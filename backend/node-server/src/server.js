@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
+const apiRoutes = require('./routes/api.js');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -21,13 +23,8 @@ app.use(express.static(flutterBuildPath));
 // -------------------------------
 // API Routes
 // -------------------------------
-app.get('/api/ping', (req, res) => {
-  res.json({ success: true, message: 'CalBot backend is running!' });
-});
+app.use('/api', apiRoutes); 
 
-// Example: additional API routes can go here
-// const scheduleRouter = require('../routes/schedule');
-// app.use('/api/schedule', scheduleRouter);
 
 // -------------------------------
 // Catch-all route for Flutter SPA

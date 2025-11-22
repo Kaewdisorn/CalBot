@@ -29,8 +29,12 @@ class Home extends ConsumerWidget {
         //scheduleViewMonthHeaderBuilder: scheduleViewBuilder,
         dataSource: dataSource,
         onTap: (details) {
-          if (details.date != null) {
-            onCalendarTapped(context, ref, details, homeController);
+          if (details.targetElement == CalendarElement.header) {
+            return;
+          } else {
+            if (details.date != null) {
+              onCalendarTapped(context, ref, details, homeController);
+            }
           }
         },
         onViewChanged: null,

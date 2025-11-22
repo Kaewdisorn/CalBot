@@ -12,7 +12,7 @@ class CalendarPage extends ConsumerWidget {
     final events = ref.watch(calendarControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("CalBot Calendar MVC")),
+      appBar: AppBar(title: const Text("Calendar Bot")),
       body: SfCalendar(
         view: CalendarView.month,
         monthViewSettings: const MonthViewSettings(showAgenda: true),

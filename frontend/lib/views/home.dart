@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 // Controllers
-import '../controllers/calendaer.dart';
+import '../controllers/calendar.dart';
 import '../controllers/home.dart';
 import '../controllers/event.dart';
 
@@ -19,6 +19,39 @@ class Home extends ConsumerWidget {
     final events = ref.watch(eventProvider);
     final calendarController = ref.watch(calendarControllerProvider);
 
+    // final Widget calendar = Theme(
+    //   /// The key set here to maintain the state,
+    //   /// when we change the parent of the widget.
+    //   //key: _globalKey,
+    //   //data: model.themeData.copyWith(colorScheme: model.themeData.colorScheme.copyWith(secondary: model.primaryColor)),
+    //   child: getAppointmentEditorCalendar(calendarController, _events, _onCalendarTapped, _onViewChanged, scheduleViewBuilder),
+    // );
+
+    // final Widget calendar = getAppointmentEditorCalendar(calendarController, EventDataSource(events), _onCalendarTapped, _onViewChanged, scheduleViewBuilder);
+
+    // /// Returns the Calendar based on the properties passed.
+    // SfCalendar getAppointmentEditorCalendar([
+    //   CalendarController? calendarController,
+    //   CalendarDataSource? calendarDataSource,
+    //   dynamic calendarTapCallback,
+    //   ViewChangedCallback? viewChangedCallback,
+    //   dynamic scheduleViewBuilder,
+    // ]) {
+    //   return SfCalendar(
+    //     controller: calendarController,
+    //     //showNavigationArrow: model.isWebFullView,
+    //     allowedViews: homeController.allowedViews,
+    //     showDatePickerButton: true,
+    //     scheduleViewMonthHeaderBuilder: scheduleViewBuilder,
+    //     dataSource: calendarDataSource,
+    //     onTap: calendarTapCallback,
+    //     onViewChanged: viewChangedCallback,
+    //     initialDisplayDate: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+    //     monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
+    //     timeSlotViewSettings: const TimeSlotViewSettings(minimumAppointmentDuration: Duration(minutes: 60)),
+    //   );
+    // }
+
     return Scaffold(
       body: SfCalendar(
         controller: calendarController,
@@ -33,13 +66,6 @@ class Home extends ConsumerWidget {
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
         timeSlotViewSettings: const TimeSlotViewSettings(minimumAppointmentDuration: Duration(minutes: 60)),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {
-      //     final now = DateTime.now();
-      //     ref.read(eventProvider.notifier).addEvent(Event('New Meeting', now, now.add(const Duration(hours: 1)), Colors.blue, false));
-      //   },
-      //   child: const Icon(Icons.add),
-      // ),
     );
 
     // return Scaffold(

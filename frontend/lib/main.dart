@@ -11,6 +11,6 @@ class CalendarApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(title: 'Calendar Demo', home: Home());
+    return const MaterialApp(title: 'Calendar', home: Home());
   }
 }

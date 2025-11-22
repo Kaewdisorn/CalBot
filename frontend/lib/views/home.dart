@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
+
+// Controllers
+import '../controllers/calendaer.dart';
 import '../controllers/home.dart';
 import '../controllers/event.dart';
+
+// Models
 import '../models/event.dart';
 
 class Home extends ConsumerWidget {
@@ -12,10 +17,11 @@ class Home extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final homeController = ref.watch(homeControllerProvider);
     final events = ref.watch(eventProvider);
+    final calendarController = ref.watch(calendarControllerProvider);
 
     return Scaffold(
       body: SfCalendar(
-        //controller: calendarController,
+        controller: calendarController,
         //showNavigationArrow: model.isWebFullView,
         allowedViews: homeController.allowedViews,
         showDatePickerButton: true,

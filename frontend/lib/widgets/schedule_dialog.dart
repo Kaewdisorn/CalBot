@@ -32,7 +32,7 @@ class ScheduleDialog extends ConsumerWidget {
 
     final title = TextEditingController(text: existingSchedule?.eventName ?? "");
     final location = TextEditingController(text: existingSchedule?.location ?? "");
-    final startDate = TextEditingController(text: existingSchedule != null ? formatYMD(existingSchedule!.startDate) : formatYMD(DateTime.now()));
+    final startDate = TextEditingController(text: existingSchedule != null ? formatYMD(existingSchedule!.startDate) : formatYMD(date));
 
     //final start = TextEditingController(text: (existingSchedule?.from ?? date.add(const Duration(hours: 9))).toString());
     final end = TextEditingController(text: (existingSchedule?.to ?? date.add(const Duration(hours: 10))).toString());
@@ -308,68 +308,190 @@ class ScheduleDialog extends ConsumerWidget {
   // ------------------------------------------------
   // EDIT SCHEDULE UI (different design)
   // ------------------------------------------------
-  Widget _buildEditDialog(BuildContext context, WidgetRef ref, TextEditingController title, TextEditingController start, TextEditingController end) {
+  Widget _buildEditDialog(BuildContext context, WidgetRef ref, TextEditingController title, TextEditingController startDate, TextEditingController endDate) {
     final schedule = existingSchedule!;
 
-    return Dialog(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("Edit Schedule", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 15),
+    final dialogWidth = MediaQuery.of(context).size.width * 0.8;
+    final dialogHeight = MediaQuery.of(context).size.height * 0.5;
 
-            TextField(
-              controller: title,
-              decoration: const InputDecoration(labelText: "Title"),
-            ),
-            TextField(
-              controller: start,
-              decoration: const InputDecoration(labelText: "Start"),
-            ),
-            TextField(
-              controller: end,
-              decoration: const InputDecoration(labelText: "End"),
-            ),
+    // Separate time controllers
+    final startTime = TextEditingController(
+      text: "${schedule.startDate.hour.toString().padLeft(2, '0')}:${schedule.startDate.minute.toString().padLeft(2, '0')}",
+    );
+    final endTime = TextEditingController(text: "${schedule.to.hour.toString().padLeft(2, '0')}:${schedule.to.minute.toString().padLeft(2, '0')}");
 
-            const SizedBox(height: 20),
-
-            Row(
-              children: [
-                TextButton(
-                  onPressed: () {
-                    ref.read(scheduleListProvider.notifier).removeSchedule(schedule);
-                    Navigator.pop(context);
-                  },
-                  child: const Text("Delete", style: TextStyle(color: Colors.red)),
+    return AlertDialog(
+      title: const Text("Edit Schedule"),
+      content: SizedBox(
+        width: dialogWidth,
+        height: dialogHeight,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title
+              TextField(
+                controller: title,
+                maxLines: null,
+                decoration: InputDecoration(
+                  labelText: "Title",
+                  prefixIcon: const Icon(Icons.title, color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
-                const Spacer(),
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-                ElevatedButton(
-                  child: const Text("Save"),
-                  onPressed: () {
-                    final notifier = ref.read(scheduleListProvider.notifier);
+              ),
 
-                    // Update by replacing the schedule
-                    notifier.removeSchedule(schedule);
-                    notifier.addSchedule(
-                      homeController.createSchedule(
-                        title.text.isEmpty ? "(No Title)" : title.text,
-                        '',
-                        DateTime.tryParse(start.text) ?? schedule.startDate,
-                        DateTime.tryParse(end.text) ?? schedule.to,
+              const SizedBox(height: 15),
+
+              // DATE/TIME ROW
+              Row(
+                children: [
+                  // Start date
+                  Expanded(
+                    child: TextField(
+                      readOnly: true,
+                      controller: startDate,
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: schedule.startDate,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          startDate.text = formatYMD(picked);
+                        }
+                      },
+                      decoration: InputDecoration(
+                        labelText: "Start Date",
+                        prefixIcon: const Icon(Icons.date_range, color: Colors.grey),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                       ),
-                    );
+                    ),
+                  ),
 
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
+                  const SizedBox(width: 10),
+
+                  // Start time
+                  Expanded(
+                    child: TextField(
+                      readOnly: true,
+                      controller: startTime,
+                      onTap: () async {
+                        final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(schedule.startDate));
+                        if (picked != null) {
+                          startTime.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
+                        }
+                      },
+                      decoration: InputDecoration(
+                        labelText: "Start Time",
+                        prefixIcon: const Icon(Icons.access_time, color: Colors.grey),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 15),
+
+              Row(
+                children: [
+                  // End date
+                  Expanded(
+                    child: TextField(
+                      readOnly: true,
+                      controller: endDate,
+                      onTap: () async {
+                        final picked = await showDatePicker(context: context, initialDate: schedule.to, firstDate: DateTime(2000), lastDate: DateTime(2100));
+                        if (picked != null) {
+                          endDate.text = formatYMD(picked);
+                        }
+                      },
+                      decoration: InputDecoration(
+                        labelText: "End Date",
+                        prefixIcon: const Icon(Icons.date_range, color: Colors.grey),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  // End time
+                  Expanded(
+                    child: TextField(
+                      readOnly: true,
+                      controller: endTime,
+                      onTap: () async {
+                        final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(schedule.to));
+                        if (picked != null) {
+                          endTime.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
+                        }
+                      },
+                      decoration: InputDecoration(
+                        labelText: "End Time",
+                        prefixIcon: const Icon(Icons.access_time, color: Colors.grey),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+
+      // BUTTONS
+      actions: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            // Delete
+            TextButton(
+              onPressed: () {
+                ref.read(scheduleListProvider.notifier).removeSchedule(schedule);
+                Navigator.pop(context);
+              },
+              child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            ),
+
+            const SizedBox(width: 8),
+
+            // Cancel
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+
+            const SizedBox(width: 8),
+
+            // Save
+            FilledButton(
+              onPressed: () {
+                final notifier = ref.read(scheduleListProvider.notifier);
+
+                DateTime s = DateTime.parse("${startDate.text} ${startTime.text}:00");
+                DateTime e = DateTime.parse("${endDate.text} ${endTime.text}:00");
+
+                notifier.removeSchedule(schedule);
+                notifier.addSchedule(homeController.createSchedule(title.text.isEmpty ? "(No Title)" : title.text, schedule.location, s, e));
+
+                Navigator.pop(context);
+              },
+              child: const Text("Save"),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 }

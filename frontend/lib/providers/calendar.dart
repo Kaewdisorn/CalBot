@@ -20,7 +20,7 @@ class ScheduleNotifier extends Notifier<List<Schedule>> {
     final sampleSchedule = Schedule(
       'Sample Event',
       '',
-      DateTime(now.year, now.month, now.day, 9, 0),
+      DateTime(now.year, now.month, now.day),
       DateTime(now.year, now.month, now.day, 11, 0),
       const Color(0xFF0F8644),
       false,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../utils/datetime_format.dart';
 
-/// Reusable TimePickerTextField
 class TimePickerTextField extends StatefulWidget {
   final TextEditingController controller;
   final String label;
@@ -15,15 +14,13 @@ class TimePickerTextField extends StatefulWidget {
 }
 
 class _TimePickerTextFieldState extends State<TimePickerTextField> {
-  /// Format TimeOfDay as HH:MM AM/PM
-
   @override
   Widget build(BuildContext context) {
     return TextField(
       readOnly: true,
       controller: widget.controller,
       onTap: () async {
-        final localContext = context; // capture context safely
+        final localContext = context;
 
         final time = await showTimePicker(context: localContext, initialTime: widget.initialTime);
 

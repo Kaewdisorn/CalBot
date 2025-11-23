@@ -4,12 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../controllers/home.dart';
 import '../models/schedule.dart';
 import '../providers/calendar.dart';
-
-String formatYMD(DateTime d) {
-  return "${d.year.toString().padLeft(4, '0')}-"
-      "${d.month.toString().padLeft(2, '0')}-"
-      "${d.day.toString().padLeft(2, '0')}";
-}
+import '../utils/datetime_format.dart';
 
 class ScheduleDialog extends ConsumerWidget {
   final DateTime date;
@@ -18,21 +13,19 @@ class ScheduleDialog extends ConsumerWidget {
 
   const ScheduleDialog({super.key, required this.date, required this.homeController, this.existingSchedule});
 
-  String formatYMD(DateTime d) {
-    return "${d.year.toString().padLeft(4, '0')}-"
-        "${d.month.toString().padLeft(2, '0')}-"
-        "${d.day.toString().padLeft(2, '0')}";
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dialogWidth = MediaQuery.of(context).size.width * 0.8;
     final dialogHeight = MediaQuery.of(context).size.height * 0.4;
+
     final isEditing = existingSchedule != null;
 
     final title = TextEditingController(text: existingSchedule?.eventName ?? "");
     final location = TextEditingController(text: existingSchedule?.location ?? "");
     final startDate = TextEditingController(text: existingSchedule != null ? formatYMD(existingSchedule!.startDate) : formatYMD(date));
+    final startTime = TextEditingController(
+      text: existingSchedule != null ? formatTimeOfDayToHHMM(existingSchedule!.startTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 0, minute: 1)),
+    );
 
     //final start = TextEditingController(text: (existingSchedule?.from ?? date.add(const Duration(hours: 9))).toString());
     final end = TextEditingController(text: (existingSchedule?.to ?? date.add(const Duration(hours: 10))).toString());
@@ -40,8 +33,7 @@ class ScheduleDialog extends ConsumerWidget {
     if (isEditing) {
       return _buildEditDialog(context, ref, title, startDate, end);
     } else {
-      // return _buildAddDialog(context, ref, title, start, end);
-      return buildAddDialog(context, ref, dialogWidth, dialogHeight, title, location, startDate, end);
+      return buildAddDialog(context, ref, dialogWidth, dialogHeight, title, location, startDate, startTime, end);
     }
   }
 
@@ -53,6 +45,7 @@ class ScheduleDialog extends ConsumerWidget {
     TextEditingController title,
     TextEditingController location,
     TextEditingController startDate,
+    TextEditingController startTime,
     TextEditingController end,
   ) {
     return AlertDialog(
@@ -151,20 +144,24 @@ class ScheduleDialog extends ConsumerWidget {
                   Expanded(
                     child: TextField(
                       readOnly: true,
-                      controller: title,
+                      controller: startTime,
                       onTap: () async {
                         TimeOfDay? time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
                         if (time != null) {
-                          title.text = time.format(context);
+                          startTime.text = formatTimeOfDayAMPM(time);
                         }
                       },
                       decoration: InputDecoration(
                         labelText: "Start Time",
                         labelStyle: const TextStyle(color: Colors.grey),
+                        prefixIcon: const Icon(Icons.access_time, color: Colors.grey),
                         filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        fillColor: Colors.grey.shade100, // subtle background
+                        contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none, // remove default border
+                        ),
                       ),
                     ),
                   ),
@@ -482,8 +479,18 @@ class ScheduleDialog extends ConsumerWidget {
                 DateTime s = DateTime.parse("${startDate.text} ${startTime.text}:00");
                 DateTime e = DateTime.parse("${endDate.text} ${endTime.text}:00");
 
+                final startTimeParts = startTime.text.split(':').map((e) => int.parse(e)).toList();
+
                 notifier.removeSchedule(schedule);
-                notifier.addSchedule(homeController.createSchedule(title.text.isEmpty ? "(No Title)" : title.text, schedule.location, s, e));
+                notifier.addSchedule(
+                  homeController.createSchedule(
+                    title.text.isEmpty ? "(No Title)" : title.text,
+                    schedule.location,
+                    s,
+                    TimeOfDay(hour: startTimeParts[0], minute: startTimeParts[1]),
+                    e,
+                  ),
+                );
 
                 Navigator.pop(context);
               },

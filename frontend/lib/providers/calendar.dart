@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
@@ -18,12 +19,13 @@ class ScheduleNotifier extends Notifier<List<Schedule>> {
     // Add one sample schedule
     final now = DateTime.now();
     final sampleSchedule = Schedule(
-      'Sample Event',
-      '',
-      DateTime(now.year, now.month, now.day),
-      DateTime(now.year, now.month, now.day, 11, 0),
-      const Color(0xFF0F8644),
-      false,
+      'Sample Event', // eventName
+      '', // location
+      DateTime(now.year, now.month, now.day), // startDate
+      TimeOfDay(hour: 11, minute: 0), // startTime (TimeOfDay)
+      DateTime(now.year, now.month, now.day, 12, 0), // to (end DateTime)
+      const Color(0xFF0F8644), // background
+      false, // isAllDay
     );
     return [sampleSchedule];
   }

@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class Schedule {
-  Schedule(this.eventName, this.location, this.startDate, this.startTime, this.to, this.background, this.isAllDay);
+  Schedule(this.eventName, this.location, this.startDate, this.startTime, this.to, this.endDate, this.background, this.isAllDay);
 
   String eventName;
   String location;
   DateTime startDate;
   TimeOfDay startTime;
+  DateTime endDate;
   DateTime to;
   Color background;
   bool isAllDay;

@@ -23,18 +23,19 @@ class ScheduleDialog extends ConsumerWidget {
 
     final title = TextEditingController(text: existingSchedule?.eventName ?? "");
     final location = TextEditingController(text: existingSchedule?.location ?? "");
-    final startDate = TextEditingController(text: existingSchedule != null ? formatYMD(existingSchedule!.startDate) : formatYMD(date));
+    final startDate = TextEditingController(text: existingSchedule?.startDate != null ? formatYMD(existingSchedule!.startDate) : formatYMD(date));
     final startTime = TextEditingController(
       text: existingSchedule != null ? formatTimeOfDayAMPM(existingSchedule!.startTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 0, minute: 1)),
     );
+    final endDate = TextEditingController(text: existingSchedule?.endDate != null ? formatYMD(existingSchedule!.endDate) : formatYMD(date));
 
     //final start = TextEditingController(text: (existingSchedule?.from ?? date.add(const Duration(hours: 9))).toString());
-    final end = TextEditingController(text: (existingSchedule?.to ?? date.add(const Duration(hours: 10))).toString());
+    final end = TextEditingController(text: (existingSchedule?.endDate ?? date.add(const Duration(hours: 10))).toString());
 
     if (isEditing) {
       return _buildEditDialog(context, ref, title, startDate, end);
     } else {
-      return buildAddDialog(context, ref, dialogWidth, dialogHeight, title, location, startDate, startTime, end);
+      return buildAddDialog(context, ref, dialogWidth, dialogHeight, title, location, startDate, startTime, endDate);
     }
   }
 
@@ -47,7 +48,7 @@ class ScheduleDialog extends ConsumerWidget {
     TextEditingController location,
     TextEditingController startDate,
     TextEditingController startTime,
-    TextEditingController end,
+    TextEditingController endDate,
   ) {
     return AlertDialog(
       title: const Text("Add Schedule"),
@@ -145,29 +146,7 @@ class ScheduleDialog extends ConsumerWidget {
 
                   // End Date
                   Expanded(
-                    child: TextField(
-                      readOnly: true,
-                      controller: title,
-                      onTap: () async {
-                        DateTime? picked = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2100),
-                        );
-                        if (picked != null) {
-                          title.text = "${picked.year}-${picked.month}-${picked.day}";
-                        }
-                      },
-                      decoration: InputDecoration(
-                        labelText: "End Date",
-                        labelStyle: const TextStyle(color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                      ),
-                    ),
+                    child: DatePickerTextField(controller: endDate, label: "End Date", compareDateController: startDate),
                   ),
 
                   const SizedBox(width: 10),
@@ -463,6 +442,7 @@ class ScheduleDialog extends ConsumerWidget {
                     schedule.location,
                     s,
                     TimeOfDay(hour: startTimeParts[0], minute: startTimeParts[1]),
+                    e,
                     e,
                   ),
                 );

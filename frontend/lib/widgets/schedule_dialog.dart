@@ -5,6 +5,7 @@ import '../controllers/home.dart';
 import '../models/schedule.dart';
 import '../providers/calendar.dart';
 import '../utils/datetime_format.dart';
+import 'date_picker_textfield.dart';
 
 class ScheduleDialog extends ConsumerWidget {
   final DateTime date;
@@ -109,33 +110,7 @@ class ScheduleDialog extends ConsumerWidget {
                 children: [
                   // Start Date
                   Expanded(
-                    child: TextField(
-                      readOnly: true,
-                      controller: startDate,
-                      onTap: () async {
-                        DateTime? picked = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2100),
-                        );
-                        if (picked != null) {
-                          startDate.text = "${picked.year}-${picked.month}-${picked.day}";
-                        }
-                      },
-                      decoration: InputDecoration(
-                        labelText: "Start Date",
-                        labelStyle: const TextStyle(color: Colors.grey),
-                        prefixIcon: const Icon(Icons.date_range, color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.grey.shade100, // subtle background
-                        contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none, // remove default border
-                        ),
-                      ),
-                    ),
+                    child: DatePickerTextField(controller: startDate, label: "Start Date"),
                   ),
 
                   const SizedBox(width: 10),

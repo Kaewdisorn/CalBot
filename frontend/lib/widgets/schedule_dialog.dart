@@ -227,6 +227,36 @@ class ScheduleDialog extends ConsumerWidget {
           ),
         ),
       ),
+      actions: [
+        SizedBox(
+          width: double.infinity,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // CANCEL BUTTON
+              TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+              ),
+              const SizedBox(width: 12),
+
+              // ADD BUTTON
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () {}, // your function
+                child: const Text("Add"),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

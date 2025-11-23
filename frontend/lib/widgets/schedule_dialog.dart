@@ -6,6 +6,7 @@ import '../models/schedule.dart';
 import '../providers/calendar.dart';
 import '../utils/datetime_format.dart';
 import 'date_picker_textfield.dart';
+import 'time_picker_textfield.dart';
 
 class ScheduleDialog extends ConsumerWidget {
   final DateTime date;
@@ -39,6 +40,9 @@ class ScheduleDialog extends ConsumerWidget {
     }
   }
 
+  // ------------------------------------------------
+  // ADD SCHEDULE UI
+  // ------------------------------------------------
   Widget buildAddDialog(
     BuildContext context,
     WidgetRef ref,
@@ -64,7 +68,6 @@ class ScheduleDialog extends ConsumerWidget {
               Row(
                 children: [
                   Expanded(
-                    flex: 5,
                     child: TextField(
                       controller: title,
                       maxLines: null,
@@ -82,7 +85,6 @@ class ScheduleDialog extends ConsumerWidget {
                   ),
                   const SizedBox(width: 15),
                   Expanded(
-                    flex: 5,
                     child: TextField(
                       controller: location,
                       maxLines: null,
@@ -113,44 +115,17 @@ class ScheduleDialog extends ConsumerWidget {
                   Expanded(
                     child: DatePickerTextField(controller: startDate, label: "Start Date"),
                   ),
-
                   const SizedBox(width: 10),
-
                   // Start Time
                   Expanded(
-                    child: TextField(
-                      readOnly: true,
-                      controller: startTime,
-                      onTap: () async {
-                        TimeOfDay? time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
-                        if (time != null) {
-                          startTime.text = formatTimeOfDayAMPM(time);
-                        }
-                      },
-                      decoration: InputDecoration(
-                        labelText: "Start Time",
-                        labelStyle: const TextStyle(color: Colors.grey),
-                        prefixIcon: const Icon(Icons.access_time, color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.grey.shade100, // subtle background
-                        contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none, // remove default border
-                        ),
-                      ),
-                    ),
+                    child: TimePickerTextField(controller: startTime, label: "Start Time", initialTime: TimeOfDay.now()),
                   ),
-
                   const SizedBox(width: 10),
-
                   // End Date
                   Expanded(
                     child: DatePickerTextField(controller: endDate, label: "End Date", compareDateController: startDate),
                   ),
-
                   const SizedBox(width: 10),
-
                   // End Time
                   Expanded(
                     child: TextField(
@@ -210,51 +185,6 @@ class ScheduleDialog extends ConsumerWidget {
       ],
     );
   }
-
-  // ------------------------------------------------
-  // ADD SCHEDULE UI
-  // ------------------------------------------------
-  // Widget _buildAddDialog(BuildContext context, WidgetRef ref, TextEditingController title, TextEditingController start, TextEditingController end) {
-  //   return AlertDialog(
-  //     title: const Text("Add Schedule"),
-  //     content: Column(
-  //       mainAxisSize: MainAxisSize.min,
-  //       children: [
-  //         TextField(
-  //           controller: title,
-  //           decoration: const InputDecoration(labelText: "Title"),
-  //         ),
-  //         TextField(
-  //           controller: start,
-  //           decoration: const InputDecoration(labelText: "Start"),
-  //         ),
-  //         TextField(
-  //           controller: end,
-  //           decoration: const InputDecoration(labelText: "End"),
-  //         ),
-  //       ],
-  //     ),
-  //     actions: [
-  //       TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-  //       ElevatedButton(
-  //         child: const Text("Add"),
-  //         onPressed: () {
-  //           ref
-  //               .read(scheduleListProvider.notifier)
-  //               .addSchedule(
-  //                 homeController.createSchedule(
-  //                   title.text.isEmpty ? "(No Title)" : title.text,
-  //                   '',
-  //                   DateTime.tryParse(start.text) ?? date.add(const Duration(hours: 9)),
-  //                   DateTime.tryParse(end.text) ?? date.add(const Duration(hours: 10)),
-  //                 ),
-  //               );
-  //           Navigator.pop(context);
-  //         },
-  //       ),
-  //     ],
-  //   );
-  // }
 
   // ------------------------------------------------
   // EDIT SCHEDULE UI (different design)

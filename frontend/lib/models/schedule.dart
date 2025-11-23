@@ -18,20 +18,32 @@ class ScheduleDataSource extends CalendarDataSource {
   }
 
   @override
-  String getLocation(int index) => appointments![index].location;
+  DateTime getStartTime(int index) {
+    return appointments![index].startDate;
+  }
 
   @override
-  DateTime getStartDate(int index) => appointments![index].startDate;
+  DateTime getEndTime(int index) {
+    return appointments![index].to;
+  }
 
   @override
-  DateTime getEndTime(int index) => appointments![index].to;
+  String getSubject(int index) {
+    return appointments![index].eventName;
+  }
 
   @override
-  String getSubject(int index) => appointments![index].eventName;
+  Color getColor(int index) {
+    return appointments![index].background;
+  }
 
   @override
-  Color getColor(int index) => appointments![index].background;
+  bool isAllDay(int index) {
+    return appointments![index].isAllDay;
+  }
 
   @override
-  bool isAllDay(int index) => appointments![index].isAllDay;
+  String? getLocation(int index) {
+    return appointments![index].location;
+  }
 }

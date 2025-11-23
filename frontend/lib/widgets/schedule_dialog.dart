@@ -46,35 +46,55 @@ class ScheduleDialog extends ConsumerWidget {
       content: SizedBox(
         width: dialogWidth,
         height: dialogHeight,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: TextField(
-                    controller: title,
-                    decoration: const InputDecoration(
-                      labelText: "Title",
-                      labelStyle: TextStyle(color: Colors.grey),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: TextField(
+                      controller: title,
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                      decoration: InputDecoration(
+                        labelText: "Title",
+                        labelStyle: const TextStyle(color: Colors.grey),
+                        prefixIcon: const Icon(Icons.title, color: Colors.grey),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  flex: 5,
-                  child: TextField(
-                    controller: location,
-                    decoration: const InputDecoration(
-                      labelText: "Location",
-                      labelStyle: TextStyle(color: Colors.grey),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    flex: 5,
+                    child: TextField(
+                      controller: location,
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                      decoration: InputDecoration(
+                        labelText: "Location",
+                        labelStyle: const TextStyle(color: Colors.grey),
+                        prefixIcon: const Icon(Icons.location_on, color: Colors.grey),
+                        filled: true,
+                        fillColor: Colors.grey.shade100, // subtle background
+                        contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none, // remove default border
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

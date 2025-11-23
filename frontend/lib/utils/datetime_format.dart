@@ -11,3 +11,10 @@ String formatTimeOfDayToHHMM(TimeOfDay time) {
   final m = time.minute.toString().padLeft(2, '0');
   return "$h:$m";
 }
+
+String formatTimeOfDayAMPM(TimeOfDay time) {
+  final hour = time.hourOfPeriod.toString().padLeft(2, '0'); // 12-hour hour
+  final minute = time.minute.toString().padLeft(2, '0');
+  final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+  return "$hour:$minute $period";
+}

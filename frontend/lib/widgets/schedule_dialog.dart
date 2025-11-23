@@ -14,60 +14,123 @@ class ScheduleDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final titleController = TextEditingController(text: existingSchedule?.eventName ?? '');
-    final startController = TextEditingController(text: (existingSchedule?.from ?? date.add(const Duration(hours: 9))).toString());
-    final endController = TextEditingController(text: (existingSchedule?.to ?? date.add(const Duration(hours: 10))).toString());
+    final isEditing = existingSchedule != null;
 
+    final title = TextEditingController(text: existingSchedule?.eventName ?? "");
+    final start = TextEditingController(text: (existingSchedule?.from ?? date.add(const Duration(hours: 9))).toString());
+    final end = TextEditingController(text: (existingSchedule?.to ?? date.add(const Duration(hours: 10))).toString());
+
+    return isEditing ? _buildEditDialog(context, ref, title, start, end) : _buildAddDialog(context, ref, title, start, end);
+  }
+
+  // ------------------------------------------------
+  // ADD SCHEDULE UI
+  // ------------------------------------------------
+  Widget _buildAddDialog(BuildContext context, WidgetRef ref, TextEditingController title, TextEditingController start, TextEditingController end) {
     return AlertDialog(
-      title: Text(existingSchedule != null ? 'Edit Schedule' : 'Add Schedule'),
+      title: const Text("Add Schedule"),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextFormField(
-            controller: titleController,
-            decoration: const InputDecoration(labelText: 'Title'),
+          TextField(
+            controller: title,
+            decoration: const InputDecoration(labelText: "Title"),
           ),
-          TextFormField(
-            controller: startController,
-            decoration: const InputDecoration(labelText: 'Start Time'),
+          TextField(
+            controller: start,
+            decoration: const InputDecoration(labelText: "Start"),
           ),
-          TextFormField(
-            controller: endController,
-            decoration: const InputDecoration(labelText: 'End Time'),
+          TextField(
+            controller: end,
+            decoration: const InputDecoration(labelText: "End"),
           ),
         ],
       ),
       actions: [
-        if (existingSchedule != null)
-          TextButton(
-            onPressed: () {
-              ref.read(scheduleListProvider.notifier).removeSchedule(existingSchedule!);
-              Navigator.pop(context);
-            },
-            child: const Text('Delete'),
-          ),
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
         ElevatedButton(
+          child: const Text("Add"),
           onPressed: () {
-            final startTime = DateTime.tryParse(startController.text) ?? date.add(const Duration(hours: 9));
-            final endTime = DateTime.tryParse(endController.text) ?? date.add(const Duration(hours: 10));
-
-            final newSchedule = homeController.createSchedule(titleController.text.isEmpty ? '(No Title)' : titleController.text, startTime, endTime);
-
-            final notifier = ref.read(scheduleListProvider.notifier);
-
-            if (existingSchedule != null) {
-              notifier.removeSchedule(existingSchedule!);
-              notifier.addSchedule(newSchedule);
-            } else {
-              notifier.addSchedule(newSchedule);
-            }
-
+            ref
+                .read(scheduleListProvider.notifier)
+                .addSchedule(
+                  homeController.createSchedule(
+                    title.text.isEmpty ? "(No Title)" : title.text,
+                    DateTime.tryParse(start.text) ?? date.add(const Duration(hours: 9)),
+                    DateTime.tryParse(end.text) ?? date.add(const Duration(hours: 10)),
+                  ),
+                );
             Navigator.pop(context);
           },
-          child: Text(existingSchedule != null ? 'Save' : 'Add'),
         ),
       ],
+    );
+  }
+
+  // ------------------------------------------------
+  // EDIT SCHEDULE UI (different design)
+  // ------------------------------------------------
+  Widget _buildEditDialog(BuildContext context, WidgetRef ref, TextEditingController title, TextEditingController start, TextEditingController end) {
+    final schedule = existingSchedule!;
+
+    return Dialog(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Edit Schedule", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 15),
+
+            TextField(
+              controller: title,
+              decoration: const InputDecoration(labelText: "Title"),
+            ),
+            TextField(
+              controller: start,
+              decoration: const InputDecoration(labelText: "Start"),
+            ),
+            TextField(
+              controller: end,
+              decoration: const InputDecoration(labelText: "End"),
+            ),
+
+            const SizedBox(height: 20),
+
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () {
+                    ref.read(scheduleListProvider.notifier).removeSchedule(schedule);
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                ),
+                const Spacer(),
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+                ElevatedButton(
+                  child: const Text("Save"),
+                  onPressed: () {
+                    final notifier = ref.read(scheduleListProvider.notifier);
+
+                    // Update by replacing the schedule
+                    notifier.removeSchedule(schedule);
+                    notifier.addSchedule(
+                      homeController.createSchedule(
+                        title.text.isEmpty ? "(No Title)" : title.text,
+                        DateTime.tryParse(start.text) ?? schedule.from,
+                        DateTime.tryParse(end.text) ?? schedule.to,
+                      ),
+                    );
+
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

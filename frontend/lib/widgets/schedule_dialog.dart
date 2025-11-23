@@ -24,7 +24,7 @@ class ScheduleDialog extends ConsumerWidget {
     final location = TextEditingController(text: existingSchedule?.location ?? "");
     final startDate = TextEditingController(text: existingSchedule != null ? formatYMD(existingSchedule!.startDate) : formatYMD(date));
     final startTime = TextEditingController(
-      text: existingSchedule != null ? formatTimeOfDayToHHMM(existingSchedule!.startTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 0, minute: 1)),
+      text: existingSchedule != null ? formatTimeOfDayAMPM(existingSchedule!.startTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 0, minute: 1)),
     );
 
     //final start = TextEditingController(text: (existingSchedule?.from ?? date.add(const Duration(hours: 9))).toString());

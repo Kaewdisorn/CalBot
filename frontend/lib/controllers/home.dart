@@ -8,7 +8,7 @@ class HomeController {
   final allowedViews = <CalendarView>[CalendarView.day, CalendarView.week, CalendarView.month, CalendarView.schedule];
 
   /// Create a new Schedule object
-  Schedule createSchedule(String title, DateTime start, DateTime end, {Color color = const Color(0xFF0F8644), bool isAllDay = false}) {
-    return Schedule(title, start, end, color, isAllDay);
+  Schedule createSchedule(String title, String location, DateTime start, DateTime end, {Color color = const Color(0xFF0F8644), bool isAllDay = false}) {
+    return Schedule(title, location, start, end, color, isAllDay);
   }
 }

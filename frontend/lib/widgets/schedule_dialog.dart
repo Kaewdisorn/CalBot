@@ -19,6 +19,7 @@ class ScheduleDialog extends ConsumerWidget {
     final isEditing = existingSchedule != null;
 
     final title = TextEditingController(text: existingSchedule?.eventName ?? "");
+    final location = TextEditingController(text: existingSchedule?.location ?? "");
     final start = TextEditingController(text: (existingSchedule?.from ?? date.add(const Duration(hours: 9))).toString());
     final end = TextEditingController(text: (existingSchedule?.to ?? date.add(const Duration(hours: 10))).toString());
 
@@ -26,7 +27,7 @@ class ScheduleDialog extends ConsumerWidget {
       return _buildEditDialog(context, ref, title, start, end);
     } else {
       // return _buildAddDialog(context, ref, title, start, end);
-      return buildAddDialog(context, ref, dialogWidth, dialogHeight, title, start, end);
+      return buildAddDialog(context, ref, dialogWidth, dialogHeight, title, location, start, end);
     }
   }
 
@@ -36,6 +37,7 @@ class ScheduleDialog extends ConsumerWidget {
     double dialogWidth,
     double dialogHeight,
     TextEditingController title,
+    TextEditingController location,
     TextEditingController start,
     TextEditingController end,
   ) {
@@ -53,15 +55,21 @@ class ScheduleDialog extends ConsumerWidget {
                   flex: 5,
                   child: TextField(
                     controller: title,
-                    decoration: const InputDecoration(labelText: "Title"),
+                    decoration: const InputDecoration(
+                      labelText: "Title",
+                      labelStyle: TextStyle(color: Colors.grey),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 15),
                 Expanded(
                   flex: 5,
                   child: TextField(
-                    controller: title,
-                    decoration: const InputDecoration(labelText: "Location"),
+                    controller: location,
+                    decoration: const InputDecoration(
+                      labelText: "Location",
+                      labelStyle: TextStyle(color: Colors.grey),
+                    ),
                   ),
                 ),
               ],
@@ -105,6 +113,7 @@ class ScheduleDialog extends ConsumerWidget {
                 .addSchedule(
                   homeController.createSchedule(
                     title.text.isEmpty ? "(No Title)" : title.text,
+                    '',
                     DateTime.tryParse(start.text) ?? date.add(const Duration(hours: 9)),
                     DateTime.tryParse(end.text) ?? date.add(const Duration(hours: 10)),
                   ),
@@ -167,6 +176,7 @@ class ScheduleDialog extends ConsumerWidget {
                     notifier.addSchedule(
                       homeController.createSchedule(
                         title.text.isEmpty ? "(No Title)" : title.text,
+                        '',
                         DateTime.tryParse(start.text) ?? schedule.from,
                         DateTime.tryParse(end.text) ?? schedule.to,
                       ),

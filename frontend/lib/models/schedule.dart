@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class Schedule {
-  Schedule(this.eventName, this.from, this.to, this.background, this.isAllDay);
+  Schedule(this.eventName, this.location, this.from, this.to, this.background, this.isAllDay);
 
   String eventName;
+  String location;
   DateTime from;
   DateTime to;
   Color background;
@@ -15,6 +16,9 @@ class ScheduleDataSource extends CalendarDataSource {
   ScheduleDataSource(List<Schedule> source) {
     appointments = source;
   }
+
+  @override
+  String getLocation(int index) => appointments![index].location;
 
   @override
   DateTime getStartTime(int index) => appointments![index].from;

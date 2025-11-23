@@ -14,13 +14,62 @@ class ScheduleDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final dialogWidth = MediaQuery.of(context).size.width * 0.8;
+    final dialogHeight = MediaQuery.of(context).size.height * 0.4;
     final isEditing = existingSchedule != null;
 
     final title = TextEditingController(text: existingSchedule?.eventName ?? "");
     final start = TextEditingController(text: (existingSchedule?.from ?? date.add(const Duration(hours: 9))).toString());
     final end = TextEditingController(text: (existingSchedule?.to ?? date.add(const Duration(hours: 10))).toString());
 
-    return isEditing ? _buildEditDialog(context, ref, title, start, end) : _buildAddDialog(context, ref, title, start, end);
+    if (isEditing) {
+      return _buildEditDialog(context, ref, title, start, end);
+    } else {
+      // return _buildAddDialog(context, ref, title, start, end);
+      return buildAddDialog(context, ref, dialogWidth, dialogHeight, title, start, end);
+    }
+  }
+
+  Widget buildAddDialog(
+    BuildContext context,
+    WidgetRef ref,
+    double dialogWidth,
+    double dialogHeight,
+    TextEditingController title,
+    TextEditingController start,
+    TextEditingController end,
+  ) {
+    return AlertDialog(
+      title: const Text("Add Schedule"),
+      content: SizedBox(
+        width: dialogWidth,
+        height: dialogHeight,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: TextField(
+                    controller: title,
+                    decoration: const InputDecoration(labelText: "Title"),
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  flex: 5,
+                  child: TextField(
+                    controller: title,
+                    decoration: const InputDecoration(labelText: "Location"),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   // ------------------------------------------------

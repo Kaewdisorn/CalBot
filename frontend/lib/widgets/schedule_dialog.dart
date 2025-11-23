@@ -29,6 +29,9 @@ class ScheduleDialog extends ConsumerWidget {
       text: existingSchedule != null ? formatTimeOfDayAMPM(existingSchedule!.startTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 0, minute: 1)),
     );
     final endDate = TextEditingController(text: existingSchedule?.endDate != null ? formatYMD(existingSchedule!.endDate) : formatYMD(date));
+    final endTime = TextEditingController(
+      text: existingSchedule != null ? formatTimeOfDayAMPM(existingSchedule!.endTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 23, minute: 59)),
+    );
 
     //final start = TextEditingController(text: (existingSchedule?.from ?? date.add(const Duration(hours: 9))).toString());
     final end = TextEditingController(text: (existingSchedule?.endDate ?? date.add(const Duration(hours: 10))).toString());
@@ -36,7 +39,7 @@ class ScheduleDialog extends ConsumerWidget {
     if (isEditing) {
       return _buildEditDialog(context, ref, title, startDate, end);
     } else {
-      return buildAddDialog(context, ref, dialogWidth, dialogHeight, title, location, startDate, startTime, endDate);
+      return buildAddDialog(context, ref, dialogWidth, dialogHeight, title, location, startDate, startTime, endDate, endTime);
     }
   }
 
@@ -53,6 +56,7 @@ class ScheduleDialog extends ConsumerWidget {
     TextEditingController startDate,
     TextEditingController startTime,
     TextEditingController endDate,
+    TextEditingController endTime,
   ) {
     return AlertDialog(
       title: const Text("Add Schedule"),
@@ -128,24 +132,7 @@ class ScheduleDialog extends ConsumerWidget {
                   const SizedBox(width: 10),
                   // End Time
                   Expanded(
-                    child: TextField(
-                      readOnly: true,
-                      controller: title,
-                      onTap: () async {
-                        TimeOfDay? time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
-                        if (time != null) {
-                          title.text = time.format(context);
-                        }
-                      },
-                      decoration: InputDecoration(
-                        labelText: "End Time",
-                        labelStyle: const TextStyle(color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                      ),
-                    ),
+                    child: TimePickerTextField(controller: endTime, label: "End Time", initialTime: TimeOfDay.now()),
                   ),
                 ],
               ),
@@ -364,6 +351,7 @@ class ScheduleDialog extends ConsumerWidget {
                 DateTime e = DateTime.parse("${endDate.text} ${endTime.text}:00");
 
                 final startTimeParts = startTime.text.split(':').map((e) => int.parse(e)).toList();
+                final endTimeParts = endTime.text.split(':').map((e) => int.parse(e)).toList();
 
                 notifier.removeSchedule(schedule);
                 notifier.addSchedule(
@@ -373,6 +361,7 @@ class ScheduleDialog extends ConsumerWidget {
                     s,
                     TimeOfDay(hour: startTimeParts[0], minute: startTimeParts[1]),
                     e,
+                    TimeOfDay(hour: endTimeParts[0], minute: endTimeParts[1]),
                     e,
                   ),
                 );

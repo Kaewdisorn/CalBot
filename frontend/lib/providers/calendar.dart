@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
@@ -24,6 +22,7 @@ class ScheduleNotifier extends Notifier<List<Schedule>> {
       DateTime(now.year, now.month, now.day), // startDate
       TimeOfDay(hour: 11, minute: 0), // startTime (TimeOfDay)
       DateTime(now.year, now.month, now.day),
+      TimeOfDay(hour: 11, minute: 5),
       DateTime(now.year, now.month, now.day, 12, 0), // to (end DateTime)
       const Color(0xFF0F8644), // background
       false, // isAllDay

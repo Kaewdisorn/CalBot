@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class Schedule {
-  Schedule(this.eventName, this.location, this.startDate, this.startTime, this.to, this.endDate, this.background, this.isAllDay);
+  Schedule(this.eventName, this.location, this.startDate, this.startTime, this.endDate, this.endTime, this.to, this.background, this.isAllDay);
 
   String eventName;
   String location;
   DateTime startDate;
   TimeOfDay startTime;
   DateTime endDate;
+  TimeOfDay endTime;
   DateTime to;
   Color background;
   bool isAllDay;
@@ -22,13 +23,13 @@ class ScheduleDataSource extends CalendarDataSource {
   @override
   DateTime getStartTime(int index) {
     final schedule = appointments![index];
-    // Combine date + time
     return DateTime(schedule.startDate.year, schedule.startDate.month, schedule.startDate.day, schedule.startTime.hour, schedule.startTime.minute);
   }
 
   @override
   DateTime getEndTime(int index) {
-    return appointments![index].to;
+    final schedule = appointments![index];
+    return DateTime(schedule.endDate.year, schedule.endDate.month, schedule.endDate.day, schedule.endTime.hour, schedule.endTime.minute);
   }
 
   @override

@@ -8,7 +8,7 @@ import '../utils/datetime_format.dart';
 import 'date_picker_textfield.dart';
 import 'time_picker_textfield.dart';
 
-class ScheduleDialog extends ConsumerWidget {
+class ScheduleDialog extends ConsumerStatefulWidget {
   final DateTime date;
   final HomeController homeController;
   final Schedule? existingSchedule;
@@ -16,249 +16,125 @@ class ScheduleDialog extends ConsumerWidget {
   const ScheduleDialog({super.key, required this.date, required this.homeController, this.existingSchedule});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final dialogWidth = MediaQuery.of(context).size.width * 0.8;
-    final dialogHeight = MediaQuery.of(context).size.height * 0.4;
+  ConsumerState<ScheduleDialog> createState() => _ScheduleDialogState();
+}
 
-    final isEditing = existingSchedule != null;
+class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
+  late final TextEditingController titleController;
+  late final TextEditingController locationController;
+  late final TextEditingController startDateController;
+  late final TextEditingController startTimeController;
+  late final TextEditingController endDateController;
+  late final TextEditingController endTimeController;
 
-    final title = TextEditingController(text: existingSchedule?.eventName ?? "");
-    final location = TextEditingController(text: existingSchedule?.location ?? "");
-    final startDate = TextEditingController(text: existingSchedule?.startDate != null ? formatYMD(existingSchedule!.startDate) : formatYMD(date));
-    final startTime = TextEditingController(
-      text: existingSchedule != null ? formatTimeOfDayAMPM(existingSchedule!.startTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 0, minute: 1)),
-    );
-    final endDate = TextEditingController(text: existingSchedule?.endDate != null ? formatYMD(existingSchedule!.endDate) : formatYMD(date));
-    final endTime = TextEditingController(
-      text: existingSchedule != null ? formatTimeOfDayAMPM(existingSchedule!.endTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 23, minute: 59)),
-    );
+  @override
+  void initState() {
+    super.initState();
 
-    //final start = TextEditingController(text: (existingSchedule?.from ?? date.add(const Duration(hours: 9))).toString());
-    final end = TextEditingController(text: (existingSchedule?.endDate ?? date.add(const Duration(hours: 10))).toString());
+    final s = widget.existingSchedule;
 
-    if (isEditing) {
-      return _buildEditDialog(context, ref, title, startDate, end);
-    } else {
-      return buildAddDialog(context, ref, dialogWidth, dialogHeight, title, location, startDate, startTime, endDate, endTime);
+    titleController = TextEditingController(text: s?.eventName ?? "");
+    locationController = TextEditingController(text: s?.location ?? "");
+    startDateController = TextEditingController(text: s != null ? formatYMD(s.startDate) : formatYMD(widget.date));
+    startTimeController = TextEditingController(text: s != null ? formatTimeOfDayAMPM(s.startTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 0, minute: 1)));
+    endDateController = TextEditingController(text: s != null ? formatYMD(s.endDate) : formatYMD(widget.date));
+    endTimeController = TextEditingController(text: s != null ? formatTimeOfDayAMPM(s.endTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 23, minute: 59)));
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    locationController.dispose();
+    startDateController.dispose();
+    startTimeController.dispose();
+    endDateController.dispose();
+    endTimeController.dispose();
+    super.dispose();
+  }
+
+  // ---------------- Helper Methods ----------------
+
+  TimeOfDay? parseTimeOfDay(String timeStr) {
+    try {
+      timeStr = timeStr.trim().toLowerCase();
+      final isPM = timeStr.contains('pm');
+      final isAM = timeStr.contains('am');
+
+      timeStr = timeStr.replaceAll(RegExp(r'\s*(am|pm)'), '');
+
+      int hour = 0;
+      int minute = 0;
+
+      final parts = timeStr.split(':');
+      if (parts.length == 2) {
+        hour = int.parse(parts[0]);
+        minute = int.parse(parts[1]);
+      } else if (parts.length == 1) {
+        hour = int.parse(parts[0]);
+        minute = 0;
+      } else {
+        return null;
+      }
+
+      if (isPM && hour != 12) hour += 12;
+      if (isAM && hour == 12) hour = 0;
+
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (_) {
+      return null;
     }
   }
 
-  // ------------------------------------------------
-  // ADD SCHEDULE UI
-  // ------------------------------------------------
-  Widget buildAddDialog(
-    BuildContext context,
-    WidgetRef ref,
-    double dialogWidth,
-    double dialogHeight,
-    TextEditingController title,
-    TextEditingController location,
-    TextEditingController startDate,
-    TextEditingController startTime,
-    TextEditingController endDate,
-    TextEditingController endTime,
-  ) {
-    return AlertDialog(
-      title: const Text("Add Schedule"),
-      content: SizedBox(
-        width: dialogWidth,
-        height: dialogHeight,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // First Row: Title & Location
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: title,
-                      maxLines: null,
-                      keyboardType: TextInputType.multiline,
-                      decoration: InputDecoration(
-                        labelText: "Title",
-                        labelStyle: const TextStyle(color: Colors.grey),
-                        prefixIcon: const Icon(Icons.title, color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: TextField(
-                      controller: location,
-                      maxLines: null,
-                      keyboardType: TextInputType.multiline,
-                      decoration: InputDecoration(
-                        labelText: "Location",
-                        labelStyle: const TextStyle(color: Colors.grey),
-                        prefixIcon: const Icon(Icons.location_on, color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.grey.shade100, // subtle background
-                        contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none, // remove default border
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 15),
-
-              // Second Row: Date & Time Pickers
-              Row(
-                children: [
-                  // Start Date
-                  Expanded(
-                    child: DatePickerTextField(controller: startDate, label: "Start Date"),
-                  ),
-                  const SizedBox(width: 10),
-                  // Start Time
-                  Expanded(
-                    child: TimePickerTextField(controller: startTime, label: "Start Time", initialTime: TimeOfDay.now()),
-                  ),
-                  const SizedBox(width: 10),
-                  // End Date
-                  Expanded(
-                    child: DatePickerTextField(controller: endDate, label: "End Date", compareDateController: startDate),
-                  ),
-                  const SizedBox(width: 10),
-                  // End Time
-                  Expanded(
-                    child: TimePickerTextField(controller: endTime, label: "End Time", initialTime: TimeOfDay.now()),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+  void showErrorDialog(String message) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Error"),
+        content: Text(message),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))],
       ),
-      actions: [
-        SizedBox(
-          width: double.infinity,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              // CANCEL BUTTON
-              TextButton(
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel"),
-              ),
-              const SizedBox(width: 12),
-
-              // ADD BUTTON
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: () {}, // your function
-                child: const Text("Add"),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 
-  // ------------------------------------------------
-  // EDIT SCHEDULE UI (different design)
-  // ------------------------------------------------
-  Widget _buildEditDialog(BuildContext context, WidgetRef ref, TextEditingController title, TextEditingController startDate, TextEditingController endDate) {
-    final schedule = existingSchedule!;
+  // ---------------- Build Dialog ----------------
 
+  @override
+  Widget build(BuildContext context) {
+    final isEditing = widget.existingSchedule != null;
     final dialogWidth = MediaQuery.of(context).size.width * 0.8;
-    final dialogHeight = MediaQuery.of(context).size.height * 0.5;
-
-    // Separate time controllers
-    final startTime = TextEditingController(
-      text: "${schedule.startDate.hour.toString().padLeft(2, '0')}:${schedule.startDate.minute.toString().padLeft(2, '0')}",
-    );
-
-    final endTime = TextEditingController(text: "${schedule.endDate.hour.toString().padLeft(2, '0')}:${schedule.endDate.minute.toString().padLeft(2, '0')}");
+    final dialogHeight = MediaQuery.of(context).size.height * 0.45;
 
     return AlertDialog(
-      title: const Text("Edit Schedule"),
+      title: Text(isEditing ? "Edit Schedule" : "Add Schedule"),
       content: SizedBox(
         width: dialogWidth,
         height: dialogHeight,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(8),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              // Title
-              TextField(
-                controller: title,
-                maxLines: null,
-                decoration: InputDecoration(
-                  labelText: "Title",
-                  prefixIcon: const Icon(Icons.title, color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                ),
-              ),
-
-              const SizedBox(height: 15),
-
-              // DATE/TIME ROW
+              // Title & Location
               Row(
                 children: [
-                  // Start date
                   Expanded(
                     child: TextField(
-                      readOnly: true,
-                      controller: startDate,
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: schedule.startDate,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2100),
-                        );
-                        if (picked != null) {
-                          startDate.text = formatYMD(picked);
-                        }
-                      },
+                      controller: titleController,
                       decoration: InputDecoration(
-                        labelText: "Start Date",
-                        prefixIcon: const Icon(Icons.date_range, color: Colors.grey),
+                        labelText: "Title",
+                        prefixIcon: const Icon(Icons.title),
                         filled: true,
                         fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                       ),
                     ),
                   ),
-
-                  const SizedBox(width: 10),
-
-                  // Start time
+                  const SizedBox(width: 12),
                   Expanded(
                     child: TextField(
-                      readOnly: true,
-                      controller: startTime,
-                      onTap: () async {
-                        final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(schedule.startDate));
-                        if (picked != null) {
-                          startTime.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
-                        }
-                      },
+                      controller: locationController,
                       decoration: InputDecoration(
-                        labelText: "Start Time",
-                        prefixIcon: const Icon(Icons.access_time, color: Colors.grey),
+                        labelText: "Location",
+                        prefixIcon: const Icon(Icons.location_on),
                         filled: true,
                         fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -267,58 +143,25 @@ class ScheduleDialog extends ConsumerWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
 
-              const SizedBox(height: 15),
-
+              // Dates & Times
               Row(
                 children: [
-                  // End date
                   Expanded(
-                    child: TextField(
-                      readOnly: true,
-                      controller: endDate,
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: schedule.startDate,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2100),
-                        );
-                        if (picked != null) {
-                          endDate.text = formatYMD(picked);
-                        }
-                      },
-                      decoration: InputDecoration(
-                        labelText: "End Date",
-                        prefixIcon: const Icon(Icons.date_range, color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                      ),
-                    ),
+                    child: DatePickerTextField(controller: startDateController, label: "Start Date"),
                   ),
-
-                  const SizedBox(width: 10),
-
-                  // End time
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: TextField(
-                      readOnly: true,
-                      controller: endTime,
-                      onTap: () async {
-                        final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(schedule.endDate));
-                        if (picked != null) {
-                          endTime.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
-                        }
-                      },
-                      decoration: InputDecoration(
-                        labelText: "End Time",
-                        prefixIcon: const Icon(Icons.access_time, color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                      ),
-                    ),
+                    child: TimePickerTextField(controller: startTimeController, label: "Start Time", initialTime: const TimeOfDay(hour: 0, minute: 1)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: DatePickerTextField(controller: endDateController, label: "End Date"),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TimePickerTextField(controller: endTimeController, label: "End Time", initialTime: const TimeOfDay(hour: 23, minute: 59)),
                   ),
                 ],
               ),
@@ -326,58 +169,75 @@ class ScheduleDialog extends ConsumerWidget {
           ),
         ),
       ),
-
-      // BUTTONS
       actions: [
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            // Delete
-            TextButton(
-              onPressed: () {
-                ref.read(scheduleListProvider.notifier).removeSchedule(schedule);
-                Navigator.pop(context);
-              },
-              child: const Text("Delete", style: TextStyle(color: Colors.red)),
-            ),
-
+            if (isEditing)
+              TextButton(
+                onPressed: () {
+                  ref.read(scheduleListProvider.notifier).removeSchedule(widget.existingSchedule!);
+                  Navigator.pop(context);
+                },
+                child: const Text("Delete", style: TextStyle(color: Colors.red)),
+              ),
             const SizedBox(width: 8),
-
-            // Cancel
             TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-
             const SizedBox(width: 8),
-
-            // Save
-            FilledButton(
-              onPressed: () {
-                final notifier = ref.read(scheduleListProvider.notifier);
-
-                DateTime s = DateTime.parse("${startDate.text} ${startTime.text}:00");
-                DateTime e = DateTime.parse("${endDate.text} ${endTime.text}:00");
-
-                final startTimeParts = startTime.text.split(':').map((e) => int.parse(e)).toList();
-                final endTimeParts = endTime.text.split(':').map((e) => int.parse(e)).toList();
-
-                notifier.removeSchedule(schedule);
-                notifier.addSchedule(
-                  homeController.createSchedule(
-                    title.text.isEmpty ? "(No Title)" : title.text,
-                    schedule.location,
-                    s,
-                    TimeOfDay(hour: startTimeParts[0], minute: startTimeParts[1]),
-                    e,
-                    TimeOfDay(hour: endTimeParts[0], minute: endTimeParts[1]),
-                  ),
-                );
-
-                Navigator.pop(context);
-              },
-              child: const Text("Save"),
-            ),
+            FilledButton(onPressed: saveSchedule, child: Text(isEditing ? "Save" : "Add")),
           ],
         ),
       ],
     );
+  }
+
+  void saveSchedule() {
+    final notifier = ref.read(scheduleListProvider.notifier);
+
+    // Parse dates
+    DateTime? startDateParsed;
+    DateTime? endDateParsed;
+    try {
+      startDateParsed = DateTime.parse(startDateController.text);
+      endDateParsed = DateTime.parse(endDateController.text);
+    } catch (_) {
+      showErrorDialog("Invalid date format.");
+      return;
+    }
+
+    // Parse times
+    final startTOD = parseTimeOfDay(startTimeController.text);
+    final endTOD = parseTimeOfDay(endTimeController.text);
+
+    if (startTOD == null || endTOD == null) {
+      showErrorDialog("Invalid time format.");
+      return;
+    }
+
+    final startDateTime = DateTime(startDateParsed.year, startDateParsed.month, startDateParsed.day, startTOD.hour, startTOD.minute);
+
+    final endDateTime = DateTime(endDateParsed.year, endDateParsed.month, endDateParsed.day, endTOD.hour, endTOD.minute);
+
+    if (endDateTime.isBefore(startDateTime)) {
+      showErrorDialog("End date/time must be after start date/time.");
+      return;
+    }
+
+    if (widget.existingSchedule != null) {
+      notifier.removeSchedule(widget.existingSchedule!);
+    }
+
+    notifier.addSchedule(
+      widget.homeController.createSchedule(
+        titleController.text.isEmpty ? "(No Title)" : titleController.text,
+        locationController.text,
+        startDateTime,
+        startTOD,
+        endDateTime,
+        endTOD,
+      ),
+    );
+
+    if (mounted) Navigator.pop(context);
   }
 }

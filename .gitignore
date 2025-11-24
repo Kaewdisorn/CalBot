@@ -3,5 +3,4 @@ frontend/.dart_tool
 frontend/.metadata
 frontend/calbot.iml
 frontend/pubspec.lock
-frontend/build
 backend/node-server/node_modules

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 import '../controllers/home.dart';
 import '../models/schedule.dart';
@@ -30,23 +31,14 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
 
   bool allDay = false;
 
-  final Map<String, Color> colorOptions = {
-    "Blue": Colors.blue,
-    "Red": Colors.red,
-    "Green": Colors.green,
-    "Orange": Colors.orange,
-    "Purple": Colors.purple,
-    "Teal": Colors.teal,
-    "Pink": Colors.pink,
-  };
+  // Predefined palette colors
+  final List<Color> paletteColors = [Colors.blue, Colors.red, Colors.green, Colors.orange, Colors.purple, Colors.teal, Colors.pink];
 
-  String selectedColorName = "Blue"; // default
-  Color get selectedColor => colorOptions[selectedColorName]!;
+  late Color selectedColor;
 
   @override
   void initState() {
     super.initState();
-
     final s = widget.existingSchedule;
 
     titleController = TextEditingController(text: s?.eventName ?? "");
@@ -56,6 +48,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
     endDateController = TextEditingController(text: s != null ? formatYMD(s.endDate) : formatYMD(widget.date));
     endTimeController = TextEditingController(text: s != null ? formatTimeOfDayAMPM(s.endTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 23, minute: 59)));
     descriptionController = TextEditingController(text: s?.description ?? "");
+    selectedColor = s?.background ?? paletteColors.first;
 
     // Auto-check allDay if times are full day
     if (s != null && s.startTime.hour == 0 && s.startTime.minute == 0 && s.endTime.hour == 23 && s.endTime.minute == 59) {
@@ -75,26 +68,20 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
     super.dispose();
   }
 
-  // ---------------- Helper Methods ----------------
-
   TimeOfDay? parseTimeOfDay(String timeStr) {
     try {
       timeStr = timeStr.trim().toLowerCase();
       final isPM = timeStr.contains('pm');
       final isAM = timeStr.contains('am');
-
       timeStr = timeStr.replaceAll(RegExp(r'\s*(am|pm)'), '');
 
-      int hour = 0;
-      int minute = 0;
-
+      int hour = 0, minute = 0;
       final parts = timeStr.split(':');
       if (parts.length == 2) {
         hour = int.parse(parts[0]);
         minute = int.parse(parts[1]);
       } else if (parts.length == 1) {
         hour = int.parse(parts[0]);
-        minute = 0;
       } else {
         return null;
       }
@@ -120,13 +107,30 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
     );
   }
 
-  // ---------------- Build Dialog ----------------
+  void pickCustomColor() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Pick Custom Color"),
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: selectedColor,
+            onColorChanged: (color) => setState(() => selectedColor = color),
+            showLabel: true,
+            enableAlpha: false,
+            pickerAreaHeightPercent: 0.8,
+          ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("Done"))],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.existingSchedule != null;
-    final dialogWidth = MediaQuery.of(context).size.width * 0.8;
-    final dialogHeight = MediaQuery.of(context).size.height * 0.6;
+    final dialogWidth = MediaQuery.of(context).size.width * 0.85;
+    final dialogHeight = MediaQuery.of(context).size.height * 0.7;
 
     return AlertDialog(
       title: Text(isEditing ? "Edit Schedule" : "Add Schedule"),
@@ -220,7 +224,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
               ),
               const SizedBox(height: 16),
 
-              // Description (Multiline)
+              // Description
               TextField(
                 controller: descriptionController,
                 maxLines: 5,
@@ -236,39 +240,56 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
               ),
               const SizedBox(height: 16),
 
-              // Color Dropdown with hintText
-              DropdownButtonFormField<String>(
-                initialValue: selectedColorName,
-                decoration: InputDecoration(
-                  hintText: "Select Event Color",
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                ),
-                items: colorOptions.keys.map((name) {
-                  return DropdownMenuItem<String>(
-                    value: name,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(color: colorOptions[name], shape: BoxShape.circle),
+              // Color Palette + Custom
+              Row(
+                children: [
+                  ...paletteColors.map(
+                    (c) => GestureDetector(
+                      onTap: () => setState(() => selectedColor = c),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: c,
+                          shape: BoxShape.circle,
+                          border: selectedColor == c ? Border.all(width: 3, color: Colors.black) : null,
                         ),
-                        const SizedBox(width: 8),
-                        Text(name),
-                      ],
+                      ),
                     ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      selectedColorName = value;
-                    });
-                  }
-                },
+                  ),
+                  GestureDetector(
+                    onTap: pickCustomColor,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: const Icon(Icons.add, size: 20),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // Live preview of selected color
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: selectedColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.black12),
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 8),
+                    Text("Sample Title", style: TextStyle(color: Colors.white)),
+                  ],
+                ),
               ),
             ],
           ),

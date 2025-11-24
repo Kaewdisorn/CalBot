@@ -26,6 +26,7 @@ class ScheduleNotifier extends Notifier<List<Schedule>> {
       const Color(0xFF0F8644), // background
       false,
       '',
+      false, // isDone
     );
     return [sampleSchedule];
   }

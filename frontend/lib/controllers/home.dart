@@ -17,7 +17,8 @@ class HomeController {
     String description, {
     Color color = const Color(0xFF0F8644),
     bool isAllDay = false,
+    bool isDone = false,
   }) {
-    return Schedule(title, location, startDate, startTime, endDate, endTime, color, isAllDay, description);
+    return Schedule(title, location, startDate, startTime, endDate, endTime, color, isAllDay, description, isDone);
   }
 }

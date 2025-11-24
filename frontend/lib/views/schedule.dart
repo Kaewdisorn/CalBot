@@ -30,11 +30,16 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
   late final TextEditingController descriptionController;
 
   bool allDay = false;
+  bool isDone = false;
 
   // Predefined palette colors
   final List<Color> paletteColors = [Colors.blue, Colors.red, Colors.green, Colors.orange, Colors.purple, Colors.teal, Colors.pink];
 
   late Color selectedColor;
+
+  // keep previous time strings so we can restore when unchecking All Day
+  String? _prevStartTimeText;
+  String? _prevEndTimeText;
 
   @override
   void initState() {
@@ -49,15 +54,31 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
     endTimeController = TextEditingController(text: s != null ? formatTimeOfDayAMPM(s.endTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 23, minute: 59)));
     descriptionController = TextEditingController(text: s?.description ?? "");
     selectedColor = s?.background ?? paletteColors.first;
+    isDone = s?.isDone ?? false;
 
     // Auto-check allDay if times are full day
     if (s != null && s.startTime.hour == 0 && s.startTime.minute == 0 && s.endTime.hour == 23 && s.endTime.minute == 59) {
       allDay = true;
+      // store prev times in case user unchecks later
+      _prevStartTimeText = startTimeController.text;
+      _prevEndTimeText = endTimeController.text;
+    }
+
+    // When allDay is true, keep end date synced with start date
+    startDateController.addListener(_onStartDateChanged);
+  }
+
+  void _onStartDateChanged() {
+    if (allDay) {
+      // copy startDate -> endDate if allDay
+      endDateController.text = startDateController.text;
     }
   }
 
   @override
   void dispose() {
+    startDateController.removeListener(_onStartDateChanged);
+
     titleController.dispose();
     locationController.dispose();
     startDateController.dispose();
@@ -116,7 +137,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
           child: ColorPicker(
             pickerColor: selectedColor,
             onColorChanged: (color) => setState(() => selectedColor = color),
-            labelTypes: const [],
+            labelTypes: const [], // replace deprecated showLabel
             enableAlpha: false,
             pickerAreaHeightPercent: 0.8,
           ),
@@ -170,7 +191,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
               // Dates & Times
               Row(
@@ -202,27 +223,40 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
-              // All Day Checkbox
+              // All Day & Done
               Row(
                 children: [
                   Checkbox(
                     value: allDay,
                     onChanged: (value) {
                       setState(() {
-                        allDay = value ?? false;
-                        if (allDay) {
+                        final v = value ?? false;
+                        if (v && !allDay) {
+                          // user checked All Day: save prev times and set full-day times
+                          _prevStartTimeText = startTimeController.text;
+                          _prevEndTimeText = endTimeController.text;
                           startTimeController.text = "00:00";
                           endTimeController.text = "23:59";
+                          // sync end date to start date
+                          endDateController.text = startDateController.text;
+                        } else if (!v && allDay) {
+                          // user unchecked All Day: restore previous times if any
+                          if (_prevStartTimeText != null) startTimeController.text = _prevStartTimeText!;
+                          if (_prevEndTimeText != null) endTimeController.text = _prevEndTimeText!;
                         }
+                        allDay = v;
                       });
                     },
                   ),
                   const Text("All Day"),
+                  const SizedBox(width: 16),
+                  Checkbox(value: isDone, onChanged: (v) => setState(() => isDone = v ?? false)),
+                  const Text("Mark as Done"),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
               // Description
               TextField(
@@ -231,14 +265,14 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                 keyboardType: TextInputType.multiline,
                 decoration: InputDecoration(
                   labelText: "Description",
-                  prefix: Padding(padding: const EdgeInsets.only(top: 12, right: 8), child: Icon(Icons.description)),
+                  prefix: Padding(padding: const EdgeInsets.only(top: 12, right: 8), child: const Icon(Icons.description)),
                   alignLabelWithHint: true,
                   filled: true,
                   fillColor: Colors.grey.shade100,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
               // Color Palette + Custom
               Row(
@@ -273,10 +307,9 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 12),
 
-              // Live preview of selected color
+              // Live preview of selected color (sample text uses actual title)
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -286,8 +319,19 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                 ),
                 child: Row(
                   children: [
+                    Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                    ),
                     const SizedBox(width: 8),
-                    Text("Sample Title", style: TextStyle(color: Colors.white)),
+                    Expanded(
+                      child: Text(
+                        titleController.text.isEmpty ? "Sample Title" : titleController.text,
+                        style: const TextStyle(color: Colors.white),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -361,6 +405,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
         descriptionController.text,
         isAllDay: allDay,
         color: selectedColor,
+        isDone: isDone,
       ),
     );
 

@@ -6,12 +6,6 @@ String formatYMD(DateTime d) {
       "${d.day.toString().padLeft(2, '0')}";
 }
 
-String formatTimeOfDayToHHMM(TimeOfDay time) {
-  final h = time.hour.toString().padLeft(2, '0');
-  final m = time.minute.toString().padLeft(2, '0');
-  return "$h:$m";
-}
-
 String formatTimeOfDayAMPM(TimeOfDay time) {
   final hour = time.hourOfPeriod.toString().padLeft(2, '0');
   final minute = time.minute.toString().padLeft(2, '0');

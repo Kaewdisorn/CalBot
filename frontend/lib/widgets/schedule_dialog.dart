@@ -149,7 +149,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
               Row(
                 children: [
                   Expanded(
-                    child: DatePickerTextField(controller: startDateController, label: "Start Date"),
+                    child: DatePickerTextField(controller: startDateController, label: "Start Date", initialDate: widget.date),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -157,7 +157,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: DatePickerTextField(controller: endDateController, label: "End Date"),
+                    child: DatePickerTextField(controller: endDateController, label: "End Date", initialDate: widget.date),
                   ),
                   const SizedBox(width: 8),
                   Expanded(

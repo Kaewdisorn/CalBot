@@ -23,7 +23,6 @@ class ScheduleNotifier extends Notifier<List<Schedule>> {
       TimeOfDay(hour: 11, minute: 0), // startTime (TimeOfDay)
       DateTime(now.year, now.month, now.day),
       TimeOfDay(hour: 11, minute: 5),
-      DateTime(now.year, now.month, now.day, 12, 0), // to (end DateTime)
       const Color(0xFF0F8644), // background
       false, // isAllDay
     );

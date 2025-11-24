@@ -186,7 +186,8 @@ class ScheduleDialog extends ConsumerWidget {
     final startTime = TextEditingController(
       text: "${schedule.startDate.hour.toString().padLeft(2, '0')}:${schedule.startDate.minute.toString().padLeft(2, '0')}",
     );
-    final endTime = TextEditingController(text: "${schedule.to.hour.toString().padLeft(2, '0')}:${schedule.to.minute.toString().padLeft(2, '0')}");
+
+    final endTime = TextEditingController(text: "${schedule.endDate.hour.toString().padLeft(2, '0')}:${schedule.endDate.minute.toString().padLeft(2, '0')}");
 
     return AlertDialog(
       title: const Text("Edit Schedule"),
@@ -277,7 +278,12 @@ class ScheduleDialog extends ConsumerWidget {
                       readOnly: true,
                       controller: endDate,
                       onTap: () async {
-                        final picked = await showDatePicker(context: context, initialDate: schedule.to, firstDate: DateTime(2000), lastDate: DateTime(2100));
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: schedule.startDate,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
                         if (picked != null) {
                           endDate.text = formatYMD(picked);
                         }
@@ -300,7 +306,7 @@ class ScheduleDialog extends ConsumerWidget {
                       readOnly: true,
                       controller: endTime,
                       onTap: () async {
-                        final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(schedule.to));
+                        final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(schedule.endDate));
                         if (picked != null) {
                           endTime.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
                         }
@@ -362,7 +368,6 @@ class ScheduleDialog extends ConsumerWidget {
                     TimeOfDay(hour: startTimeParts[0], minute: startTimeParts[1]),
                     e,
                     TimeOfDay(hour: endTimeParts[0], minute: endTimeParts[1]),
-                    e,
                   ),
                 );
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class Schedule {
-  Schedule(this.eventName, this.location, this.startDate, this.startTime, this.endDate, this.endTime, this.to, this.background, this.isAllDay);
+  Schedule(this.eventName, this.location, this.startDate, this.startTime, this.endDate, this.endTime, this.background, this.isAllDay);
 
   String eventName;
   String location;
@@ -10,7 +10,6 @@ class Schedule {
   TimeOfDay startTime;
   DateTime endDate;
   TimeOfDay endTime;
-  DateTime to;
   Color background;
   bool isAllDay;
 }

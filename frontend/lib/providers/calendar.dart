@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
-import '../models/schedule.dart';
+import '../models/schedule.dart'; // Make sure this now has Appointment helpers
 
+// CalendarController provider
 final calendarControllerProvider = Provider<CalendarController>((ref) {
   final controller = CalendarController();
   controller.view = CalendarView.month;
@@ -11,44 +13,58 @@ final calendarControllerProvider = Provider<CalendarController>((ref) {
   return controller;
 });
 
-class ScheduleNotifier extends Notifier<List<Schedule>> {
+/// Notifier to manage list of Appointments
+class ScheduleNotifier extends Notifier<List<Appointment>> {
   @override
-  List<Schedule> build() {
-    // Add one sample schedule
+  List<Appointment> build() {
     final now = DateTime.now();
-    final sampleSchedule = Schedule(
-      'Sample Event', // eventName
-      '', // location
-      DateTime(now.year, now.month, now.day), // startDate
-      TimeOfDay(hour: 11, minute: 0), // startTime (TimeOfDay)
-      DateTime(now.year, now.month, now.day),
-      TimeOfDay(hour: 11, minute: 5),
-      const Color(0xFF0F8644), // background
-      false,
-      '',
-      false, // isDone
+
+    // Sample Appointment using createAppointment helper
+    final sampleAppointment = createAppointment(
+      eventName: 'Sample Event',
+      location: '',
+      startDate: DateTime(now.year, now.month, now.day),
+      startTime: TimeOfDay(hour: 11, minute: 0),
+      endDate: DateTime(now.year, now.month, now.day),
+      endTime: TimeOfDay(hour: 11, minute: 5),
+      background: const Color(0xFF0F8644),
+      isAllDay: false,
+      description: '',
+      isDone: false,
     );
-    return [sampleSchedule];
+
+    return [sampleAppointment];
   }
 
-  void addSchedule(Schedule schedule) {
-    state = [...state, schedule];
+  void addAppointment(Appointment appointment) {
+    state = [...state, appointment];
   }
 
-  void removeSchedule(Schedule schedule) {
-    state = state.where((s) => s != schedule).toList();
+  void removeAppointment(Appointment appointment) {
+    state = state.where((a) => a != appointment).toList();
   }
 
-  void clearSchedules() {
+  void clearAppointments() {
     state = [];
+  }
+
+  void toggleDone(int index) {
+    final appt = state[index];
+    Map<String, dynamic> data = {};
+    if (appt.notes != null) {
+      data = jsonDecode(appt.notes!);
+    }
+    data['isDone'] = !(data['isDone'] ?? false);
+    appt.notes = jsonEncode(data);
+    state = [...state]; // trigger update
   }
 }
 
-// NotifierProvider
-final scheduleListProvider = NotifierProvider<ScheduleNotifier, List<Schedule>>(ScheduleNotifier.new);
+// NotifierProvider for list of appointments
+final scheduleListProvider = NotifierProvider<ScheduleNotifier, List<Appointment>>(ScheduleNotifier.new);
 
-// CalendarDataSource provider
+/// CalendarDataSource provider
 final calendarDataSourceProvider = Provider<ScheduleDataSource>((ref) {
-  final schedules = ref.watch(scheduleListProvider);
-  return ScheduleDataSource(schedules);
+  final appointments = ref.watch(scheduleListProvider);
+  return ScheduleDataSource(appointments);
 });

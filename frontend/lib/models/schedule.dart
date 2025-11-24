@@ -1,72 +1,66 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
-class Schedule {
-  Schedule(
-    this.eventName,
-    this.location,
-    this.startDate,
-    this.startTime,
-    this.endDate,
-    this.endTime,
-    this.background,
-    this.isAllDay,
-    this.description,
-    this.isDone,
+/// Helper to create Appointment from your previous Schedule data
+Appointment createAppointment({
+  required String eventName,
+  required String location,
+  required DateTime startDate,
+  required TimeOfDay startTime,
+  required DateTime endDate,
+  required TimeOfDay endTime,
+  required Color background,
+  required bool isAllDay,
+  required String description,
+  required bool isDone,
+}) {
+  return Appointment(
+    startTime: DateTime(startDate.year, startDate.month, startDate.day, startTime.hour, startTime.minute),
+    endTime: DateTime(endDate.year, endDate.month, endDate.day, endTime.hour, endTime.minute),
+    subject: eventName,
+    color: background,
+    location: location,
+    isAllDay: isAllDay,
+    notes: jsonEncode({'description': description, 'isDone': isDone}),
   );
-
-  String eventName;
-  String location;
-  DateTime startDate;
-  TimeOfDay startTime;
-  DateTime endDate;
-  TimeOfDay endTime;
-  Color background;
-  bool isAllDay;
-  String description;
-  bool isDone;
 }
 
+/// Custom CalendarDataSource using Appointment
 class ScheduleDataSource extends CalendarDataSource {
-  ScheduleDataSource(List<Schedule> source) {
+  ScheduleDataSource(List<Appointment> source) {
     appointments = source;
   }
 
-  @override
-  DateTime getStartTime(int index) {
-    final s = appointments![index];
-    return DateTime(s.startDate.year, s.startDate.month, s.startDate.day, s.startTime.hour, s.startTime.minute);
+  /// Get description from notes
+  String? getDescription(int index) {
+    final appt = appointments![index];
+    if (appt.notes != null) {
+      final data = jsonDecode(appt.notes!);
+      return data['description'] ?? '';
+    }
+    return '';
   }
 
-  @override
-  DateTime getEndTime(int index) {
-    final s = appointments![index];
-    return DateTime(s.endDate.year, s.endDate.month, s.endDate.day, s.endTime.hour, s.endTime.minute);
+  /// Check if appointment is done
+  bool isDone(int index) {
+    final appt = appointments![index];
+    if (appt.notes != null) {
+      final data = jsonDecode(appt.notes!);
+      return data['isDone'] ?? false;
+    }
+    return false;
   }
 
-  @override
-  String getSubject(int index) {
-    final s = appointments![index];
-    return s.isDone ? s.eventName : s.eventName;
-  }
-
-  @override
-  String? getNotes(int index) {
-    return appointments![index].description;
-  }
-
-  @override
-  String? getLocation(int index) {
-    return appointments![index].location;
-  }
-
-  @override
-  Color getColor(int index) {
-    return appointments![index].background;
-  }
-
-  @override
-  bool isAllDay(int index) {
-    return appointments![index].isAllDay;
+  /// Toggle done status
+  void toggleDone(int index) {
+    final appt = appointments![index];
+    Map<String, dynamic> data = {};
+    if (appt.notes != null) {
+      data = jsonDecode(appt.notes!);
+    }
+    data['isDone'] = !(data['isDone'] ?? false);
+    appt.notes = jsonEncode(data);
+    notifyListeners(CalendarDataSourceAction.reset, appointments!);
   }
 }

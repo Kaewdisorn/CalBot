@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../controllers/home.dart';
-import '../models/schedule.dart';
 import '../providers/calendar.dart';
 import '../utils/datetime_format.dart';
 import '../widgets/date_picker_textfield.dart';
@@ -12,9 +13,9 @@ import '../widgets/time_picker_textfield.dart';
 class ScheduleDialog extends ConsumerStatefulWidget {
   final DateTime date;
   final HomeController homeController;
-  final Schedule? existingSchedule;
+  final Appointment? existingAppointment;
 
-  const ScheduleDialog({super.key, required this.date, required this.homeController, this.existingSchedule});
+  const ScheduleDialog({super.key, required this.date, required this.homeController, this.existingAppointment});
 
   @override
   ConsumerState<ScheduleDialog> createState() => _ScheduleDialogState();
@@ -32,45 +33,45 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
   bool allDay = false;
   bool isDone = false;
 
-  // Predefined palette colors
   final List<Color> paletteColors = [Colors.blue, Colors.red, Colors.green, Colors.orange, Colors.purple, Colors.teal, Colors.pink];
 
   late Color selectedColor;
 
-  // keep previous time strings so we can restore when unchecking All Day
   String? _prevStartTimeText;
   String? _prevEndTimeText;
 
   @override
   void initState() {
     super.initState();
-    final s = widget.existingSchedule;
+    final a = widget.existingAppointment;
 
-    titleController = TextEditingController(text: s?.eventName ?? "");
-    locationController = TextEditingController(text: s?.location ?? "");
-    startDateController = TextEditingController(text: s != null ? formatYMD(s.startDate) : formatYMD(widget.date));
-    startTimeController = TextEditingController(text: s != null ? formatTimeOfDayAMPM(s.startTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 0, minute: 1)));
-    endDateController = TextEditingController(text: s != null ? formatYMD(s.endDate) : formatYMD(widget.date));
-    endTimeController = TextEditingController(text: s != null ? formatTimeOfDayAMPM(s.endTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 23, minute: 59)));
-    descriptionController = TextEditingController(text: s?.description ?? "");
-    selectedColor = s?.background ?? paletteColors.first;
-    isDone = s?.isDone ?? false;
+    titleController = TextEditingController(text: a?.subject ?? "");
+    locationController = TextEditingController(text: a?.location ?? "");
+    descriptionController = TextEditingController(text: a != null ? jsonDecode(a.notes ?? '{}')['description'] ?? '' : '');
+    selectedColor = a?.color ?? paletteColors.first;
 
-    // Auto-check allDay if times are full day
-    if (s != null && s.startTime.hour == 0 && s.startTime.minute == 0 && s.endTime.hour == 23 && s.endTime.minute == 59) {
+    final start = a?.startTime ?? widget.date;
+    final end = a?.endTime ?? widget.date.add(const Duration(hours: 1));
+
+    startDateController = TextEditingController(text: formatYMD(start));
+    endDateController = TextEditingController(text: formatYMD(end));
+    startTimeController = TextEditingController(text: formatTimeOfDayAMPM(TimeOfDay.fromDateTime(start)));
+    endTimeController = TextEditingController(text: formatTimeOfDayAMPM(TimeOfDay.fromDateTime(end)));
+
+    isDone = a != null ? jsonDecode(a.notes ?? '{}')['isDone'] ?? false : false;
+
+    // Auto-check allDay if full day
+    if (start.hour == 0 && start.minute == 0 && end.hour == 23 && end.minute == 59) {
       allDay = true;
-      // store prev times in case user unchecks later
       _prevStartTimeText = startTimeController.text;
       _prevEndTimeText = endTimeController.text;
     }
 
-    // When allDay is true, keep end date synced with start date
     startDateController.addListener(_onStartDateChanged);
   }
 
   void _onStartDateChanged() {
     if (allDay) {
-      // copy startDate -> endDate if allDay
       endDateController.text = startDateController.text;
     }
   }
@@ -86,6 +87,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
     endDateController.dispose();
     endTimeController.dispose();
     descriptionController.dispose();
+
     super.dispose();
   }
 
@@ -137,7 +139,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
           child: ColorPicker(
             pickerColor: selectedColor,
             onColorChanged: (color) => setState(() => selectedColor = color),
-            labelTypes: const [], // replace deprecated showLabel
+            labelTypes: const [],
             enableAlpha: false,
             pickerAreaHeightPercent: 0.8,
           ),
@@ -149,9 +151,9 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.existingSchedule != null;
-    final dialogWidth = MediaQuery.of(context).size.width * 0.7; // narrower
-    final dialogHeight = MediaQuery.of(context).size.height * 0.55; // shorter
+    final isEditing = widget.existingAppointment != null;
+    final dialogWidth = MediaQuery.of(context).size.width * 0.7;
+    final dialogHeight = MediaQuery.of(context).size.height * 0.55;
 
     return AlertDialog(
       title: Text(isEditing ? "Edit Schedule" : "Add Schedule"),
@@ -234,15 +236,12 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                       setState(() {
                         final v = value ?? false;
                         if (v && !allDay) {
-                          // user checked All Day: save prev times and set full-day times
                           _prevStartTimeText = startTimeController.text;
                           _prevEndTimeText = endTimeController.text;
                           startTimeController.text = "00:00";
                           endTimeController.text = "23:59";
-                          // sync end date to start date
                           endDateController.text = startDateController.text;
                         } else if (!v && allDay) {
-                          // user unchecked All Day: restore previous times if any
                           if (_prevStartTimeText != null) startTimeController.text = _prevStartTimeText!;
                           if (_prevEndTimeText != null) endTimeController.text = _prevEndTimeText!;
                         }
@@ -307,9 +306,10 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 12),
 
-              // Live preview of selected color (sample text uses actual title)
+              // Live preview of selected color + line-through if done
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -319,16 +319,15 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         titleController.text.isEmpty ? "Sample Title" : titleController.text,
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -346,7 +345,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
             if (isEditing)
               TextButton(
                 onPressed: () {
-                  ref.read(scheduleListProvider.notifier).removeSchedule(widget.existingSchedule!);
+                  ref.read(scheduleListProvider.notifier).removeAppointment(widget.existingAppointment!);
                   Navigator.pop(context);
                 },
                 child: const Text("Delete", style: TextStyle(color: Colors.red)),
@@ -354,14 +353,14 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
             const SizedBox(width: 8),
             TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
             const SizedBox(width: 8),
-            FilledButton(onPressed: saveSchedule, child: Text(isEditing ? "Save" : "Add")),
+            FilledButton(onPressed: saveAppointment, child: Text(isEditing ? "Save" : "Add")),
           ],
         ),
       ],
     );
   }
 
-  void saveSchedule() {
+  void saveAppointment() {
     final notifier = ref.read(scheduleListProvider.notifier);
 
     DateTime? startDateParsed;
@@ -390,24 +389,24 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
       return;
     }
 
-    if (widget.existingSchedule != null) {
-      notifier.removeSchedule(widget.existingSchedule!);
+    if (widget.existingAppointment != null) {
+      notifier.removeAppointment(widget.existingAppointment!);
     }
 
-    notifier.addSchedule(
-      widget.homeController.createSchedule(
-        titleController.text.isEmpty ? "(No Title)" : titleController.text,
-        locationController.text,
-        startDateTime,
-        startTOD,
-        endDateTime,
-        endTOD,
-        descriptionController.text,
-        isAllDay: allDay,
-        color: selectedColor,
-        isDone: isDone,
-      ),
+    final newAppointment = widget.homeController.createAppointment(
+      title: titleController.text.isEmpty ? "(No Title)" : titleController.text,
+      location: locationController.text,
+      startDate: startDateParsed,
+      startTime: startTOD,
+      endDate: endDateParsed,
+      endTime: endTOD,
+      description: descriptionController.text,
+      color: selectedColor,
+      isAllDay: allDay,
+      isDone: isDone,
     );
+
+    notifier.addAppointment(newAppointment);
 
     if (mounted) Navigator.pop(context);
   }

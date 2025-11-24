@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
@@ -28,29 +29,29 @@ class Home extends ConsumerWidget {
         showDatePickerButton: true,
         dataSource: dataSource,
         appointmentBuilder: (context, details) {
-          final schedule = details.appointments.first;
+          final appointment = details.appointments.first as Appointment;
+
+          // Decode notes JSON to get description and isDone
+          final notes = appointment.notes != null ? jsonDecode(appointment.notes!) : {};
+          final isDone = notes['isDone'] ?? false;
 
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             decoration: BoxDecoration(
-              color: schedule.isDone ? schedule.background.withOpacity(0.35) : schedule.background,
+              color: isDone
+                  ? appointment.color.withAlpha((0.35 * 255).round()) // 35% opacity
+                  : appointment.color,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Row(
               children: [
-                if (schedule.isDone) const Icon(Icons.check, size: 14, color: Colors.white),
-
-                if (schedule.isDone) const SizedBox(width: 4),
-
+                if (isDone) const Icon(Icons.check, size: 14, color: Colors.white),
+                if (isDone) const SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    schedule.eventName,
+                    appointment.subject,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      decoration: schedule.isDone ? TextDecoration.lineThrough : TextDecoration.none,
-                    ),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none),
                   ),
                 ),
               ],
@@ -66,23 +67,22 @@ class Home extends ConsumerWidget {
 
           // Edit existing appointment
           if (details.appointments != null && details.appointments!.isNotEmpty && details.targetElement == CalendarElement.appointment) {
-            final selected = details.appointments!.first;
+            final selected = details.appointments!.first as Appointment;
 
             showDialog(
               context: context,
-              builder: (_) => ScheduleDialog(date: date, homeController: homeController, existingSchedule: selected),
+              builder: (_) => ScheduleDialog(date: date, homeController: homeController, existingAppointment: selected),
             );
             return;
           }
 
-          // Create new
+          // Create new appointment
           showDialog(
             context: context,
             builder: (_) => ScheduleDialog(date: date, homeController: homeController),
           );
         },
 
-        onViewChanged: null,
         initialDisplayDate: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
 
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),

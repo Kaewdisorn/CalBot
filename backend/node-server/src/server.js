@@ -17,7 +17,7 @@ app.use(express.json());
 // -------------------------------
 // Serve Flutter Web build
 // -------------------------------
-const flutterBuildPath = path.join(__dirname, '..', '..', '..', 'frontend', 'flutter-build', 'web');
+const flutterBuildPath = path.join(__dirname, '..', '..', '..', 'frontend', 'build', 'web');
 app.use(express.static(flutterBuildPath));
 
 // -------------------------------

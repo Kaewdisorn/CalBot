@@ -116,7 +116,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
           child: ColorPicker(
             pickerColor: selectedColor,
             onColorChanged: (color) => setState(() => selectedColor = color),
-            showLabel: true,
+            labelTypes: const [],
             enableAlpha: false,
             pickerAreaHeightPercent: 0.8,
           ),
@@ -129,8 +129,8 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.existingSchedule != null;
-    final dialogWidth = MediaQuery.of(context).size.width * 0.85;
-    final dialogHeight = MediaQuery.of(context).size.height * 0.7;
+    final dialogWidth = MediaQuery.of(context).size.width * 0.7; // narrower
+    final dialogHeight = MediaQuery.of(context).size.height * 0.55; // shorter
 
     return AlertDialog(
       title: Text(isEditing ? "Edit Schedule" : "Add Schedule"),

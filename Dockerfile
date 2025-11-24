@@ -14,7 +14,7 @@ COPY backend/node-server/src ./src
 
 # Copy Flutter build next to backend folder (not inside backend)
 WORKDIR /app
-COPY frontend/build/web ./frontend/build/web
+COPY frontend/flutter-build/web ./frontend/flutter-build/web
 
 # Expose server port
 EXPOSE 3000

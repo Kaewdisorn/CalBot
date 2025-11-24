@@ -30,6 +30,19 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
 
   bool allDay = false;
 
+  final Map<String, Color> colorOptions = {
+    "Blue": Colors.blue,
+    "Red": Colors.red,
+    "Green": Colors.green,
+    "Orange": Colors.orange,
+    "Purple": Colors.purple,
+    "Teal": Colors.teal,
+    "Pink": Colors.pink,
+  };
+
+  String selectedColorName = "Blue"; // default
+  Color get selectedColor => colorOptions[selectedColorName]!;
+
   @override
   void initState() {
     super.initState();
@@ -113,7 +126,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
   Widget build(BuildContext context) {
     final isEditing = widget.existingSchedule != null;
     final dialogWidth = MediaQuery.of(context).size.width * 0.8;
-    final dialogHeight = MediaQuery.of(context).size.height * 0.55; // slightly taller for description
+    final dialogHeight = MediaQuery.of(context).size.height * 0.6;
 
     return AlertDialog(
       title: Text(isEditing ? "Edit Schedule" : "Add Schedule"),
@@ -214,15 +227,48 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                 keyboardType: TextInputType.multiline,
                 decoration: InputDecoration(
                   labelText: "Description",
-                  prefix: Padding(
-                    padding: const EdgeInsets.only(top: 12, right: 8), // adjust top to align
-                    child: Icon(Icons.description),
-                  ),
+                  prefix: Padding(padding: const EdgeInsets.only(top: 12, right: 8), child: Icon(Icons.description)),
                   alignLabelWithHint: true,
                   filled: true,
                   fillColor: Colors.grey.shade100,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
+              ),
+              const SizedBox(height: 16),
+
+              // Color Dropdown with hintText
+              DropdownButtonFormField<String>(
+                initialValue: selectedColorName,
+                decoration: InputDecoration(
+                  hintText: "Select Event Color",
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                ),
+                items: colorOptions.keys.map((name) {
+                  return DropdownMenuItem<String>(
+                    value: name,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(color: colorOptions[name], shape: BoxShape.circle),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(name),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedColorName = value;
+                    });
+                  }
+                },
               ),
             ],
           ),
@@ -253,7 +299,6 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
   void saveSchedule() {
     final notifier = ref.read(scheduleListProvider.notifier);
 
-    // Parse dates
     DateTime? startDateParsed;
     DateTime? endDateParsed;
     try {
@@ -264,7 +309,6 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
       return;
     }
 
-    // Parse times
     final startTOD = parseTimeOfDay(startTimeController.text);
     final endTOD = parseTimeOfDay(endTimeController.text);
 
@@ -295,6 +339,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
         endTOD,
         descriptionController.text,
         isAllDay: allDay,
+        color: selectedColor,
       ),
     );
 

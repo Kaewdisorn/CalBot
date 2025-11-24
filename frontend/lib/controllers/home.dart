@@ -13,10 +13,11 @@ class HomeController {
     DateTime startDate,
     TimeOfDay startTime,
     DateTime endDate,
-    TimeOfDay endTime, {
+    TimeOfDay endTime,
+    String description, {
     Color color = const Color(0xFF0F8644),
     bool isAllDay = false,
   }) {
-    return Schedule(title, location, startDate, startTime, endDate, endTime, color, isAllDay);
+    return Schedule(title, location, startDate, startTime, endDate, endTime, color, isAllDay, description);
   }
 }

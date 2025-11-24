@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Calendar Bot (Chrome)",
+      "name": "CalBot web",
       "request": "launch",
       "type": "dart",
       "program": "frontend/lib/main.dart",

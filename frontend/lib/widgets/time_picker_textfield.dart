@@ -4,8 +4,15 @@ class TimePickerTextField extends StatefulWidget {
   final TextEditingController controller;
   final String label;
   final TimeOfDay initialTime;
+  final bool enabled; // NEW
 
-  const TimePickerTextField({super.key, required this.controller, required this.label, required this.initialTime});
+  const TimePickerTextField({
+    super.key,
+    required this.controller,
+    required this.label,
+    required this.initialTime,
+    this.enabled = true, // default true
+  });
 
   @override
   State<TimePickerTextField> createState() => _TimePickerTextFieldState();
@@ -29,15 +36,17 @@ class _TimePickerTextFieldState extends State<TimePickerTextField> {
   }
 
   Future<void> pickTime() async {
+    if (!widget.enabled) return; // do nothing if disabled
+
     final picked = await showTimePicker(
-      context: context, // THIS IS SAFE
+      context: context,
       initialTime: widget.initialTime,
       builder: (context, child) {
         return MediaQuery(data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false), child: child!);
       },
     );
 
-    if (!mounted) return; // SAFE AGAINST ASYNC BUILD CONTEXT ERROR
+    if (!mounted) return;
 
     if (picked != null) {
       widget.controller.text = formatTime(picked);
@@ -50,11 +59,12 @@ class _TimePickerTextFieldState extends State<TimePickerTextField> {
     return TextField(
       controller: widget.controller,
       readOnly: true,
+      enabled: widget.enabled, // respect enabled state
       decoration: InputDecoration(
         labelText: widget.label,
         prefixIcon: const Icon(Icons.access_time),
         filled: true,
-        fillColor: Colors.grey.shade100,
+        fillColor: widget.enabled ? Colors.grey.shade100 : Colors.grey.shade200,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       ),
       onTap: pickTime,

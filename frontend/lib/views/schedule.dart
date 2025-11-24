@@ -26,6 +26,9 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
   late final TextEditingController startTimeController;
   late final TextEditingController endDateController;
   late final TextEditingController endTimeController;
+  late final TextEditingController descriptionController;
+
+  bool allDay = false;
 
   @override
   void initState() {
@@ -39,6 +42,12 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
     startTimeController = TextEditingController(text: s != null ? formatTimeOfDayAMPM(s.startTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 0, minute: 1)));
     endDateController = TextEditingController(text: s != null ? formatYMD(s.endDate) : formatYMD(widget.date));
     endTimeController = TextEditingController(text: s != null ? formatTimeOfDayAMPM(s.endTime) : formatTimeOfDayAMPM(const TimeOfDay(hour: 23, minute: 59)));
+    descriptionController = TextEditingController(text: s?.description ?? "");
+
+    // Auto-check allDay if times are full day
+    if (s != null && s.startTime.hour == 0 && s.startTime.minute == 0 && s.endTime.hour == 23 && s.endTime.minute == 59) {
+      allDay = true;
+    }
   }
 
   @override
@@ -49,6 +58,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
     startTimeController.dispose();
     endDateController.dispose();
     endTimeController.dispose();
+    descriptionController.dispose();
     super.dispose();
   }
 
@@ -103,7 +113,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
   Widget build(BuildContext context) {
     final isEditing = widget.existingSchedule != null;
     final dialogWidth = MediaQuery.of(context).size.width * 0.8;
-    final dialogHeight = MediaQuery.of(context).size.height * 0.45;
+    final dialogHeight = MediaQuery.of(context).size.height * 0.55; // slightly taller for description
 
     return AlertDialog(
       title: Text(isEditing ? "Edit Schedule" : "Add Schedule"),
@@ -153,7 +163,12 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: TimePickerTextField(controller: startTimeController, label: "Start Time", initialTime: const TimeOfDay(hour: 0, minute: 1)),
+                    child: TimePickerTextField(
+                      controller: startTimeController,
+                      label: "Start Time",
+                      initialTime: const TimeOfDay(hour: 0, minute: 1),
+                      enabled: !allDay,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -161,9 +176,53 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: TimePickerTextField(controller: endTimeController, label: "End Time", initialTime: const TimeOfDay(hour: 23, minute: 59)),
+                    child: TimePickerTextField(
+                      controller: endTimeController,
+                      label: "End Time",
+                      initialTime: const TimeOfDay(hour: 23, minute: 59),
+                      enabled: !allDay,
+                    ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+
+              // All Day Checkbox
+              Row(
+                children: [
+                  Checkbox(
+                    value: allDay,
+                    onChanged: (value) {
+                      setState(() {
+                        allDay = value ?? false;
+                        if (allDay) {
+                          startTimeController.text = "00:00";
+                          endTimeController.text = "23:59";
+                        }
+                      });
+                    },
+                  ),
+                  const Text("All Day"),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Description (Multiline)
+              TextField(
+                controller: descriptionController,
+                maxLines: 5,
+                keyboardType: TextInputType.multiline,
+                decoration: InputDecoration(
+                  labelText: "Description",
+                  prefix: Padding(
+                    padding: const EdgeInsets.only(top: 12, right: 8), // adjust top to align
+                    child: Icon(Icons.description),
+                  ),
+                  alignLabelWithHint: true,
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
               ),
             ],
           ),
@@ -215,7 +274,6 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
     }
 
     final startDateTime = DateTime(startDateParsed.year, startDateParsed.month, startDateParsed.day, startTOD.hour, startTOD.minute);
-
     final endDateTime = DateTime(endDateParsed.year, endDateParsed.month, endDateParsed.day, endTOD.hour, endTOD.minute);
 
     if (endDateTime.isBefore(startDateTime)) {
@@ -235,6 +293,8 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
         startTOD,
         endDateTime,
         endTOD,
+        descriptionController.text,
+        isAllDay: allDay,
       ),
     );
 

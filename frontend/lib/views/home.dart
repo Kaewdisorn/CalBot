@@ -9,7 +9,7 @@ import '../controllers/home.dart';
 import '../providers/calendar.dart';
 
 // Widgets
-import '../widgets/schedule_dialog.dart';
+import 'schedule.dart';
 
 class Home extends ConsumerWidget {
   const Home({super.key});

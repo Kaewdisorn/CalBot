@@ -5,8 +5,8 @@ import '../controllers/home.dart';
 import '../models/schedule.dart';
 import '../providers/calendar.dart';
 import '../utils/datetime_format.dart';
-import 'date_picker_textfield.dart';
-import 'time_picker_textfield.dart';
+import '../widgets/date_picker_textfield.dart';
+import '../widgets/time_picker_textfield.dart';
 
 class ScheduleDialog extends ConsumerStatefulWidget {
   final DateTime date;

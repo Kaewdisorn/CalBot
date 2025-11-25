@@ -5,7 +5,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../controllers/home.dart';
-import '../providers/calendar.dart';
+import '../providers/schedule.dart';
 import '../utils/datetime_format.dart';
 import '../widgets/date_picker_textfield.dart';
 import '../widgets/time_picker_textfield.dart';

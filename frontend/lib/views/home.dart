@@ -7,7 +7,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 import '../controllers/home.dart';
 
 // Providers
-import '../providers/calendar.dart';
+import '../providers/schedule.dart';
 
 // Widgets
 import 'schedule.dart';

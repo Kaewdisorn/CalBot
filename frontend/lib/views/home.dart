@@ -26,6 +26,7 @@ class Home extends ConsumerWidget {
         controller: calendarController,
         showNavigationArrow: false,
         allowedViews: homeController.allowedViews,
+        allowDragAndDrop: true,
         showDatePickerButton: true,
         dataSource: dataSource,
         appointmentBuilder: (context, details) {

@@ -25,7 +25,17 @@ class HomePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("CalBot Web"),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/images/halulu.png', // your logo
+              width: 36,
+              height: 36,
+            ),
+            const SizedBox(width: 8),
+            const Text("Halulu"),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.color_lens),

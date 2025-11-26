@@ -15,7 +15,7 @@ class CalBotApp extends ConsumerWidget {
     final themeSettings = ref.watch(themeProvider);
 
     return MaterialApp(
-      title: 'CalBot Web',
+      title: 'Halulu',
       debugShowCheckedModeBanner: false,
       themeMode: themeSettings.mode,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: themeSettings.seedColor, brightness: Brightness.light),

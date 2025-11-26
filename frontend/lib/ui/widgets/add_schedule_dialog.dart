@@ -153,7 +153,7 @@ class _AddScheduleDialogState extends ConsumerState<AddScheduleDialog> {
         TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Cancel")),
         ElevatedButton(
           onPressed: () {
-            if (_titleController.text.isEmpty) return;
+            if (_titleController.text.isEmpty) _titleController.text = "(No title)";
 
             final newSchedule = Schedule(
               id: DateTime.now().millisecondsSinceEpoch.toString(),

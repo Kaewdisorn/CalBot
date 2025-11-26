@@ -4,6 +4,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../../models/schedule.dart';
 import '../../providers/schedule_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../widgets/add_schedule_dialog.dart';
 import '../widgets/schedule_detail_dialog.dart';
 import '../widgets/theme_settings_panel.dart';
@@ -25,6 +26,8 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final schedules = ref.watch(scheduleProvider);
+    final theme = ref.watch(themeProvider);
+    final seedColor = theme.seedColor ?? Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(
@@ -66,7 +69,14 @@ class HomePage extends ConsumerWidget {
       ),
       body: SfCalendar(
         view: CalendarView.month,
+        showDatePickerButton: true,
+        showNavigationArrow: true,
+        showTodayButton: true,
         allowedViews: allowedViews,
+        headerStyle: CalendarHeaderStyle(
+          backgroundColor: seedColor.withValues(alpha: 0.01),
+          textStyle: TextStyle(color: seedColor, fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         dataSource: _ScheduleDataSource(schedules),
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
         onTap: (CalendarTapDetails details) {

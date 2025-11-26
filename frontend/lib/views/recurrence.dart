@@ -82,10 +82,11 @@ class _RecurrenceDialogState extends State<RecurrenceDialog> {
           selected: selected,
           onSelected: (v) {
             setState(() {
-              if (v)
+              if (v) {
                 selectedWeekdays.add(day);
-              else
+              } else {
                 selectedWeekdays.remove(day);
+              }
             });
           },
         );
@@ -96,31 +97,19 @@ class _RecurrenceDialogState extends State<RecurrenceDialog> {
   Widget monthlySelector() {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: RadioListTile<String>(
-                title: const Text("Day of month"),
-                value: 'DayOfMonth',
-                groupValue: monthlyOption,
-                onChanged: (v) => setState(() => monthlyOption = v!),
-              ),
-            ),
-            Expanded(
-              child: RadioListTile<String>(
-                title: const Text("Weekday of month"),
-                value: 'WeekdayOfMonth',
-                groupValue: monthlyOption,
-                onChanged: (v) => setState(() => monthlyOption = v!),
-              ),
-            ),
-          ],
+        ListTile(
+          leading: Radio<String>(value: 'DayOfMonth', groupValue: monthlyOption, onChanged: (v) => setState(() => monthlyOption = v!)),
+          title: const Text("Day of month"),
+        ),
+        ListTile(
+          leading: Radio<String>(value: 'WeekdayOfMonth', groupValue: monthlyOption, onChanged: (v) => setState(() => monthlyOption = v!)),
+          title: const Text("Weekday of month"),
         ),
         if (monthlyOption == 'DayOfMonth')
           TextField(
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: "Day"),
-            controller: monthlyDayController,
+            decoration: InputDecoration(labelText: "Day"),
+            controller: TextEditingController(text: monthlyDay.toString()),
             onChanged: (v) => monthlyDay = int.tryParse(v),
           ),
         if (monthlyOption == 'WeekdayOfMonth') const Text("TODO: Select week & weekday (e.g., 2nd Tuesday)"),

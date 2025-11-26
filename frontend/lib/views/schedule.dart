@@ -37,7 +37,6 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
   final List<Color> paletteColors = [Colors.blue, Colors.red, Colors.green, Colors.orange, Colors.purple, Colors.teal, Colors.pink];
 
   late Color selectedColor;
-
   String? _prevStartTimeText;
   String? _prevEndTimeText;
 
@@ -75,15 +74,12 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
   }
 
   void _onStartDateChanged() {
-    if (allDay) {
-      endDateController.text = startDateController.text;
-    }
+    if (allDay) endDateController.text = startDateController.text;
   }
 
   @override
   void dispose() {
     startDateController.removeListener(_onStartDateChanged);
-
     titleController.dispose();
     locationController.dispose();
     startDateController.dispose();
@@ -91,7 +87,6 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
     endDateController.dispose();
     endTimeController.dispose();
     descriptionController.dispose();
-
     super.dispose();
   }
 
@@ -101,7 +96,6 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
       final isPM = timeStr.contains('pm');
       final isAM = timeStr.contains('am');
       timeStr = timeStr.replaceAll(RegExp(r'\s*(am|pm)'), '');
-
       int hour = 0, minute = 0;
       final parts = timeStr.split(':');
       if (parts.length == 2) {
@@ -112,10 +106,8 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
       } else {
         return null;
       }
-
       if (isPM && hour != 12) hour += 12;
       if (isAM && hour == 12) hour = 0;
-
       return TimeOfDay(hour: hour, minute: minute);
     } catch (_) {
       return null;
@@ -151,6 +143,47 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
         actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("Done"))],
       ),
     );
+  }
+
+  void showRecurrenceDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => RecurrenceDialog(
+        initialRecurrence: recurrenceDetail,
+        onSave: (rec) {
+          setState(() {
+            repeat = true;
+            recurrenceDetail = rec;
+          });
+        },
+      ),
+    );
+  }
+
+  String formatRecurrenceSummary(Map<String, dynamic> rec) {
+    if (rec.isEmpty) return '';
+    final type = rec['type'] ?? '';
+    final interval = rec['interval'] ?? 1;
+
+    switch (type) {
+      case 'Daily':
+        return "Every $interval day${interval > 1 ? 's' : ''}";
+      case 'Weekly':
+        final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        final days = (rec['weekdays'] as List<int>?)?.map((d) => weekdays[d - 1]).toList() ?? [];
+        final daysStr = days.isNotEmpty ? days.join(', ') : '?';
+        return "Every $interval week${interval > 1 ? 's' : ''} on $daysStr";
+      case 'Monthly':
+        final monthlyOption = rec['monthlyOption'] ?? 'DayOfMonth';
+        if (monthlyOption == 'DayOfMonth') {
+          final day = rec['monthlyDay'] ?? '?';
+          return "Every $interval month${interval > 1 ? 's' : ''} on day $day";
+        } else {
+          return "Every $interval month${interval > 1 ? 's' : ''} on ${monthlyOption}";
+        }
+      default:
+        return '';
+    }
   }
 
   @override
@@ -231,7 +264,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
               ),
               const SizedBox(height: 12),
 
-              // All Day & Done
+              // All Day, Done & Repeat
               Row(
                 children: [
                   Checkbox(
@@ -257,22 +290,12 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                   const SizedBox(width: 16),
                   Checkbox(value: isDone, onChanged: (v) => setState(() => isDone = v ?? false)),
                   const Text("Mark as Done"),
+                  const SizedBox(width: 16),
                   Checkbox(
                     value: repeat,
                     onChanged: (v) {
                       if (v == true) {
-                        showDialog(
-                          context: context,
-                          builder: (context) => RecurrenceDialog(
-                            initialRecurrence: recurrenceDetail,
-                            onSave: (rec) {
-                              setState(() {
-                                repeat = true;
-                                recurrenceDetail = rec;
-                              });
-                            },
-                          ),
-                        );
+                        showRecurrenceDialog();
                       } else {
                         setState(() {
                           repeat = false;
@@ -283,12 +306,19 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                   ),
                   const Text("Repeat"),
                   if (repeat && recurrenceDetail.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Text(formatRecurrenceSummary(recurrenceDetail), style: const TextStyle(decoration: TextDecoration.underline)),
+                    GestureDetector(
+                      onTap: showRecurrenceDialog,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Text(
+                          formatRecurrenceSummary(recurrenceDetail),
+                          style: const TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
+                        ),
+                      ),
                     ),
                 ],
               ),
+
               const SizedBox(height: 12),
 
               // Description
@@ -305,6 +335,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
               ),
+
               const SizedBox(height: 12),
 
               // Color Palette + Custom
@@ -343,7 +374,7 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
 
               const SizedBox(height: 12),
 
-              // Live preview of selected color + line-through if done
+              // Live preview
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -438,36 +469,11 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
       color: selectedColor,
       isAllDay: allDay,
       isDone: isDone,
+      recurrence: repeat ? jsonEncode(recurrenceDetail) : '',
     );
 
     notifier.addAppointment(newAppointment);
 
     if (mounted) Navigator.pop(context);
-  }
-
-  String formatRecurrenceSummary(Map<String, dynamic> recurrenceDetail) {
-    if (recurrenceDetail.isEmpty) return '';
-
-    final type = recurrenceDetail['type'] ?? '';
-    final interval = recurrenceDetail['interval'] ?? 1;
-
-    switch (type) {
-      case 'Daily':
-        return "Every $interval day${interval > 1 ? 's' : ''}";
-      case 'Weekly':
-        final days = (recurrenceDetail['weekdays'] as List<int>?)?.map((d) => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][d - 1]).toList() ?? [];
-        final daysStr = days.isNotEmpty ? days.join(', ') : '?';
-        return "Every $interval week${interval > 1 ? 's' : ''} on $daysStr";
-      case 'Monthly':
-        final monthlyOption = recurrenceDetail['monthlyOption'] ?? 'DayOfMonth';
-        if (monthlyOption == 'DayOfMonth') {
-          final day = recurrenceDetail['monthlyDay'] ?? '?';
-          return "Every $interval month${interval > 1 ? 's' : ''} on day $day";
-        } else {
-          return "Every $interval month${interval > 1 ? 's' : ''} on ${monthlyOption}";
-        }
-      default:
-        return '';
-    }
   }
 }

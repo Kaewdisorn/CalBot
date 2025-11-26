@@ -35,10 +35,7 @@ class _ScheduleDetailDialogState extends ConsumerState<ScheduleDetailDialog> {
 
   void _toggleDone() {
     setState(() => _isDone = !_isDone);
-    // Update provider
     ref.read(scheduleProvider.notifier).toggleDone(widget.schedule.id);
-    // Manually notify listeners to refresh calendar
-    ref.invalidate(scheduleProvider);
   }
 
   @override

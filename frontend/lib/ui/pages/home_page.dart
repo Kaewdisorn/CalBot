@@ -119,7 +119,21 @@ class ScheduleDataSource extends CalendarDataSource {
   String getSubject(int index) => appointments![index].subject;
 
   @override
-  Color getColor(int index) => appointments![index].color;
+  Color getColor(int index) {
+    final appointment = appointments![index];
+
+    // Map "done" schedules to grey
+    bool isDone = false;
+
+    // If you stored isDone in the appointment's notes as a flag
+    if (appointment.notes != null && appointment.notes!.contains('[DONE]')) {
+      isDone = true;
+    }
+
+    // Default color if null
+    final color = appointment.color ?? Colors.blue;
+    return isDone ? Colors.grey : color;
+  }
 
   @override
   bool isAllDay(int index) => appointments![index].isAllDay;

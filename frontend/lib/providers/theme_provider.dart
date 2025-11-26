@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeSettings {
   final ThemeMode mode;
-  final Color? seedColor; // allow null
+  final Color? seedColor; // nullable
 
   ThemeSettings({required this.mode, this.seedColor});
 
@@ -16,20 +16,25 @@ class ThemeSettings {
 class ThemeNotifier extends Notifier<ThemeSettings> {
   @override
   ThemeSettings build() {
-    _load();
-    return ThemeSettings(mode: ThemeMode.system, seedColor: Colors.blue);
+    // default theme while loading saved prefs
+    return ThemeSettings(mode: ThemeMode.system, seedColor: null);
   }
 
-  Future<void> _load() async {
+  Future<void> loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    final modeString = prefs.getString("theme_mode");
+
+    // Load theme mode
+    final modeString = prefs.getString("theme_mode") ?? "system";
+    final mode = _parseThemeMode(modeString);
+
+    // Load seedColor if exists
     final colorValue = prefs.getInt("theme_seed_color");
 
-    state = ThemeSettings(mode: _parseThemeMode(modeString), seedColor: colorValue != null ? Color(colorValue) : Colors.blue);
+    state = ThemeSettings(mode: mode, seedColor: colorValue != null ? Color(colorValue) : null);
   }
 
-  ThemeMode _parseThemeMode(String? s) {
-    switch (s) {
+  ThemeMode _parseThemeMode(String str) {
+    switch (str) {
       case "light":
         return ThemeMode.light;
       case "dark":
@@ -39,23 +44,23 @@ class ThemeNotifier extends Notifier<ThemeSettings> {
     }
   }
 
-  Future<void> setThemeMode(ThemeMode mode) async {
-    state = state.copyWith(mode: mode);
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString("theme_mode", mode.name);
-  }
-
   Future<void> setSeedColor(Color color) async {
     state = state.copyWith(seedColor: color);
     final prefs = await SharedPreferences.getInstance();
     prefs.setInt("theme_seed_color", color.toARGB32()); // still works
   }
 
+  Future<void> setThemeMode(ThemeMode mode) async {
+    state = state.copyWith(mode: mode);
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString("theme_mode", mode.name);
+  }
+
   Future<void> resetToDefault() async {
     state = ThemeSettings(mode: ThemeMode.system, seedColor: null);
     final prefs = await SharedPreferences.getInstance();
-    prefs.remove("theme_mode");
-    prefs.remove("theme_seed_color");
+    await prefs.remove("theme_mode");
+    await prefs.remove("theme_seed_color");
   }
 }
 

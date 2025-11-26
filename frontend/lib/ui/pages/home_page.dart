@@ -5,7 +5,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 import '../../models/schedule.dart';
 import '../../providers/schedule_provider.dart';
 import '../widgets/add_schedule_dialog.dart';
-import '../widgets/edit_schedule_dialog.dart';
+import '../widgets/schedule_detail_dialog.dart';
 import '../widgets/theme_settings_panel.dart';
 
 class HomePage extends ConsumerWidget {
@@ -57,7 +57,7 @@ class HomePage extends ConsumerWidget {
             final appointment = details.appointments!.first as Schedule;
             showDialog(
               context: context,
-              builder: (_) => EditScheduleDialog(schedule: appointment),
+              builder: (_) => ScheduleDetailDialog(schedule: appointment),
             );
           }
         },

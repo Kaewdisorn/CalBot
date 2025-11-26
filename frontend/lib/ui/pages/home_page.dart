@@ -1,22 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:syncfusion_flutter_calendar/calendar.dart';
 
-import '../widgets/schedule_calendar.dart';
-import '../widgets/schedule_list.dart';
+import '../../providers/schedule_provider.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
+  static const allowedViews = [
+    CalendarView.day,
+    CalendarView.week,
+    CalendarView.workWeek,
+    CalendarView.timelineDay,
+    CalendarView.timelineWeek,
+    CalendarView.timelineWorkWeek,
+    CalendarView.month,
+    CalendarView.schedule,
+  ];
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final schedules = ref.watch(scheduleProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text("CalBot Web")),
-      body: Row(
-        children: [
-          Expanded(flex: 1, child: const ScheduleList()),
-          VerticalDivider(width: 1),
-          Expanded(flex: 2, child: const ScheduleCalendar()),
-        ],
+      body: SfCalendar(
+        allowedViews: allowedViews,
+        dataSource: _ScheduleDataSource(schedules),
+        monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
       ),
     );
+  }
+}
+
+class _ScheduleDataSource extends CalendarDataSource {
+  _ScheduleDataSource(List schedules) {
+    appointments = schedules;
+  }
+
+  @override
+  DateTime getStartTime(int index) {
+    final item = appointments![index];
+    return item.date; // Your model’s date
+  }
+
+  @override
+  DateTime getEndTime(int index) {
+    final item = appointments![index];
+    return item.date.add(const Duration(hours: 1)); // <-- duration for calendar
+  }
+
+  @override
+  String getSubject(int index) {
+    final item = appointments![index];
+    return item.title;
+  }
+
+  @override
+  Color getColor(int index) {
+    return Colors.blue;
   }
 }

@@ -36,33 +36,7 @@ class HomePage extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.color_lens),
             onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) {
-                  return Dialog(
-                    insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: 360, // smaller width
-                        maxHeight: 480, // smaller height
-                      ),
-                      child: Stack(
-                        children: [
-                          const Padding(padding: EdgeInsets.all(16), child: ThemeSettingsPanel()),
-
-                          // ❌ Close button
-                          Positioned(
-                            right: 8,
-                            top: 8,
-                            child: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop(), splashRadius: 22),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              );
+              ThemeSettingsPanel.show(context);
             },
           ),
         ],

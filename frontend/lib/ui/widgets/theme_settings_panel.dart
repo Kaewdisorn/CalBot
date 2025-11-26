@@ -5,6 +5,9 @@ import '../../providers/theme_provider.dart';
 class ThemeSettingsPanel extends ConsumerWidget {
   const ThemeSettingsPanel({super.key});
 
+  // ----------------------------
+  // Section title helper
+  // ----------------------------
   Widget _sectionTitle(BuildContext context, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, top: 4),
@@ -15,10 +18,40 @@ class ThemeSettingsPanel extends ConsumerWidget {
     );
   }
 
+  // ----------------------------
+  // Static helper to show dialog
+  // ----------------------------
+  static Future<void> show(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (_) {
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360, maxHeight: 480),
+            child: Stack(
+              children: [
+                const Padding(padding: EdgeInsets.all(16), child: ThemeSettingsPanel()),
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop(), splashRadius: 22),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ----------------------------
+  // Build panel content
+  // ----------------------------
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
-
     const presetColors = [Colors.blue, Colors.green, Colors.purple, Colors.orange, Colors.pink, Colors.teal, Colors.red];
 
     return SingleChildScrollView(
@@ -29,7 +62,6 @@ class ThemeSettingsPanel extends ConsumerWidget {
           children: [
             // Theme Mode
             _sectionTitle(context, "Theme Mode"),
-
             RadioGroup<ThemeMode>(
               groupValue: theme.mode,
               onChanged: (value) {
@@ -53,7 +85,6 @@ class ThemeSettingsPanel extends ConsumerWidget {
 
             // Primary Color
             _sectionTitle(context, "Primary Color"),
-
             Wrap(
               spacing: 12,
               runSpacing: 12,

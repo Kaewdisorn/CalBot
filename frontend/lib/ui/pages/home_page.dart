@@ -48,7 +48,7 @@ class HomePage extends ConsumerWidget {
         showTodayButton: true,
         allowedViews: allowedViews,
         headerStyle: CalendarHeaderStyle(
-          backgroundColor: seedColor.withOpacity(0.05), // subtle bg
+          backgroundColor: seedColor.withValues(alpha: 0.01), // subtle bg
           textStyle: TextStyle(color: seedColor, fontSize: 20, fontWeight: FontWeight.bold),
           textAlign: TextAlign.start,
         ),

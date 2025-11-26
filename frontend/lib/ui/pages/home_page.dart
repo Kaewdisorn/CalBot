@@ -25,11 +25,10 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final schedules = ref.watch(scheduleProvider); // auto rebuild when schedules change
+    final schedules = ref.watch(scheduleProvider); // auto rebuild
     final theme = ref.watch(themeProvider);
     final seedColor = theme.seedColor ?? Theme.of(context).colorScheme.primary;
 
-    // DataSource is rebuilt on every build with latest schedules
     final calendarDataSource = ScheduleDataSource(schedules);
 
     return Scaffold(
@@ -50,6 +49,37 @@ class HomePage extends ConsumerWidget {
         ),
         dataSource: calendarDataSource,
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
+
+        appointmentBuilder: (context, details) {
+          final appointment = details.appointments.first as Appointment;
+          final schedule = schedules.firstWhere(
+            (s) => s.id == (appointment.id?.toString() ?? ''),
+            orElse: () => Schedule(
+              id: appointment.id?.toString() ?? '',
+              title: appointment.subject,
+              startDate: appointment.startTime,
+              endDate: appointment.endTime,
+              description: appointment.notes,
+              color: appointment.color,
+              isDone: false,
+              recurrenceRule: appointment.recurrenceRule,
+            ),
+          );
+
+          final bgColor = schedule.isDone ? Colors.grey.shade400 : schedule.color ?? Colors.blue;
+          final textColor = schedule.isDone ? const Color.fromARGB(137, 172, 142, 142) : Colors.white;
+
+          return Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(4)),
+            child: Text(
+              '${schedule.isDone ? "✅ " : ""}${schedule.title}',
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: textColor, decoration: schedule.isDone ? TextDecoration.lineThrough : null),
+            ),
+          );
+        },
+
         onTap: (details) async {
           if (details.targetElement == CalendarElement.calendarCell) {
             final selectedDate = details.date!;
@@ -57,12 +87,9 @@ class HomePage extends ConsumerWidget {
               context: context,
               builder: (_) => AddScheduleDialog(date: selectedDate),
             );
-            // Refresh after adding schedule
             calendarDataSource.updateAppointments(ref.read(scheduleProvider));
           } else if (details.targetElement == CalendarElement.appointment) {
             final appointment = details.appointments!.first as Appointment;
-
-            // Safely find schedule by id
             final schedule = schedules.firstWhere(
               (s) => s.id == (appointment.id?.toString() ?? ''),
               orElse: () => Schedule(
@@ -81,8 +108,6 @@ class HomePage extends ConsumerWidget {
               context: context,
               builder: (_) => ScheduleDetailDialog(schedule: schedule),
             );
-
-            // Refresh after editing schedule
             calendarDataSource.updateAppointments(ref.read(scheduleProvider));
           }
         },
@@ -91,7 +116,6 @@ class HomePage extends ConsumerWidget {
   }
 }
 
-/// Calendar data source mapping Schedule -> Appointment
 class ScheduleDataSource extends CalendarDataSource {
   ScheduleDataSource(List<Schedule> schedules) {
     updateAppointments(schedules);
@@ -104,7 +128,7 @@ class ScheduleDataSource extends CalendarDataSource {
             startTime: s.startDate,
             endTime: s.endDate,
             subject: s.title,
-            color: s.isDone ? Colors.grey : (s.color ?? Colors.blue),
+            color: s.color ?? Colors.blue,
             id: s.id,
             notes: s.description,
             recurrenceRule: s.recurrenceRule,

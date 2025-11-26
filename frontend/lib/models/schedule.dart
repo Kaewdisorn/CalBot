@@ -31,7 +31,9 @@ class Schedule {
       notes: description,
       isAllDay: false,
       recurrenceRule: recurrenceRule,
-      color: color ?? (isDone ? Colors.grey : Colors.blue),
+      // Use grey if done, otherwise the provided color, default to blue if null
+      color: isDone ? Colors.grey : (color ?? Colors.blue),
+      id: id, // make sure to store id for easy lookup
     );
   }
 

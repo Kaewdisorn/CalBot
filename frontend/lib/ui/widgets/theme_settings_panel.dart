@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../providers/theme_provider.dart';
 
 class ThemeSettingsPanel extends ConsumerWidget {
@@ -37,7 +36,7 @@ class ThemeSettingsPanel extends ConsumerWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              // Preset colors
+              // Preset colors only
               for (final c in presetColors)
                 GestureDetector(
                   onTap: () => ref.read(themeProvider.notifier).setSeedColor(c),
@@ -51,47 +50,6 @@ class ThemeSettingsPanel extends ConsumerWidget {
                     ),
                   ),
                 ),
-              // Custom color button
-              GestureDetector(
-                onTap: () {
-                  Color pickerColor = theme.seedColor ?? Colors.blue;
-                  showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text("Pick a custom color"),
-                      content: SingleChildScrollView(
-                        child: ColorPicker(
-                          pickerColor: pickerColor,
-                          onColorChanged: (color) => pickerColor = color,
-                          enableAlpha: false,
-                          labelTypes: const [],
-                          pickerAreaHeightPercent: 0.7,
-                        ),
-                      ),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Cancel")),
-                        ElevatedButton(
-                          onPressed: () {
-                            ref.read(themeProvider.notifier).setSeedColor(pickerColor);
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text("Select"),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: theme.seedColor ?? Colors.grey[200],
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black54, width: 1),
-                  ),
-                  child: const Center(child: Icon(Icons.add, size: 18, color: Colors.black87)),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 20),

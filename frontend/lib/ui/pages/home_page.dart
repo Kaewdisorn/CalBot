@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../../providers/schedule_provider.dart';
+import '../widgets/theme_settings_panel.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -23,8 +24,22 @@ class HomePage extends ConsumerWidget {
     final schedules = ref.watch(scheduleProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("CalBot Web")),
+      appBar: AppBar(
+        title: const Text("CalBot Web"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.color_lens),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => AlertDialog(title: const Text("Theme Settings"), content: const ThemeSettingsPanel()),
+              );
+            },
+          ),
+        ],
+      ),
       body: SfCalendar(
+        view: CalendarView.month,
         allowedViews: allowedViews,
         dataSource: _ScheduleDataSource(schedules),
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),

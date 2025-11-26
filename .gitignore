@@ -5,3 +5,4 @@ frontend/calbot.iml
 frontend/pubspec.lock
 backend/node-server/node_modules
 frontend/build
+frontend/.flutter-plugins-dependencies

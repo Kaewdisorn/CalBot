@@ -4,9 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeSettings {
   final ThemeMode mode;
-  final Color seedColor;
+  final Color? seedColor; // allow null
 
-  ThemeSettings({required this.mode, required this.seedColor});
+  ThemeSettings({required this.mode, this.seedColor});
 
   ThemeSettings copyWith({ThemeMode? mode, Color? seedColor}) {
     return ThemeSettings(mode: mode ?? this.mode, seedColor: seedColor ?? this.seedColor);
@@ -48,7 +48,14 @@ class ThemeNotifier extends Notifier<ThemeSettings> {
   Future<void> setSeedColor(Color color) async {
     state = state.copyWith(seedColor: color);
     final prefs = await SharedPreferences.getInstance();
-    prefs.setInt("theme_seed_color", color.value);
+    prefs.setInt("theme_seed_color", color.toARGB32()); // still works
+  }
+
+  Future<void> resetToDefault() async {
+    state = ThemeSettings(mode: ThemeMode.system, seedColor: null);
+    final prefs = await SharedPreferences.getInstance();
+    prefs.remove("theme_mode");
+    prefs.remove("theme_seed_color");
   }
 }
 

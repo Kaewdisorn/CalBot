@@ -25,17 +25,12 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final schedules = ref.watch(scheduleProvider);
+    final schedules = ref.watch(scheduleProvider); // auto-rebuild when schedules change
     final theme = ref.watch(themeProvider);
     final seedColor = theme.seedColor ?? Theme.of(context).colorScheme.primary;
 
-    // Create a calendar data source with colors updated based on isDone
-    final calendarDataSource = ScheduleDataSource(
-      schedules.map((s) {
-        // Automatically grey out "done" schedules
-        return s.copyWith(color: s.isDone ? Colors.grey : s.color ?? seedColor);
-      }).toList(),
-    );
+    // Rebuild calendar data source every time schedules change
+    final calendarDataSource = ScheduleDataSource(schedules);
 
     return Scaffold(
       appBar: AppBar(
@@ -55,28 +50,30 @@ class HomePage extends ConsumerWidget {
         ),
         dataSource: calendarDataSource,
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
-        onTap: (details) {
+        onTap: (CalendarTapDetails details) {
           if (details.targetElement == CalendarElement.calendarCell) {
             final selectedDate = details.date!;
             showDialog(
               context: context,
               builder: (_) => AddScheduleDialog(date: selectedDate),
-            );
+            ).then((_) {
+              // Refresh after adding schedule
+              calendarDataSource.updateAppointments(ref.read(scheduleProvider));
+            });
           } else if (details.targetElement == CalendarElement.appointment) {
             final appointment = details.appointments!.first as Appointment;
 
-            // Safe lookup of Schedule with orElse
             final schedule = schedules.firstWhere(
-              (s) => s.id == appointment.id?.toString(),
+              (s) => s.id == (appointment.id?.toString() ?? ''),
               orElse: () => Schedule(
-                id: appointment.id?.toString() ?? '',
+                id: '',
                 title: appointment.subject,
                 startDate: appointment.startTime,
                 endDate: appointment.endTime,
                 description: appointment.notes,
                 color: appointment.color,
+                isDone: false,
                 recurrenceRule: appointment.recurrenceRule,
-                isDone: appointment.color == Colors.grey,
               ),
             );
 
@@ -84,12 +81,8 @@ class HomePage extends ConsumerWidget {
               context: context,
               builder: (_) => ScheduleDetailDialog(schedule: schedule),
             ).then((_) {
-              // Refresh calendar after possible change
-              calendarDataSource.updateAppointments(
-                ref.read(scheduleProvider).map((s) {
-                  return s.copyWith(color: s.isDone ? Colors.grey : s.color ?? seedColor);
-                }).toList(),
-              );
+              // Refresh calendar after possible changes in detail dialog
+              calendarDataSource.updateAppointments(ref.read(scheduleProvider));
             });
           }
         },
@@ -100,12 +93,36 @@ class HomePage extends ConsumerWidget {
 
 class ScheduleDataSource extends CalendarDataSource {
   ScheduleDataSource(List<Schedule> schedules) {
-    appointments = schedules.map((s) => s.toAppointment()).toList();
+    appointments = schedules
+        .map(
+          (s) => Appointment(
+            startTime: s.startDate,
+            endTime: s.endDate,
+            subject: s.title,
+            color: s.isDone ? Colors.grey : (s.color ?? Colors.blue),
+            id: s.id,
+            notes: s.description,
+            recurrenceRule: s.recurrenceRule,
+          ),
+        )
+        .toList();
   }
 
-  /// Update appointments and refresh calendar
+  /// Refresh appointments when schedules change
   void updateAppointments(List<Schedule> schedules) {
-    appointments = schedules.map((s) => s.toAppointment()).toList();
+    appointments = schedules
+        .map(
+          (s) => Appointment(
+            startTime: s.startDate,
+            endTime: s.endDate,
+            subject: s.title,
+            color: s.isDone ? Colors.grey : (s.color ?? Colors.blue),
+            id: s.id,
+            notes: s.description,
+            recurrenceRule: s.recurrenceRule,
+          ),
+        )
+        .toList();
     notifyListeners(CalendarDataSourceAction.reset, appointments!);
   }
 
@@ -119,21 +136,7 @@ class ScheduleDataSource extends CalendarDataSource {
   String getSubject(int index) => appointments![index].subject;
 
   @override
-  Color getColor(int index) {
-    final appointment = appointments![index];
-
-    // Map "done" schedules to grey
-    bool isDone = false;
-
-    // If you stored isDone in the appointment's notes as a flag
-    if (appointment.notes != null && appointment.notes!.contains('[DONE]')) {
-      isDone = true;
-    }
-
-    // Default color if null
-    final color = appointment.color ?? Colors.blue;
-    return isDone ? Colors.grey : color;
-  }
+  Color getColor(int index) => appointments![index].color!;
 
   @override
   bool isAllDay(int index) => appointments![index].isAllDay;

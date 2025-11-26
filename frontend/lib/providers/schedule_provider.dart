@@ -41,6 +41,15 @@ class ScheduleNotifier extends Notifier<List<Schedule>> {
   void removeSchedule(String id) {
     state = state.where((s) => s.id != id).toList();
   }
+
+  void toggleDone(String id) {
+    state = state.map((s) {
+      if (s.id == id) {
+        return s.copyWith(isDone: !s.isDone);
+      }
+      return s;
+    }).toList();
+  }
 }
 
 final scheduleProvider = NotifierProvider<ScheduleNotifier, List<Schedule>>(ScheduleNotifier.new);

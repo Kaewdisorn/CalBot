@@ -34,4 +34,27 @@ class Schedule {
       color: color ?? (isDone ? Colors.grey : Colors.blue),
     );
   }
+
+  /// Allows creating a modified copy of Schedule
+  Schedule copyWith({
+    String? id,
+    String? title,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? description,
+    bool? isDone,
+    Color? color,
+    String? recurrenceRule,
+  }) {
+    return Schedule(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      description: description ?? this.description,
+      isDone: isDone ?? this.isDone,
+      color: color ?? this.color,
+      recurrenceRule: recurrenceRule ?? this.recurrenceRule,
+    );
+  }
 }

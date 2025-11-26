@@ -43,7 +43,7 @@ class HomePage extends ConsumerWidget {
         showTodayButton: true,
         allowedViews: allowedViews,
         headerStyle: CalendarHeaderStyle(
-          backgroundColor: seedColor.withAlpha(10),
+          backgroundColor: seedColor.withAlpha(1),
           textStyle: TextStyle(color: seedColor, fontSize: 20, fontWeight: FontWeight.bold),
           textAlign: TextAlign.start,
         ),

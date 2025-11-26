@@ -43,126 +43,136 @@ class _ScheduleDetailDialogState extends ConsumerState<ScheduleDetailDialog> {
     final colors = Theme.of(context).colorScheme;
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title + Actions
-            Row(
-              children: [
-                Expanded(
-                  child: Text(widget.schedule.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      tooltip: "Edit",
-                      icon: Icon(Icons.edit, color: colors.primary, size: 20),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        showDialog(
-                          context: context,
-                          builder: (_) => EditScheduleDialog(schedule: widget.schedule),
-                        );
-                      },
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      splashRadius: 18,
-                    ),
-                    const SizedBox(width: 4),
-                    IconButton(
-                      tooltip: "Delete",
-                      icon: Icon(Icons.delete, color: colors.error, size: 20),
-                      onPressed: () {
-                        ref.read(scheduleProvider.notifier).removeSchedule(widget.schedule.id);
-                        Navigator.of(context).pop();
-                        ref.invalidate(scheduleProvider);
-                      },
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      splashRadius: 18,
-                    ),
-                    const SizedBox(width: 4),
-                    IconButton(
-                      tooltip: "Close",
-                      icon: Icon(Icons.close, color: colors.onSurfaceVariant, size: 20),
-                      onPressed: () => Navigator.of(context).pop(),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      splashRadius: 18,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Max width for larger screens, keep it responsive
+          final maxWidth = constraints.maxWidth < 500 ? constraints.maxWidth : 450.0;
 
-            const SizedBox(height: 12),
-
-            // Time
-            Row(
-              children: [
-                const Icon(Icons.schedule, size: 18),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(formatDateRange(widget.schedule.startDate, widget.schedule.endDate), style: const TextStyle(fontWeight: FontWeight.w500)),
-                ),
-              ],
-            ),
-
-            // Recurrence
-            if (widget.schedule.recurrenceRule != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.repeat, size: 18),
-                  const SizedBox(width: 6),
-                  Expanded(child: Text(widget.schedule.recurrenceRule!)),
-                ],
-              ),
-            ],
-
-            // Description
-            if (widget.schedule.description != null) ...[
-              const SizedBox(height: 8),
-              Row(
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.note, size: 18),
-                  const SizedBox(width: 6),
-                  Expanded(child: Text(widget.schedule.description!)),
-                ],
-              ),
-            ],
-
-            const SizedBox(height: 16),
-
-            // Done checkbox
-            InkWell(
-              onTap: _toggleDone,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: _isDone ? const Center(child: Icon(Icons.check, size: 16, color: Colors.black)) : null,
+                  // Title + Actions
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(widget.schedule.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: "Edit",
+                            icon: Icon(Icons.edit, color: colors.primary, size: 20),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              showDialog(
+                                context: context,
+                                builder: (_) => EditScheduleDialog(schedule: widget.schedule),
+                              );
+                            },
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            splashRadius: 18,
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            tooltip: "Delete",
+                            icon: Icon(Icons.delete, color: colors.error, size: 20),
+                            onPressed: () {
+                              ref.read(scheduleProvider.notifier).removeSchedule(widget.schedule.id);
+                              Navigator.of(context).pop();
+                              ref.invalidate(scheduleProvider);
+                            },
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            splashRadius: 18,
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            tooltip: "Close",
+                            icon: Icon(Icons.close, color: colors.onSurfaceVariant, size: 20),
+                            onPressed: () => Navigator.of(context).pop(),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            splashRadius: 18,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  const Text("Mark as Done", style: TextStyle(fontWeight: FontWeight.w500)),
+
+                  const SizedBox(height: 12),
+
+                  // Time
+                  Row(
+                    children: [
+                      const Icon(Icons.schedule, size: 18),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(formatDateRange(widget.schedule.startDate, widget.schedule.endDate), style: const TextStyle(fontWeight: FontWeight.w500)),
+                      ),
+                    ],
+                  ),
+
+                  // Recurrence
+                  if (widget.schedule.recurrenceRule != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.repeat, size: 18),
+                        const SizedBox(width: 6),
+                        Expanded(child: Text(widget.schedule.recurrenceRule!)),
+                      ],
+                    ),
+                  ],
+
+                  // Description
+                  if (widget.schedule.description != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.note, size: 18),
+                        const SizedBox(width: 6),
+                        Expanded(child: Text(widget.schedule.description!)),
+                      ],
+                    ),
+                  ],
+
+                  const SizedBox(height: 16),
+
+                  // Done checkbox
+                  InkWell(
+                    onTap: _toggleDone,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: _isDone ? const Center(child: Icon(Icons.check, size: 16, color: Colors.black)) : null,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text("Mark as Done", style: TextStyle(fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

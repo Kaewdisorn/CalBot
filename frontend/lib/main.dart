@@ -14,12 +14,24 @@ class CalBotApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeSettings = ref.watch(themeProvider);
 
+    final seedColor = themeSettings.seedColor ?? Colors.blue; // fallback color
+
     return MaterialApp(
       title: 'Halulu',
       debugShowCheckedModeBanner: false,
       themeMode: themeSettings.mode,
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: themeSettings.seedColor, brightness: Brightness.light),
-      darkTheme: ThemeData(useMaterial3: true, colorSchemeSeed: themeSettings.seedColor, brightness: Brightness.dark),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: seedColor,
+        brightness: Brightness.light,
+        appBarTheme: AppBarTheme(backgroundColor: seedColor, foregroundColor: Colors.white),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: seedColor,
+        brightness: Brightness.dark,
+        appBarTheme: AppBarTheme(backgroundColor: seedColor, foregroundColor: Colors.white),
+      ),
       home: const HomePage(),
     );
   }

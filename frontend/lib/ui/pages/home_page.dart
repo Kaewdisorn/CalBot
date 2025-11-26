@@ -35,7 +35,19 @@ class HomePage extends ConsumerWidget {
             onPressed: () {
               showDialog(
                 context: context,
-                builder: (_) => AlertDialog(title: const Text("Theme Settings"), content: const ThemeSettingsPanel()),
+                builder: (_) => AlertDialog(
+                  contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  titlePadding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  title: Row(
+                    children: [
+                      const Expanded(
+                        child: Text("Theme Settings", style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
+                    ],
+                  ),
+                  content: const ThemeSettingsPanel(),
+                ),
               );
             },
           ),

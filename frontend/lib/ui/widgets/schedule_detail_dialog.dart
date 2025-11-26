@@ -16,11 +16,11 @@ class ScheduleDetailDialog extends ConsumerWidget {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(schedule.title),
-
+          Expanded(
+            child: Text(schedule.title, style: TextStyle(decoration: schedule.isDone ? TextDecoration.lineThrough : null)),
+          ),
           Row(
             children: [
-              // Edit icon - uses theme primary color
               IconButton(
                 tooltip: "Edit",
                 icon: Icon(Icons.edit, color: colors.primary),
@@ -32,13 +32,11 @@ class ScheduleDetailDialog extends ConsumerWidget {
                   );
                 },
               ),
-
-              // Delete icon - uses theme error color
               IconButton(
                 tooltip: "Delete",
                 icon: Icon(Icons.delete, color: colors.error),
                 onPressed: () {
-                  // ref.read(scheduleProvider.notifier).removeSchedule(schedule);
+                  // TODO: call provider to remove
                   Navigator.of(context).pop();
                 },
               ),
@@ -46,9 +44,24 @@ class ScheduleDetailDialog extends ConsumerWidget {
           ),
         ],
       ),
-
-      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [Text("Date: ${schedule.date.toLocal()}")]),
-
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Start: ${schedule.startDate.toLocal()}", style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text("End: ${schedule.endDate.toLocal()}", style: const TextStyle(fontWeight: FontWeight.w500)),
+          if (schedule.description != null) ...[
+            const SizedBox(height: 8),
+            Text("Description: ${schedule.description}", style: const TextStyle(fontStyle: FontStyle.italic)),
+          ],
+          const SizedBox(height: 8),
+          Text(
+            "Status: ${schedule.isDone ? "Done ✅" : "Pending"}",
+            style: TextStyle(color: schedule.isDone ? Colors.green : Colors.orange, fontWeight: FontWeight.w600),
+          ),
+          if (schedule.recurrenceRule != null) ...[const SizedBox(height: 8), Text("Recurrence: ${schedule.recurrenceRule}")],
+        ],
+      ),
       actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Close"))],
     );
   }

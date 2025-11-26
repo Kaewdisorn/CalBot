@@ -48,10 +48,11 @@ class HomePage extends ConsumerWidget {
         showTodayButton: true,
         allowedViews: allowedViews,
         headerStyle: CalendarHeaderStyle(
-          backgroundColor: seedColor.withValues(alpha: 0.01),
+          backgroundColor: seedColor.withOpacity(0.05), // subtle bg
           textStyle: TextStyle(color: seedColor, fontSize: 20, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.start,
         ),
-        dataSource: _ScheduleDataSource(schedules),
+        dataSource: ScheduleDataSource(schedules), // now Appointment-based
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
         onTap: (CalendarTapDetails details) {
           if (details.targetElement == CalendarElement.calendarCell) {
@@ -61,10 +62,24 @@ class HomePage extends ConsumerWidget {
               builder: (_) => AddScheduleDialog(date: selectedDate),
             );
           } else if (details.targetElement == CalendarElement.appointment) {
-            final appointment = details.appointments!.first as Schedule;
+            // Appointments are now Appointment objects
+            final appointment = details.appointments!.first as Appointment;
+
+            // Optional: convert Appointment back to Schedule if needed
+            final schedule = Schedule(
+              id: appointment.id?.toString() ?? '',
+              title: appointment.subject,
+              startDate: appointment.startTime,
+              endDate: appointment.endTime,
+              description: appointment.notes,
+              color: appointment.color,
+              recurrenceRule: appointment.recurrenceRule,
+              isDone: appointment.color == Colors.grey, // example mapping
+            );
+
             showDialog(
               context: context,
-              builder: (_) => ScheduleDetailDialog(schedule: appointment),
+              builder: (_) => ScheduleDetailDialog(schedule: schedule),
             );
           }
         },
@@ -73,31 +88,39 @@ class HomePage extends ConsumerWidget {
   }
 }
 
-class _ScheduleDataSource extends CalendarDataSource {
-  _ScheduleDataSource(List schedules) {
-    appointments = schedules;
+class ScheduleDataSource extends CalendarDataSource {
+  ScheduleDataSource(List<Schedule> schedules) {
+    // Convert your Schedule objects to Appointment objects
+    appointments = schedules.map((s) => s.toAppointment()).toList();
   }
 
   @override
   DateTime getStartTime(int index) {
-    final item = appointments![index];
-    return item.date; // Your model’s date
+    return appointments![index].startTime;
   }
 
   @override
   DateTime getEndTime(int index) {
-    final item = appointments![index];
-    return item.date.add(const Duration(hours: 1)); // <-- duration for calendar
+    return appointments![index].endTime;
   }
 
   @override
   String getSubject(int index) {
-    final item = appointments![index];
-    return item.title;
+    return appointments![index].subject;
   }
 
   @override
   Color getColor(int index) {
-    return Colors.blue;
+    return appointments![index].color;
+  }
+
+  @override
+  bool isAllDay(int index) {
+    return appointments![index].isAllDay;
+  }
+
+  @override
+  String? getRecurrenceRule(int index) {
+    return appointments![index].recurrenceRule;
   }
 }

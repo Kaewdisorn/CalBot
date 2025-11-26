@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'views/home.dart';
+
+import 'ui/pages/home_page.dart';
 
 void main() {
-  runApp(const ProviderScope(child: CalendarApp()));
+  runApp(const ProviderScope(child: CalBotApp()));
 }
 
-class CalendarApp extends StatelessWidget {
-  const CalendarApp({super.key});
+class CalBotApp extends StatelessWidget {
+  const CalBotApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(debugShowCheckedModeBanner: false, title: 'Calendar', home: Home());
+    return MaterialApp(title: 'CalBot Web', debugShowCheckedModeBanner: false, home: HomePage());
   }
 }

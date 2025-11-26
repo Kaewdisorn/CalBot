@@ -17,6 +17,7 @@ class HomeController {
     Color color = const Color(0xFF0F8644),
     bool isAllDay = false,
     bool isDone = false,
+    String recurrence = 'None', // <-- new field
   }) {
     return Appointment(
       startTime: DateTime(startDate.year, startDate.month, startDate.day, startTime.hour, startTime.minute),
@@ -25,7 +26,7 @@ class HomeController {
       color: color,
       location: location,
       isAllDay: isAllDay,
-      notes: jsonEncode({'description': description, 'isDone': isDone}), // ✅ JSON string
+      notes: jsonEncode({'description': description, 'isDone': isDone, 'recurrence': recurrence}), // ✅ JSON string
     );
   }
 }

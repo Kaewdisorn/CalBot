@@ -9,6 +9,7 @@ import '../providers/schedule.dart';
 import '../utils/datetime_format.dart';
 import '../widgets/date_picker_textfield.dart';
 import '../widgets/time_picker_textfield.dart';
+import 'recurrence.dart';
 
 class ScheduleDialog extends ConsumerStatefulWidget {
   final DateTime date;
@@ -39,6 +40,9 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
 
   String? _prevStartTimeText;
   String? _prevEndTimeText;
+
+  bool repeat = false;
+  Map<String, dynamic> recurrenceDetail = {};
 
   @override
   void initState() {
@@ -253,6 +257,36 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
                   const SizedBox(width: 16),
                   Checkbox(value: isDone, onChanged: (v) => setState(() => isDone = v ?? false)),
                   const Text("Mark as Done"),
+                  Checkbox(
+                    value: repeat,
+                    onChanged: (v) {
+                      if (v == true) {
+                        showDialog(
+                          context: context,
+                          builder: (context) => RecurrenceDialog(
+                            initialRecurrence: recurrenceDetail,
+                            onSave: (rec) {
+                              setState(() {
+                                repeat = true;
+                                recurrenceDetail = rec;
+                              });
+                            },
+                          ),
+                        );
+                      } else {
+                        setState(() {
+                          repeat = false;
+                          recurrenceDetail = {};
+                        });
+                      }
+                    },
+                  ),
+                  const Text("Repeat"),
+                  if (repeat && recurrenceDetail.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Text(formatRecurrenceSummary(recurrenceDetail), style: const TextStyle(decoration: TextDecoration.underline)),
+                    ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -409,5 +443,38 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
     notifier.addAppointment(newAppointment);
 
     if (mounted) Navigator.pop(context);
+  }
+
+  String formatRecurrenceSummary(Map<String, dynamic> recurrenceDetail) {
+    if (recurrenceDetail.isEmpty) return '';
+
+    final type = recurrenceDetail['type'] ?? '';
+    final interval = recurrenceDetail['interval'] ?? 1;
+
+    switch (type) {
+      case 'Daily':
+        return 'Every $interval day(s)';
+
+      case 'Weekly':
+        final days = recurrenceDetail['days'] as List<String>? ?? [];
+        final daysStr = days.isNotEmpty ? days.join(', ') : '?';
+        return 'Every $interval week(s) on $daysStr';
+
+      case 'Monthly':
+        final monthlyOption = recurrenceDetail['monthlyOption'] ?? 'DayOfMonth';
+        if (monthlyOption == 'DayOfMonth') {
+          final day = recurrenceDetail['day'] ?? '?';
+          return 'Day $day of every $interval month(s)';
+        } else if (monthlyOption == 'WeekdayOfMonth') {
+          final week = recurrenceDetail['week'] ?? '?';
+          final weekday = recurrenceDetail['weekday'] ?? '?';
+          return '$week $weekday of every $interval month(s)';
+        } else {
+          return 'Every $interval month(s)';
+        }
+
+      default:
+        return '';
+    }
   }
 }

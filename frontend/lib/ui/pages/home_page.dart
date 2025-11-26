@@ -29,17 +29,18 @@ class HomePage extends ConsumerWidget {
     final theme = ref.watch(themeProvider);
     final seedColor = theme.seedColor ?? Theme.of(context).colorScheme.primary;
 
+    // Create a calendar data source with colors updated based on isDone
+    final calendarDataSource = ScheduleDataSource(
+      schedules.map((s) {
+        // Automatically grey out "done" schedules
+        return s.copyWith(color: s.isDone ? Colors.grey : s.color ?? seedColor);
+      }).toList(),
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Row(children: [Image.asset('assets/images/halulu.png', width: 36, height: 36), const SizedBox(width: 8), const Text("Halulu")]),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.color_lens),
-            onPressed: () {
-              ThemeSettingsPanel.show(context);
-            },
-          ),
-        ],
+        actions: [IconButton(icon: const Icon(Icons.color_lens), onPressed: () => ThemeSettingsPanel.show(context))],
       ),
       body: SfCalendar(
         view: CalendarView.month,
@@ -48,13 +49,13 @@ class HomePage extends ConsumerWidget {
         showTodayButton: true,
         allowedViews: allowedViews,
         headerStyle: CalendarHeaderStyle(
-          backgroundColor: seedColor.withValues(alpha: 0.01), // subtle bg
+          backgroundColor: seedColor.withAlpha(10),
           textStyle: TextStyle(color: seedColor, fontSize: 20, fontWeight: FontWeight.bold),
           textAlign: TextAlign.start,
         ),
-        dataSource: ScheduleDataSource(schedules), // now Appointment-based
+        dataSource: calendarDataSource,
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
-        onTap: (CalendarTapDetails details) {
+        onTap: (details) {
           if (details.targetElement == CalendarElement.calendarCell) {
             final selectedDate = details.date!;
             showDialog(
@@ -62,25 +63,34 @@ class HomePage extends ConsumerWidget {
               builder: (_) => AddScheduleDialog(date: selectedDate),
             );
           } else if (details.targetElement == CalendarElement.appointment) {
-            // Appointments are now Appointment objects
             final appointment = details.appointments!.first as Appointment;
 
-            // Optional: convert Appointment back to Schedule if needed
-            final schedule = Schedule(
-              id: appointment.id?.toString() ?? '',
-              title: appointment.subject,
-              startDate: appointment.startTime,
-              endDate: appointment.endTime,
-              description: appointment.notes,
-              color: appointment.color,
-              recurrenceRule: appointment.recurrenceRule,
-              isDone: appointment.color == Colors.grey, // example mapping
+            // Safe lookup of Schedule with orElse
+            final schedule = schedules.firstWhere(
+              (s) => s.id == appointment.id?.toString(),
+              orElse: () => Schedule(
+                id: appointment.id?.toString() ?? '',
+                title: appointment.subject,
+                startDate: appointment.startTime,
+                endDate: appointment.endTime,
+                description: appointment.notes,
+                color: appointment.color,
+                recurrenceRule: appointment.recurrenceRule,
+                isDone: appointment.color == Colors.grey,
+              ),
             );
 
             showDialog(
               context: context,
               builder: (_) => ScheduleDetailDialog(schedule: schedule),
-            );
+            ).then((_) {
+              // Refresh calendar after possible change
+              calendarDataSource.updateAppointments(
+                ref.read(scheduleProvider).map((s) {
+                  return s.copyWith(color: s.isDone ? Colors.grey : s.color ?? seedColor);
+                }).toList(),
+              );
+            });
           }
         },
       ),
@@ -90,37 +100,30 @@ class HomePage extends ConsumerWidget {
 
 class ScheduleDataSource extends CalendarDataSource {
   ScheduleDataSource(List<Schedule> schedules) {
-    // Convert your Schedule objects to Appointment objects
     appointments = schedules.map((s) => s.toAppointment()).toList();
   }
 
-  @override
-  DateTime getStartTime(int index) {
-    return appointments![index].startTime;
+  /// Update appointments and refresh calendar
+  void updateAppointments(List<Schedule> schedules) {
+    appointments = schedules.map((s) => s.toAppointment()).toList();
+    notifyListeners(CalendarDataSourceAction.reset, appointments!);
   }
 
   @override
-  DateTime getEndTime(int index) {
-    return appointments![index].endTime;
-  }
+  DateTime getStartTime(int index) => appointments![index].startTime;
 
   @override
-  String getSubject(int index) {
-    return appointments![index].subject;
-  }
+  DateTime getEndTime(int index) => appointments![index].endTime;
 
   @override
-  Color getColor(int index) {
-    return appointments![index].color;
-  }
+  String getSubject(int index) => appointments![index].subject;
 
   @override
-  bool isAllDay(int index) {
-    return appointments![index].isAllDay;
-  }
+  Color getColor(int index) => appointments![index].color;
 
   @override
-  String? getRecurrenceRule(int index) {
-    return appointments![index].recurrenceRule;
-  }
+  bool isAllDay(int index) => appointments![index].isAllDay;
+
+  @override
+  String? getRecurrenceRule(int index) => appointments![index].recurrenceRule;
 }

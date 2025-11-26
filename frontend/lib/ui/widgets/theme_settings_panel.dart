@@ -5,6 +5,16 @@ import '../../providers/theme_provider.dart';
 class ThemeSettingsPanel extends ConsumerWidget {
   const ThemeSettingsPanel({super.key});
 
+  Widget _sectionTitle(BuildContext context, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, top: 4),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurfaceVariant),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
@@ -12,72 +22,70 @@ class ThemeSettingsPanel extends ConsumerWidget {
     const presetColors = [Colors.blue, Colors.green, Colors.purple, Colors.orange, Colors.pink, Colors.teal, Colors.red];
 
     return SingleChildScrollView(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 400), // limits the dialog height
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Theme Mode
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 1,
-              child: ListTile(
-                title: const Text("Theme Mode", style: TextStyle(fontWeight: FontWeight.w600)),
-                trailing: DropdownButton<ThemeMode>(
-                  value: theme.mode,
-                  underline: const SizedBox(),
-                  onChanged: (mode) {
-                    if (mode != null) ref.read(themeProvider.notifier).setThemeMode(mode);
-                  },
-                  items: const [
-                    DropdownMenuItem(value: ThemeMode.system, child: Text("System")),
-                    DropdownMenuItem(value: ThemeMode.light, child: Text("Light")),
-                    DropdownMenuItem(value: ThemeMode.dark, child: Text("Dark")),
-                  ],
-                ),
-              ),
-            ),
+            _sectionTitle(context, "Theme Mode"),
 
-            const SizedBox(height: 16),
-
-            // Primary Color
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 1,
-              child: ListTile(
-                title: const Text("Primary Color", style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text("Tap to select your primary color"),
-                trailing: Wrap(
-                  spacing: 8,
-                  children: [
-                    for (final c in presetColors)
-                      InkWell(
-                        onTap: () => ref.read(themeProvider.notifier).setSeedColor(c),
-                        borderRadius: BorderRadius.circular(18),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: c,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: theme.seedColor == c ? Theme.of(context).colorScheme.onPrimary : Colors.transparent, width: 3),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+            RadioGroup<ThemeMode>(
+              groupValue: theme.mode,
+              onChanged: (value) {
+                if (value != null) {
+                  ref.read(themeProvider.notifier).setThemeMode(value);
+                }
+              },
+              child: Column(
+                children: ThemeMode.values.map((mode) {
+                  return ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Radio<ThemeMode>(value: mode),
+                    title: Text(mode.name[0].toUpperCase() + mode.name.substring(1)),
+                  );
+                }).toList(),
               ),
             ),
 
             const SizedBox(height: 24),
 
-            // Reset Button
+            // Primary Color
+            _sectionTitle(context, "Primary Color"),
+
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                for (final c in presetColors)
+                  GestureDetector(
+                    onTap: () => ref.read(themeProvider.notifier).setSeedColor(c),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: c,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: theme.seedColor == c ? Theme.of(context).colorScheme.onPrimary : Colors.transparent, width: 3),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 32),
+
             Center(
               child: FilledButton.icon(
                 icon: const Icon(Icons.refresh),
-                label: const Text("Reset to Default"),
+                label: const Text("Reset"),
                 onPressed: () => ref.read(themeProvider.notifier).resetToDefault(),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
             ),
           ],

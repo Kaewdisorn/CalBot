@@ -35,19 +35,30 @@ class HomePage extends ConsumerWidget {
             onPressed: () {
               showDialog(
                 context: context,
-                builder: (_) => AlertDialog(
-                  contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                  titlePadding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  title: Row(
-                    children: [
-                      const Expanded(
-                        child: Text("Theme Settings", style: TextStyle(fontWeight: FontWeight.bold)),
+                builder: (_) {
+                  return Dialog(
+                    insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: 360, // smaller width
+                        maxHeight: 480, // smaller height
                       ),
-                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
-                    ],
-                  ),
-                  content: const ThemeSettingsPanel(),
-                ),
+                      child: Stack(
+                        children: [
+                          const Padding(padding: EdgeInsets.all(16), child: ThemeSettingsPanel()),
+
+                          // ❌ Close button
+                          Positioned(
+                            right: 8,
+                            top: 8,
+                            child: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop(), splashRadius: 22),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               );
             },
           ),

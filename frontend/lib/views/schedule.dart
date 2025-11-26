@@ -453,26 +453,19 @@ class _ScheduleDialogState extends ConsumerState<ScheduleDialog> {
 
     switch (type) {
       case 'Daily':
-        return 'Every $interval day(s)';
-
+        return "Every $interval day${interval > 1 ? 's' : ''}";
       case 'Weekly':
-        final days = recurrenceDetail['days'] as List<String>? ?? [];
+        final days = (recurrenceDetail['weekdays'] as List<int>?)?.map((d) => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][d - 1]).toList() ?? [];
         final daysStr = days.isNotEmpty ? days.join(', ') : '?';
-        return 'Every $interval week(s) on $daysStr';
-
+        return "Every $interval week${interval > 1 ? 's' : ''} on $daysStr";
       case 'Monthly':
         final monthlyOption = recurrenceDetail['monthlyOption'] ?? 'DayOfMonth';
         if (monthlyOption == 'DayOfMonth') {
-          final day = recurrenceDetail['day'] ?? '?';
-          return 'Day $day of every $interval month(s)';
-        } else if (monthlyOption == 'WeekdayOfMonth') {
-          final week = recurrenceDetail['week'] ?? '?';
-          final weekday = recurrenceDetail['weekday'] ?? '?';
-          return '$week $weekday of every $interval month(s)';
+          final day = recurrenceDetail['monthlyDay'] ?? '?';
+          return "Every $interval month${interval > 1 ? 's' : ''} on day $day";
         } else {
-          return 'Every $interval month(s)';
+          return "Every $interval month${interval > 1 ? 's' : ''} on ${monthlyOption}";
         }
-
       default:
         return '';
     }

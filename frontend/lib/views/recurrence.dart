@@ -16,6 +16,9 @@ class _RecurrenceDialogState extends State<RecurrenceDialog> {
   late List<int> selectedWeekdays; // 1=Mon ... 7=Sun
   int? monthlyDay;
   late String monthlyOption; // DayOfMonth / WeekdayOfMonth
+  late TextEditingController monthlyDayController;
+
+  final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   @override
   void initState() {
@@ -23,9 +26,16 @@ class _RecurrenceDialogState extends State<RecurrenceDialog> {
     final data = widget.initialRecurrence ?? {};
     selectedType = data['type'] ?? 'Daily';
     interval = data['interval'] ?? 1;
-    selectedWeekdays = data['weekdays']?.cast<int>() ?? [];
+    selectedWeekdays = List<int>.from(data['weekdays'] ?? []);
     monthlyDay = data['monthlyDay'] ?? DateTime.now().day;
     monthlyOption = data['monthlyOption'] ?? 'DayOfMonth';
+    monthlyDayController = TextEditingController(text: monthlyDay.toString());
+  }
+
+  @override
+  void dispose() {
+    monthlyDayController.dispose();
+    super.dispose();
   }
 
   String getSummary() {
@@ -34,94 +44,92 @@ class _RecurrenceDialogState extends State<RecurrenceDialog> {
         return "Repeats every $interval day${interval > 1 ? 's' : ''}";
       case 'Weekly':
         if (selectedWeekdays.isEmpty) return "Repeats every $interval week(s)";
-        final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         final days = selectedWeekdays.map((d) => weekdays[d - 1]).join(", ");
         return "Repeats every $interval week${interval > 1 ? 's' : ''} on $days";
       case 'Monthly':
         if (monthlyOption == 'DayOfMonth') return "Repeats every $interval month(s) on day $monthlyDay";
-        return "Repeats every $interval month(s) on $monthlyOption";
+        return "Repeats every $interval month(s) on $monthlyOption"; // TODO: WeekdayOfMonth text
       default:
         return '';
     }
   }
 
+  Widget intervalSlider() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Interval: $interval ${selectedType.toLowerCase()}${interval > 1 ? 's' : ''}"),
+        Slider(
+          min: 1,
+          max: 30,
+          divisions: 29,
+          value: interval.toDouble(),
+          label: interval.toString(),
+          onChanged: (val) => setState(() => interval = val.toInt()),
+        ),
+      ],
+    );
+  }
+
+  Widget weeklySelector() {
+    return Wrap(
+      spacing: 4,
+      children: List.generate(7, (i) {
+        final day = i + 1;
+        final selected = selectedWeekdays.contains(day);
+        return FilterChip(
+          label: Text(weekdays[i]),
+          selected: selected,
+          onSelected: (v) {
+            setState(() {
+              if (v)
+                selectedWeekdays.add(day);
+              else
+                selectedWeekdays.remove(day);
+            });
+          },
+        );
+      }),
+    );
+  }
+
+  Widget monthlySelector() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: RadioListTile<String>(
+                title: const Text("Day of month"),
+                value: 'DayOfMonth',
+                groupValue: monthlyOption,
+                onChanged: (v) => setState(() => monthlyOption = v!),
+              ),
+            ),
+            Expanded(
+              child: RadioListTile<String>(
+                title: const Text("Weekday of month"),
+                value: 'WeekdayOfMonth',
+                groupValue: monthlyOption,
+                onChanged: (v) => setState(() => monthlyOption = v!),
+              ),
+            ),
+          ],
+        ),
+        if (monthlyOption == 'DayOfMonth')
+          TextField(
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: "Day"),
+            controller: monthlyDayController,
+            onChanged: (v) => monthlyDay = int.tryParse(v),
+          ),
+        if (monthlyOption == 'WeekdayOfMonth') const Text("TODO: Select week & weekday (e.g., 2nd Tuesday)"),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    Widget intervalSlider() {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Interval: $interval ${selectedType.toLowerCase()}${interval > 1 ? 's' : ''}"),
-          Slider(
-            min: 1,
-            max: 30,
-            divisions: 29,
-            value: interval.toDouble(),
-            label: interval.toString(),
-            onChanged: (val) => setState(() => interval = val.toInt()),
-          ),
-        ],
-      );
-    }
-
-    Widget weeklySelector() {
-      final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      return Wrap(
-        spacing: 4,
-        children: List.generate(7, (i) {
-          final day = i + 1;
-          final selected = selectedWeekdays.contains(day);
-          return FilterChip(
-            label: Text(weekdays[i]),
-            selected: selected,
-            onSelected: (v) {
-              setState(() {
-                if (v)
-                  selectedWeekdays.add(day);
-                else
-                  selectedWeekdays.remove(day);
-              });
-            },
-          );
-        }),
-      );
-    }
-
-    Widget monthlySelector() {
-      return Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text("Day of month"),
-                  value: 'DayOfMonth',
-                  groupValue: monthlyOption,
-                  onChanged: (v) => setState(() => monthlyOption = v!),
-                ),
-              ),
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text("Weekday of month"),
-                  value: 'WeekdayOfMonth',
-                  groupValue: monthlyOption,
-                  onChanged: (v) => setState(() => monthlyOption = v!),
-                ),
-              ),
-            ],
-          ),
-          if (monthlyOption == 'DayOfMonth')
-            TextField(
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: "Day"),
-              controller: TextEditingController(text: monthlyDay.toString()),
-              onChanged: (v) => monthlyDay = int.tryParse(v),
-            ),
-          if (monthlyOption == 'WeekdayOfMonth') const Text("TODO: Select week & weekday (e.g., 2nd Tuesday)"),
-        ],
-      );
-    }
-
     return AlertDialog(
       title: const Text("Set Recurrence"),
       content: SizedBox(
@@ -129,7 +137,6 @@ class _RecurrenceDialogState extends State<RecurrenceDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Type
             Card(
               margin: const EdgeInsets.symmetric(vertical: 4),
               child: Padding(
@@ -143,12 +150,10 @@ class _RecurrenceDialogState extends State<RecurrenceDialog> {
               ),
             ),
             const SizedBox(height: 8),
-            // Interval
             Card(
               margin: const EdgeInsets.symmetric(vertical: 4),
               child: Padding(padding: const EdgeInsets.all(8), child: intervalSlider()),
             ),
-            const SizedBox(height: 8),
             if (selectedType == 'Weekly')
               Card(
                 margin: const EdgeInsets.symmetric(vertical: 4),

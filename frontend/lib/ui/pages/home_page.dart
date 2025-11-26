@@ -25,11 +25,11 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final schedules = ref.watch(scheduleProvider); // auto-rebuild when schedules change
+    final schedules = ref.watch(scheduleProvider); // auto rebuild when schedules change
     final theme = ref.watch(themeProvider);
     final seedColor = theme.seedColor ?? Theme.of(context).colorScheme.primary;
 
-    // Rebuild calendar data source every time schedules change
+    // DataSource is rebuilt on every build with latest schedules
     final calendarDataSource = ScheduleDataSource(schedules);
 
     return Scaffold(
@@ -50,19 +50,19 @@ class HomePage extends ConsumerWidget {
         ),
         dataSource: calendarDataSource,
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
-        onTap: (CalendarTapDetails details) {
+        onTap: (details) async {
           if (details.targetElement == CalendarElement.calendarCell) {
             final selectedDate = details.date!;
-            showDialog(
+            await showDialog(
               context: context,
               builder: (_) => AddScheduleDialog(date: selectedDate),
-            ).then((_) {
-              // Refresh after adding schedule
-              calendarDataSource.updateAppointments(ref.read(scheduleProvider));
-            });
+            );
+            // Refresh after adding schedule
+            calendarDataSource.updateAppointments(ref.read(scheduleProvider));
           } else if (details.targetElement == CalendarElement.appointment) {
             final appointment = details.appointments!.first as Appointment;
 
+            // Safely find schedule by id
             final schedule = schedules.firstWhere(
               (s) => s.id == (appointment.id?.toString() ?? ''),
               orElse: () => Schedule(
@@ -77,13 +77,13 @@ class HomePage extends ConsumerWidget {
               ),
             );
 
-            showDialog(
+            await showDialog(
               context: context,
               builder: (_) => ScheduleDetailDialog(schedule: schedule),
-            ).then((_) {
-              // Refresh calendar after possible changes in detail dialog
-              calendarDataSource.updateAppointments(ref.read(scheduleProvider));
-            });
+            );
+
+            // Refresh after editing schedule
+            calendarDataSource.updateAppointments(ref.read(scheduleProvider));
           }
         },
       ),
@@ -91,24 +91,12 @@ class HomePage extends ConsumerWidget {
   }
 }
 
+/// Calendar data source mapping Schedule -> Appointment
 class ScheduleDataSource extends CalendarDataSource {
   ScheduleDataSource(List<Schedule> schedules) {
-    appointments = schedules
-        .map(
-          (s) => Appointment(
-            startTime: s.startDate,
-            endTime: s.endDate,
-            subject: s.title,
-            color: s.isDone ? Colors.grey : (s.color ?? Colors.blue),
-            id: s.id,
-            notes: s.description,
-            recurrenceRule: s.recurrenceRule,
-          ),
-        )
-        .toList();
+    updateAppointments(schedules);
   }
 
-  /// Refresh appointments when schedules change
   void updateAppointments(List<Schedule> schedules) {
     appointments = schedules
         .map(

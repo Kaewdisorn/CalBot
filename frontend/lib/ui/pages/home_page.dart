@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
+import '../../models/schedule.dart';
 import '../../providers/schedule_provider.dart';
+import '../widgets/add_schedule_dialog.dart';
+import '../widgets/edit_schedule_dialog.dart';
 import '../widgets/theme_settings_panel.dart';
 
 class HomePage extends ConsumerWidget {
@@ -25,17 +28,7 @@ class HomePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/images/halulu.png', // your logo
-              width: 36,
-              height: 36,
-            ),
-            const SizedBox(width: 8),
-            const Text("Halulu"),
-          ],
-        ),
+        title: Row(children: [Image.asset('assets/images/halulu.png', width: 36, height: 36), const SizedBox(width: 8), const Text("Halulu")]),
         actions: [
           IconButton(
             icon: const Icon(Icons.color_lens),
@@ -53,6 +46,21 @@ class HomePage extends ConsumerWidget {
         allowedViews: allowedViews,
         dataSource: _ScheduleDataSource(schedules),
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
+        onTap: (CalendarTapDetails details) {
+          if (details.targetElement == CalendarElement.calendarCell) {
+            final selectedDate = details.date!;
+            showDialog(
+              context: context,
+              builder: (_) => AddScheduleDialog(date: selectedDate),
+            );
+          } else if (details.targetElement == CalendarElement.appointment) {
+            final appointment = details.appointments!.first as Schedule;
+            showDialog(
+              context: context,
+              builder: (_) => EditScheduleDialog(schedule: appointment),
+            );
+          }
+        },
       ),
     );
   }

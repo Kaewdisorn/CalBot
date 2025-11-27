@@ -7,7 +7,7 @@ import 'widgets/custom_appbar.dart';
 import 'widgets/settings_drawer.dart';
 
 class HomeView extends StatelessWidget {
-  final controller = Get.put(HomeController());
+  final homeController = Get.find<HomeController>();
 
   HomeView({super.key});
 
@@ -18,7 +18,13 @@ class HomeView extends StatelessWidget {
 
       endDrawer: const SettingsDrawer(),
 
-      body: SfCalendar(view: CalendarView.month),
+      body: SfCalendar(
+        view: CalendarView.month,
+        showDatePickerButton: true,
+        showNavigationArrow: true,
+        showTodayButton: true,
+        allowedViews: homeController.allowedViews,
+      ),
     );
   }
 }

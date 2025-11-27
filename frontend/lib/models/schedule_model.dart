@@ -7,6 +7,7 @@ class ScheduleModel {
   final DateTime start;
   final DateTime end;
   final String? recurrenceRule;
+  final List<DateTime>? exceptionDateList;
   final int colorValue;
 
   ScheduleModel({
@@ -15,6 +16,7 @@ class ScheduleModel {
     required this.start,
     required this.end,
     this.recurrenceRule,
+    this.exceptionDateList,
     this.colorValue = 0xFF42A5F5, // default blue
   });
 
@@ -32,6 +34,13 @@ class ScheduleModel {
 
   // Convert model to SfCalendar Appointment
   Appointment toCalendarAppointment() {
-    return Appointment(startTime: start, endTime: end, subject: title, color: Color(colorValue), recurrenceRule: recurrenceRule);
+    return Appointment(
+      startTime: start,
+      endTime: end,
+      subject: title,
+      color: Color(colorValue),
+      recurrenceRule: recurrenceRule,
+      recurrenceExceptionDates: exceptionDateList,
+    );
   }
 }

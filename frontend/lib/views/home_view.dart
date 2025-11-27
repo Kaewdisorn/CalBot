@@ -16,7 +16,14 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     // Simulate fetching from API
     final sampleData = [
-      ScheduleModel(id: '1', title: 'Team Meeting', start: DateTime.now().add(Duration(hours: 1)), end: DateTime.now().add(Duration(hours: 2))),
+      ScheduleModel(
+        id: '1',
+        title: 'Team Meeting',
+        start: DateTime.now().add(Duration(hours: 1)),
+        end: DateTime.now().add(Duration(hours: 2)),
+        recurrenceRule: 'FREQ=DAILY;INTERVAL=1;COUNT=10',
+        exceptionDateList: <DateTime>[DateTime(2025, 12, 05)],
+      ),
       ScheduleModel(
         id: '2',
         title: 'Client Call',
@@ -37,6 +44,10 @@ class HomeView extends StatelessWidget {
         allowedViews: homeController.allowedViews,
         dataSource: ScheduuleDataSource(sampleData),
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
+        onTap: (calendarTapDetails) {},
+        // appointmentBuilder:(context, calendarAppointmentDetails) {
+
+        // },
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../controllers/home_controller.dart';
+import '../models/schedule_model.dart';
 import 'widgets/custom_appbar.dart';
 import 'widgets/settings_drawer.dart';
 
@@ -26,5 +27,11 @@ class HomeView extends StatelessWidget {
         allowedViews: homeController.allowedViews,
       ),
     );
+  }
+}
+
+class ScheduuleDataSource extends CalendarDataSource {
+  ScheduuleDataSource(List<ScheduleModel> models) {
+    appointments = models.map((e) => e.toCalendarAppointment()).toList();
   }
 }

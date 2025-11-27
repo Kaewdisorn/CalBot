@@ -24,25 +24,23 @@ class ThemeSettingsPanel extends ConsumerWidget {
   static Future<void> show(BuildContext context) async {
     return showDialog(
       context: context,
-      builder: (_) {
-        return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360, maxHeight: 480),
-            child: Stack(
-              children: [
-                const Padding(padding: EdgeInsets.all(16), child: ThemeSettingsPanel()),
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop(), splashRadius: 22),
-                ),
-              ],
-            ),
+      builder: (_) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360, maxHeight: 480),
+          child: Stack(
+            children: [
+              const Padding(padding: EdgeInsets.all(16), child: ThemeSettingsPanel()),
+              Positioned(
+                right: 8,
+                top: 8,
+                child: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop(), splashRadius: 22),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -60,13 +58,15 @@ class ThemeSettingsPanel extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Theme Mode
+            // -------------------
+            // Theme Mode (updated for Flutter 3.38)
+            // -------------------
             _sectionTitle(context, "Theme Mode"),
             RadioGroup<ThemeMode>(
               groupValue: theme.mode,
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(themeProvider.notifier).setThemeMode(value);
+              onChanged: (mode) {
+                if (mode != null) {
+                  ref.read(themeProvider.notifier).setThemeMode(mode);
                 }
               },
               child: Column(
@@ -74,7 +74,9 @@ class ThemeSettingsPanel extends ConsumerWidget {
                   return ListTile(
                     dense: true,
                     contentPadding: EdgeInsets.zero,
-                    leading: Radio<ThemeMode>(value: mode),
+                    leading: Radio<ThemeMode>(
+                      value: mode, // just value, groupValue handled by RadioGroup
+                    ),
                     title: Text(mode.name[0].toUpperCase() + mode.name.substring(1)),
                   );
                 }).toList(),
@@ -83,7 +85,9 @@ class ThemeSettingsPanel extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
+            // -------------------
             // Primary Color
+            // -------------------
             _sectionTitle(context, "Primary Color"),
             Wrap(
               spacing: 12,
@@ -99,7 +103,7 @@ class ThemeSettingsPanel extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: c,
                         shape: BoxShape.circle,
-                        border: Border.all(color: theme.seedColor == c ? Theme.of(context).colorScheme.onPrimary : Colors.transparent, width: 3),
+                        border: Border.all(color: theme.seedColor.value == c.value ? Theme.of(context).colorScheme.onPrimary : Colors.transparent, width: 3),
                       ),
                     ),
                   ),
@@ -108,6 +112,9 @@ class ThemeSettingsPanel extends ConsumerWidget {
 
             const SizedBox(height: 32),
 
+            // -------------------
+            // Reset Button
+            // -------------------
             Center(
               child: FilledButton.icon(
                 icon: const Icon(Icons.refresh),

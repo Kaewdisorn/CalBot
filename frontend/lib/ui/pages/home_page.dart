@@ -27,7 +27,7 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final schedules = ref.watch(scheduleProvider); // auto rebuild
     final theme = ref.watch(themeProvider);
-    final seedColor = theme.seedColor ?? Theme.of(context).colorScheme.primary;
+    final seedColor = theme.seedColor;
 
     final calendarDataSource = ScheduleDataSource(schedules);
 

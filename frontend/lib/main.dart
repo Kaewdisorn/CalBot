@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'models/theme_settings.dart';
 import 'providers/theme_provider.dart';
 import 'ui/pages/home_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Hive.initFlutter();
+  Hive.registerAdapter(ThemeSettingsAdapter());
+
+  // IMPORTANT: open the box BEFORE ProviderScope
+  await Hive.openBox<ThemeSettings>('settings');
+
   runApp(const ProviderScope(child: CalBotApp()));
 }
 
@@ -12,25 +22,23 @@ class CalBotApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeSettings = ref.watch(themeProvider);
-
-    final seedColor = themeSettings.seedColor ?? Colors.blue; // fallback color
+    final theme = ref.watch(themeProvider);
 
     return MaterialApp(
       title: 'Halulu',
       debugShowCheckedModeBanner: false,
-      themeMode: themeSettings.mode,
+      themeMode: theme.mode,
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: seedColor,
+        colorSchemeSeed: theme.seedColor,
         brightness: Brightness.light,
-        appBarTheme: AppBarTheme(backgroundColor: seedColor, foregroundColor: Colors.white),
+        appBarTheme: AppBarTheme(backgroundColor: theme.seedColor, foregroundColor: Colors.white),
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: seedColor,
+        colorSchemeSeed: theme.seedColor,
         brightness: Brightness.dark,
-        appBarTheme: AppBarTheme(backgroundColor: seedColor, foregroundColor: Colors.white),
+        appBarTheme: AppBarTheme(backgroundColor: theme.seedColor, foregroundColor: Colors.white),
       ),
       home: const HomePage(),
     );

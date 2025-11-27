@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../controllers/home_controller.dart';
-import '../widgets/custom_appbar.dart'; // <-- import your AppBar widget
+import 'widgets/custom_appbar.dart'; // <-- import your AppBar widget
 
 class HomeView extends StatelessWidget {
   final controller = Get.put(HomeController());
@@ -13,13 +13,7 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        toolbarHeight: 60,
-        onSettingsTap: () {
-          // Handle settings tap here
-          debugPrint("Settings tapped!");
-        },
-      ),
+      appBar: CustomAppBar(toolbarHeight: 60),
       body: SfCalendar(view: CalendarView.month),
     );
   }

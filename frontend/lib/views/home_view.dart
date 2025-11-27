@@ -14,6 +14,16 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Simulate fetching from API
+    final sampleData = [
+      ScheduleModel(id: '1', title: 'Team Meeting', start: DateTime.now().add(Duration(hours: 1)), end: DateTime.now().add(Duration(hours: 2))),
+      ScheduleModel(
+        id: '2',
+        title: 'Client Call',
+        start: DateTime.now().add(Duration(days: 1, hours: 3)),
+        end: DateTime.now().add(Duration(days: 1, hours: 4)),
+      ),
+    ];
     return Scaffold(
       appBar: CustomAppBar(toolbarHeight: 60, titleText: 'Halulu', logoAsset: 'assets/images/halulu_128x128.png'),
 
@@ -25,6 +35,8 @@ class HomeView extends StatelessWidget {
         showNavigationArrow: true,
         showTodayButton: true,
         allowedViews: homeController.allowedViews,
+        dataSource: ScheduuleDataSource(sampleData),
+        monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
       ),
     );
   }

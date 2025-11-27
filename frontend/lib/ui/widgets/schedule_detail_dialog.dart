@@ -88,7 +88,6 @@ class _ScheduleDetailDialogState extends ConsumerState<ScheduleDetailDialog> {
                             onPressed: () {
                               ref.read(scheduleProvider.notifier).removeSchedule(widget.schedule.id);
                               Navigator.of(context).pop();
-                              ref.invalidate(scheduleProvider);
                             },
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),

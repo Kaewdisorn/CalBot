@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double toolbarHeight;
+  final String titleText;
+  final String logoAsset;
 
-  const CustomAppBar({super.key, this.toolbarHeight = 80});
+  const CustomAppBar({super.key, required this.toolbarHeight, required this.titleText, required this.logoAsset});
 
   @override
   Widget build(BuildContext context) {
@@ -14,33 +16,17 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Left Logo
-          Image.asset("assets/images/halulu_128x128.png", height: toolbarHeight * 0.8, width: toolbarHeight * 0.8, fit: BoxFit.contain),
-
+          // Left: Logo
+          Image.asset(logoAsset, height: toolbarHeight * 0.8, width: toolbarHeight * 0.8, fit: BoxFit.contain),
           const SizedBox(width: 8),
-          // Text Logo
+
+          // Text
           Text(
-            "Halulu",
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+            titleText,
+            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
           ),
 
-          Spacer(),
-          // Settings Menu
-          PopupMenuButton<String>(
-            icon: Icon(Icons.settings, color: Colors.black, size: 80 * 0.5),
-            onSelected: (value) {
-              if (value == 'Theme') {
-                debugPrint("Profile tapped");
-              }
-              // else if (value == 'logout') {
-              //   print("Logout tapped");
-              // }
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(value: 'profile', child: Text('Profile')),
-              const PopupMenuItem<String>(value: 'logout', child: Text('Logout')),
-            ],
-          ),
+          const Spacer(),
         ],
       ),
     );

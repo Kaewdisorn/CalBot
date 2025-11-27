@@ -30,6 +30,24 @@ class _AddScheduleDialogState extends ConsumerState<AddScheduleDialog> {
     _endDate = widget.date.add(const Duration(hours: 1));
   }
 
+  /// Safely pick a date & time
+  Future<DateTime?> _pickDateTime(BuildContext context, DateTime initial) async {
+    // Use context directly from Builder, no capturing State.context
+    final date = await showDatePicker(context: context, initialDate: initial, firstDate: DateTime(2000), lastDate: DateTime(2100));
+
+    if (date == null) return null; // canceled
+
+    final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(initial));
+
+    if (time == null) return null; // canceled
+
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
+  String _formatDateTime(DateTime dt) =>
+      "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} "
+      "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -43,7 +61,6 @@ class _AddScheduleDialogState extends ConsumerState<AddScheduleDialog> {
               controller: _titleController,
               decoration: const InputDecoration(labelText: "Title"),
             ),
-
             const SizedBox(height: 12),
 
             // Description
@@ -51,54 +68,50 @@ class _AddScheduleDialogState extends ConsumerState<AddScheduleDialog> {
               controller: _descriptionController,
               decoration: const InputDecoration(labelText: "Description"),
             ),
-
             const SizedBox(height: 12),
 
-            // Start / End date
+            // Start / End DateTime pickers
             Row(
               children: [
                 Expanded(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text("Start"),
-                    subtitle: Text("${_startDate!}"),
-                    onTap: () async {
-                      final date = await showDatePicker(context: context, initialDate: _startDate!, firstDate: DateTime(2000), lastDate: DateTime(2100));
-                      if (date != null) {
-                        final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_startDate!));
-                        if (time != null) {
-                          setState(() {
-                            _startDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-                            if (_endDate!.isBefore(_startDate!)) {
-                              _endDate = _startDate!.add(const Duration(hours: 1));
-                            }
-                          });
-                        }
-                      }
-                    },
+                  child: Builder(
+                    builder: (startContext) => ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text("Start"),
+                      subtitle: Text(_startDate != null ? _formatDateTime(_startDate!) : ""),
+                      onTap: () async {
+                        final newDate = await _pickDateTime(startContext, _startDate!);
+                        if (!mounted || newDate == null) return;
+
+                        setState(() {
+                          _startDate = newDate;
+                          if (_endDate!.isBefore(_startDate!)) {
+                            _endDate = _startDate!.add(const Duration(hours: 1));
+                          }
+                        });
+                      },
+                    ),
                   ),
                 ),
                 Expanded(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text("End"),
-                    subtitle: Text("${_endDate!}"),
-                    onTap: () async {
-                      final date = await showDatePicker(context: context, initialDate: _endDate!, firstDate: DateTime(2000), lastDate: DateTime(2100));
-                      if (date != null) {
-                        final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_endDate!));
-                        if (time != null) {
-                          setState(() {
-                            _endDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-                          });
-                        }
-                      }
-                    },
+                  child: Builder(
+                    builder: (endContext) => ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text("End"),
+                      subtitle: Text(_endDate != null ? _formatDateTime(_endDate!) : ""),
+                      onTap: () async {
+                        final newDate = await _pickDateTime(endContext, _endDate!);
+                        if (!mounted || newDate == null) return;
+
+                        setState(() {
+                          _endDate = newDate;
+                        });
+                      },
+                    ),
                   ),
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
 
             // Color selection
@@ -121,12 +134,11 @@ class _AddScheduleDialogState extends ConsumerState<AddScheduleDialog> {
                   )
                   .toList(),
             ),
-
             const SizedBox(height: 12),
 
             // Recurrence
             DropdownButtonFormField<String>(
-              value: _recurrence,
+              initialValue: _recurrence,
               decoration: const InputDecoration(labelText: "Recurrence"),
               items: const [
                 DropdownMenuItem(value: null, child: Text("None")),
@@ -136,7 +148,6 @@ class _AddScheduleDialogState extends ConsumerState<AddScheduleDialog> {
               ],
               onChanged: (value) => setState(() => _recurrence = value),
             ),
-
             const SizedBox(height: 12),
 
             // Done toggle
@@ -167,7 +178,7 @@ class _AddScheduleDialogState extends ConsumerState<AddScheduleDialog> {
             );
 
             ref.read(scheduleProvider.notifier).addSchedule(newSchedule);
-            Navigator.of(context).pop();
+            if (mounted) Navigator.of(context).pop();
           },
           child: const Text("Add"),
         ),

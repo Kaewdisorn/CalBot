@@ -50,7 +50,7 @@ class ThemeSettingsPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
-    const presetColors = [Colors.blue, Colors.green, Colors.purple, Colors.orange, Colors.pink, Colors.teal, Colors.red];
+    const presetColors = [Colors.blue, Colors.green, Colors.purple, Colors.orange, Colors.pink, Colors.teal, Colors.red, Color(0xFFcab1cb)];
 
     return SingleChildScrollView(
       child: Padding(
@@ -103,7 +103,10 @@ class ThemeSettingsPanel extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: c,
                         shape: BoxShape.circle,
-                        border: Border.all(color: theme.seedColor.value == c.value ? Theme.of(context).colorScheme.onPrimary : Colors.transparent, width: 3),
+                        border: Border.all(
+                          color: theme.seedColor.toARGB32() == c.toARGB32() ? Theme.of(context).colorScheme.onPrimary : Colors.transparent,
+                          width: 3,
+                        ),
                       ),
                     ),
                   ),

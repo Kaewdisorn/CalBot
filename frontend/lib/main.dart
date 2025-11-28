@@ -1,22 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 
 import 'controllers/home_controller.dart';
 import 'controllers/widgets_controller/setting_controller.dart';
 import 'views/home_view.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await GetStorage.init();
+
+  // Read saved color seed (fallback to green)
+  final box = GetStorage();
+  final savedColorSeed = box.read('colorSeed') as int? ?? Colors.blue.toARGB32();
+
+  // Put controllers after storage is ready so they can read saved values in onInit
   Get.put(HomeController());
   Get.put(SettingsController());
 
-  runApp(MyApp());
+  runApp(MyApp(colorSeedValue: savedColorSeed));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final int colorSeedValue;
+
+  const MyApp({super.key, required this.colorSeedValue});
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(home: HomeView(), debugShowCheckedModeBanner: false);
+    return GetMaterialApp(
+      home: HomeView(),
+      theme: ThemeData(colorSchemeSeed: Color(colorSeedValue), brightness: Brightness.light, useMaterial3: true),
+      debugShowCheckedModeBanner: false,
+    );
   }
 }

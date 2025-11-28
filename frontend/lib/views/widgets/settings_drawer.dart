@@ -70,13 +70,23 @@ class SettingsDrawer extends StatelessWidget {
 
                     return GestureDetector(
                       onTap: () => settingController.setColor(color),
-                      child: Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                          border: selected ? Border.all(color: Colors.white, width: 3) : null,
+                      child: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 26,
+                              height: 26,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                boxShadow: selected ? [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 1))] : null,
+                              ),
+                            ),
+                            if (selected) const Icon(Icons.check, color: Colors.white, size: 16),
+                          ],
                         ),
                       ),
                     );

@@ -9,9 +9,6 @@ class SettingsController extends GetxController with GetSingleTickerProviderStat
   late AnimationController expandController;
   late Animation<double> animation;
 
-  // Selected theme mode
-  var selectedTheme = ThemeMode.system.obs;
-
   // Custom color palette (selected swatch)
   var selectedColor = Colors.blue.obs;
 
@@ -34,17 +31,10 @@ class SettingsController extends GetxController with GetSingleTickerProviderStat
     }
   }
 
-  // Apply theme
-  void setTheme(ThemeMode mode) {
-    selectedTheme.value = mode;
-    Get.changeThemeMode(mode);
-  }
-
-  // Apply custom color
   void setColor(MaterialColor color) {
     selectedColor.value = color;
 
-    final theme = ThemeData(colorSchemeSeed: color, brightness: selectedTheme.value == ThemeMode.dark ? Brightness.dark : Brightness.light);
+    final theme = ThemeData(colorSchemeSeed: color, brightness: Brightness.light);
 
     Get.changeTheme(theme);
   }

@@ -8,7 +8,7 @@ class SettingsDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = Get.put(SettingsController());
+    final settingController = Get.find<SettingsController>();
 
     return Drawer(
       width: 280,
@@ -26,73 +26,39 @@ class SettingsDrawer extends StatelessWidget {
             // ===== PROFILE =====
             ListTile(leading: Icon(Icons.person), title: Text("Profile"), onTap: () {}),
 
-            // ===== THEME =====
+            // ===== COLOR PALETTE MENU =====
             Obx(
               () => Column(
                 children: [
                   ListTile(
                     leading: Icon(Icons.color_lens),
-                    title: Text("Theme"),
-                    trailing: AnimatedRotation(turns: c.themeExpanded.value ? 0.5 : 0, duration: Duration(milliseconds: 200), child: Icon(Icons.expand_more)),
-                    onTap: c.toggleExpand,
+                    title: Text("Color Theme"),
+                    trailing: AnimatedRotation(
+                      turns: settingController.themeExpanded.value ? 0.5 : 0,
+                      duration: Duration(milliseconds: 200),
+                      child: Icon(Icons.expand_more),
+                    ),
+                    onTap: settingController.toggleExpand,
                   ),
 
-                  // ===== Animated Submenu =====
+                  // ===== EXPANDABLE COLOR SECTION =====
                   SizeTransition(
-                    sizeFactor: c.animation,
-                    axisAlignment: -1.0,
+                    sizeFactor: settingController.animation,
+                    axisAlignment: -1,
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 40.0),
-                      child: Column(
+                      padding: const EdgeInsets.only(left: 40, bottom: 12, top: 6),
+                      child: Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
                         children: [
-                          // LIGHT
-                          ListTile(
-                            leading: Icon(Icons.light_mode, color: Colors.orange),
-                            title: Text("Light"),
-                            onTap: () => c.setTheme(ThemeMode.light),
-                          ),
-
-                          // DARK
-                          ListTile(
-                            leading: Icon(Icons.dark_mode, color: Colors.blueGrey),
-                            title: Text("Dark"),
-                            onTap: () => c.setTheme(ThemeMode.dark),
-                          ),
-
-                          // SYSTEM
-                          ListTile(
-                            leading: Icon(Icons.brightness_auto, color: Colors.green),
-                            title: Text("System Default"),
-                            onTap: () => c.setTheme(ThemeMode.system),
-                          ),
-
-                          Divider(),
-
-                          // ===== CUSTOM COLOR PALETTE =====
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text("Color Palette", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                            ),
-                          ),
-
-                          SizedBox(height: 10),
-
-                          Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            children: [
-                              _colorDot(c, Colors.blue),
-                              _colorDot(c, Colors.red),
-                              _colorDot(c, Colors.green),
-                              _colorDot(c, Colors.deepPurple),
-                              _colorDot(c, Colors.orange),
-                              _colorDot(c, Colors.pink),
-                            ],
-                          ),
-
-                          SizedBox(height: 16),
+                          _colorDot(settingController, Colors.blue),
+                          _colorDot(settingController, Colors.red),
+                          _colorDot(settingController, Colors.green),
+                          _colorDot(settingController, Colors.deepPurple),
+                          _colorDot(settingController, Colors.orange),
+                          _colorDot(settingController, Colors.pink),
+                          _colorDot(settingController, Colors.teal),
+                          _colorDot(settingController, Colors.cyan),
                         ],
                       ),
                     ),
@@ -119,15 +85,13 @@ class SettingsDrawer extends StatelessWidget {
 
       return GestureDetector(
         onTap: () => c.setColor(color),
-        child: AnimatedContainer(
-          duration: Duration(milliseconds: 200),
-          width: selected ? 32 : 26,
-          height: selected ? 32 : 26,
+        child: Container(
+          width: 26,
+          height: 26,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
             border: selected ? Border.all(color: Colors.white, width: 3) : null,
-            boxShadow: [if (selected) BoxShadow(color: color.withOpacity(0.7), blurRadius: 10, spreadRadius: 2)],
           ),
         ),
       );

@@ -8,6 +8,10 @@ WORKDIR /app/frontend
 # Copy Flutter project
 COPY frontend/ .
 
+RUN flutter clean
+
+RUN flutter pub get
+
 # Enable Flutter web
 RUN flutter config --enable-web
 

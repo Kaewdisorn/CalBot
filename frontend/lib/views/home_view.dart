@@ -5,6 +5,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 import '../controllers/home_controller.dart';
 import '../models/schedule_model.dart';
 import 'widgets/custom_appbar.dart';
+import 'widgets/schedule_detail.dart';
 import 'widgets/settings_drawer.dart';
 
 class HomeView extends StatelessWidget {
@@ -14,7 +15,6 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Simulate fetching JSON from API and converting to models
     final sampleJson = [
       {
         'id': '1',
@@ -49,11 +49,16 @@ class HomeView extends StatelessWidget {
         allowedViews: homeController.allowedViews,
         dataSource: ScheduuleDataSource(sampleData),
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
-        onTap: (calendarTapDetails) {},
+        onTap: (CalendarTapDetails details) {
+          if (details.targetElement == CalendarElement.appointment) {
+            final Appointment tappedAppointment = details.appointments![0];
 
-        // appointmentBuilder:(context, calendarAppointmentDetails) {
-
-        // },
+            showDialog(
+              context: context,
+              builder: (context) => ScheduleDetailPopup(appointment: tappedAppointment, onEdit: () {}, onDelete: () {}),
+            );
+          }
+        },
       ),
     );
   }

@@ -29,6 +29,9 @@ class ScheduleModel {
       end: DateTime.parse(json['end']),
       recurrenceRule: json['recurrenceRule'],
       colorValue: json['colorValue'] ?? 0xFF42A5F5,
+      exceptionDateList: json['exceptionDateList'] != null
+          ? (json['exceptionDateList'] as List).map<DateTime>((e) => DateTime.parse(e as String)).toList()
+          : null,
     );
   }
 

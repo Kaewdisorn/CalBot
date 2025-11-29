@@ -14,23 +14,28 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Simulate fetching from API
-    final sampleData = [
-      ScheduleModel(
-        id: '1',
-        title: 'Team Meeting',
-        start: DateTime.now().add(Duration(hours: 1)),
-        end: DateTime.now().add(Duration(hours: 2)),
-        recurrenceRule: 'FREQ=DAILY;INTERVAL=1;COUNT=10',
-        exceptionDateList: <DateTime>[DateTime(2025, 12, 05)],
-      ),
-      ScheduleModel(
-        id: '2',
-        title: 'Client Call',
-        start: DateTime.now().add(Duration(days: 1, hours: 3)),
-        end: DateTime.now().add(Duration(days: 1, hours: 4)),
-      ),
+    // Simulate fetching JSON from API and converting to models
+    final sampleJson = [
+      {
+        'id': '1',
+        'title': 'Team Meeting',
+        'start': DateTime.now().add(Duration(hours: 1)).toIso8601String(),
+        'end': DateTime.now().add(Duration(hours: 2)).toIso8601String(),
+        'recurrenceRule': 'FREQ=DAILY;INTERVAL=1;COUNT=10',
+        'exceptionDateList': [DateTime(2025, 12, 05).toIso8601String()],
+        'colorValue': 0xFF42A5F5,
+      },
+      {
+        'id': '2',
+        'title': 'Client Call',
+        'start': DateTime.now().add(Duration(days: 1, hours: 3)).toIso8601String(),
+        'end': DateTime.now().add(Duration(days: 1, hours: 4)).toIso8601String(),
+        'colorValue': 0xFF66BB6A,
+      },
     ];
+
+    final sampleData = sampleJson.map<ScheduleModel>((j) => ScheduleModel.fromJson(j)).toList();
+
     return Scaffold(
       appBar: CustomAppBar(toolbarHeight: 60, titleText: 'Halulu', logoAsset: 'assets/images/halulu_128x128.png'),
 
@@ -45,6 +50,7 @@ class HomeView extends StatelessWidget {
         dataSource: ScheduuleDataSource(sampleData),
         monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
         onTap: (calendarTapDetails) {},
+
         // appointmentBuilder:(context, calendarAppointmentDetails) {
 
         // },

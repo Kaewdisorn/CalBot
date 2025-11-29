@@ -4,10 +4,10 @@ class HomeController {
   final List<CalendarView> allowedViews = <CalendarView>[
     CalendarView.day,
     CalendarView.week,
-    CalendarView.workWeek,
+    // CalendarView.workWeek,
     CalendarView.timelineDay,
     CalendarView.timelineWeek,
-    CalendarView.timelineWorkWeek,
+    // CalendarView.timelineWorkWeek,
     CalendarView.month,
     CalendarView.schedule,
   ];

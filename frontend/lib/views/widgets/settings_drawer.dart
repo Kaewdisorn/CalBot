@@ -24,16 +24,16 @@ class SettingsDrawer extends StatelessWidget {
             Divider(),
 
             // ===== PROFILE =====
-            ListTile(leading: Icon(Icons.person), title: Text("Profile"), onTap: () {}),
+            // ListTile(leading: Icon(Icons.person), title: Text("Profile"), onTap: () {}),
 
             // Color theme
             _colorPaletteMenu(settingController),
 
-            Divider(),
+            // Divider(),
 
-            ListTile(leading: Icon(Icons.notifications), title: Text("Notifications"), onTap: () {}),
+            // ListTile(leading: Icon(Icons.notifications), title: Text("Notifications"), onTap: () {}),
 
-            ListTile(leading: Icon(Icons.logout), title: Text("Logout"), onTap: () {}),
+            // ListTile(leading: Icon(Icons.logout), title: Text("Logout"), onTap: () {}),
           ],
         ),
       ),

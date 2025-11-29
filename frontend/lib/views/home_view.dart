@@ -52,6 +52,8 @@ class HomeView extends StatelessWidget {
         onTap: (CalendarTapDetails details) {
           if (details.targetElement == CalendarElement.appointment) {
             final Appointment tappedAppointment = details.appointments![0];
+            print(details.date);
+            print(tappedAppointment.startTime);
 
             showDialog(
               context: context,
@@ -59,6 +61,10 @@ class HomeView extends StatelessWidget {
             );
           }
         },
+        // appointmentBuilder: (BuildContext context, CalendarAppointmentDetails details) {
+        //   print(details);
+        //   return Container();
+        // },
       ),
     );
   }

@@ -68,7 +68,7 @@ class HomeView extends StatelessWidget {
 
               if (result != null && result.isNotEmpty) {
                 final newId = DateTime.now().millisecondsSinceEpoch.toString();
-                final newModel = ScheduleModel(id: newId, title: result, start: tapped, end: tapped.add(const Duration(hours: 1)));
+                final newModel = ScheduleModel(id: newId, title: result, start: tapped, end: tapped.add(const Duration(hours: 1)), isAllDay: false);
 
                 homeController.scheduleList.add(newModel);
               }

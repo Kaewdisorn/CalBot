@@ -42,7 +42,8 @@ class HomeController extends GetxController {
     "title": "Client Call",
     "start": "2025-12-02T15:00:00.000Z",
     "end": "2025-12-02T16:00:00.000Z",
-    "colorValue": 4287457102
+    "colorValue": 4287457102,
+    "isAllDay" : true
   },
   {
     "id": "3",

@@ -6,18 +6,20 @@ class ScheduleModel {
   final String title;
   final DateTime start;
   final DateTime end;
+  final bool isAllDay;
+  final int colorValue;
   final String? recurrenceRule;
   final List<DateTime>? exceptionDateList;
-  final int colorValue;
 
   ScheduleModel({
     required this.id,
     required this.title,
     required this.start,
     required this.end,
+    required this.isAllDay,
+    this.colorValue = 0xFF42A5F5, // default blue
     this.recurrenceRule,
     this.exceptionDateList,
-    this.colorValue = 0xFF42A5F5, // default blue
   });
 
   // Convert JSON from API to model
@@ -27,8 +29,9 @@ class ScheduleModel {
       title: json['title'] ?? '',
       start: DateTime.parse(json['start']),
       end: DateTime.parse(json['end']),
-      recurrenceRule: json['recurrenceRule'],
+      isAllDay: json['isAllDay'] ?? false,
       colorValue: json['colorValue'] ?? 0xFF42A5F5,
+      recurrenceRule: json['recurrenceRule'],
       exceptionDateList: json['exceptionDateList'] != null
           ? (json['exceptionDateList'] as List).map<DateTime>((e) => DateTime.parse(e as String)).toList()
           : null,
@@ -38,9 +41,11 @@ class ScheduleModel {
   // Convert model to SfCalendar Appointment
   Appointment toCalendarAppointment() {
     return Appointment(
+      id: id,
+      subject: title,
       startTime: start,
       endTime: end,
-      subject: title,
+      isAllDay: isAllDay,
       color: Color(colorValue),
       recurrenceRule: recurrenceRule,
       recurrenceExceptionDates: exceptionDateList,

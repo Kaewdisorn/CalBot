@@ -34,6 +34,8 @@ class HomeView extends StatelessWidget {
           onTap: (CalendarTapDetails details) async {
             // appointment tapped
             final appts = details.appointments;
+
+            // not empty cell tapped
             if (details.targetElement == CalendarElement.appointment && appts != null && appts.isNotEmpty) {
               final Appointment tappedAppointment = appts[0] as Appointment;
               // show detail popup

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:intl/intl.dart';
 
@@ -28,32 +29,11 @@ class ScheduleDetailPopup extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // --- Header ---
-                    Row(
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 40,
-                          decoration: BoxDecoration(color: appointment.color, borderRadius: BorderRadius.circular(8)),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            appointment.subject,
-                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
-                      ],
-                    ),
+                    _headerRow(),
                     const Divider(height: 30),
 
                     // --- Date & Time ---
-                    _buildInfoRow(
-                      Icons.access_time,
-                      DateFormat('MMM d, yyyy').format(appointment.startTime),
-                      "${DateFormat('h:mm a').format(appointment.startTime)} - ${DateFormat('h:mm a').format(appointment.endTime)}",
-                    ),
+                    _dateTimeRow(appointment: appointment),
                     const SizedBox(height: 15),
 
                     // --- Location (Conditional) ---
@@ -114,6 +94,54 @@ class ScheduleDetailPopup extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _headerRow() {
+    return Row(
+      children: [
+        Container(
+          width: 6,
+          height: 40,
+          decoration: BoxDecoration(color: appointment.color, borderRadius: BorderRadius.circular(8)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            appointment.subject,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        IconButton(icon: const Icon(Icons.close), onPressed: () => Get.back()),
+      ],
+    );
+  }
+
+  Widget _dateTimeRow({required final Appointment appointment}) {
+    final dayFormat = DateFormat('EEEE, MMM d');
+    final timeFormat = DateFormat('h:mm a');
+    DateTime start = appointment.startTime;
+    DateTime end = appointment.endTime;
+
+    final isSameDay = start.year == end.year && start.month == end.month && start.day == end.day;
+
+    final String dateTimeLabel;
+
+    if (isSameDay) {
+      dateTimeLabel = "${dayFormat.format(start)} • ${timeFormat.format(start)} - ${timeFormat.format(end)}";
+    } else {
+      dateTimeLabel =
+          "${dayFormat.format(start)} • ${timeFormat.format(start)} ~ "
+          "${dayFormat.format(end)} • ${timeFormat.format(end)}";
+    }
+
+    return Row(
+      children: [
+        const Icon(Icons.access_time, color: Colors.grey, size: 20),
+        const SizedBox(width: 12),
+        Expanded(child: Text(dateTimeLabel, maxLines: 2, style: const TextStyle(fontSize: 16))),
+      ],
     );
   }
 

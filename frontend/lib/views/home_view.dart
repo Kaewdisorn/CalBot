@@ -32,6 +32,13 @@ class HomeView extends StatelessWidget {
         'end': DateTime.now().add(Duration(days: 1, hours: 4)).toIso8601String(),
         'colorValue': 0xFF66BB6A,
       },
+      {
+        'id': '3',
+        'title': 'Shopping',
+        'start': DateTime.now().add(Duration(days: 1, hours: 3)).toIso8601String(),
+        'end': DateTime.now().add(Duration(days: 2, hours: 4)).toIso8601String(),
+        'colorValue': 0xFF66BB6A,
+      },
     ];
 
     final sampleData = sampleJson.map<ScheduleModel>((j) => ScheduleModel.fromJson(j)).toList();

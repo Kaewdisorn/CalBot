@@ -60,7 +60,7 @@ class SettingsDrawer extends StatelessWidget {
             sizeFactor: settingController.animation,
             axisAlignment: -1,
             child: Padding(
-              padding: const EdgeInsets.only(left: 40, bottom: 12, top: 6),
+              padding: const EdgeInsets.only(left: 40, bottom: 12, top: 6, right: 5),
               child: Wrap(
                 spacing: 12,
                 runSpacing: 12,

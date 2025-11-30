@@ -42,14 +42,14 @@ class _AuthDialogState extends State<AuthDialog> {
       } else {
         authController.signup(email, password);
       }
-      Get.back();
+      // Do not call Navigator.pop/Get.back() here — the view uses the controller's state to hide the dialog overlay.
       setState(() => isLoading = false);
     });
   }
 
   void _handleGuest() {
     authController.useAsGuest();
-    Navigator.pop(context);
+    // Dialog overlay will hide via controller state; no Navigator.pop here.
   }
 
   @override

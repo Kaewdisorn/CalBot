@@ -3,7 +3,6 @@ import 'package:get_storage/get_storage.dart';
 
 class AuthController extends GetxController {
   final box = GetStorage();
-
   final isLoggedIn = false.obs;
   final isGuest = false.obs;
   final userName = ''.obs;

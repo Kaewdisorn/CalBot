@@ -44,6 +44,20 @@ class ScheduleModel {
     return false;
   }
 
+  // Convert model to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'start': start.toIso8601String(),
+      'end': end.toIso8601String(),
+      'isAllDay': isAllDay,
+      'colorValue': colorValue,
+      if (recurrenceRule != null) 'recurrenceRule': recurrenceRule,
+      if (exceptionDateList != null) 'exceptionDateList': exceptionDateList!.map((e) => e.toIso8601String()).toList(),
+    };
+  }
+
   // Convert model to SfCalendar Appointment
   Appointment toCalendarAppointment() {
     // For all-day events, set time to 12:00 AM - 11:59 PM

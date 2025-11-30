@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
-import 'controllers/auth_controller.dart';
+import 'controllers/widgets_controller/auth_controller.dart';
 import 'controllers/home_controller.dart';
 import 'controllers/widgets_controller/setting_controller.dart';
 import 'views/home_view.dart';

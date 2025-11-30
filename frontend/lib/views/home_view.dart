@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
-import '../controllers/auth_controller.dart';
 import '../controllers/home_controller.dart';
 import '../models/schedule_model.dart';
-import 'widgets/auth_dialog.dart';
 import 'widgets/custom_appbar.dart';
 import 'widgets/schedule_detail.dart';
 import 'widgets/settings_drawer.dart';
@@ -81,19 +79,19 @@ class HomeView extends StatelessWidget {
           }),
 
           // Auth overlay: dim background + centered dialog
-          Obx(() {
-            if (!Get.find<AuthController>().isLoggedIn.value && !Get.find<AuthController>().isGuest.value) {
-              return Stack(
-                children: [
-                  const ModalBarrier(color: Colors.black54, dismissible: false),
-                  Center(
-                    child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 480), child: const AuthDialog()),
-                  ),
-                ],
-              );
-            }
-            return const SizedBox.shrink();
-          }),
+          // Obx(() {
+          //   if (!Get.find<AuthController>().isLoggedIn.value && !Get.find<AuthController>().isGuest.value) {
+          //     return Stack(
+          //       children: [
+          //         const ModalBarrier(color: Colors.black54, dismissible: false),
+          //         Center(
+          //           child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 480), child: const AuthDialog()),
+          //         ),
+          //       ],
+          //     );
+          //   }
+          //   return const SizedBox.shrink();
+          // }),
         ],
       ),
     );

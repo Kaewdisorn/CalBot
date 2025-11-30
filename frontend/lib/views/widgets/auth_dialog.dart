@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../controllers/auth_controller.dart';
+import '../../controllers/widgets_controller/auth_controller.dart';
 
 class AuthDialog extends StatelessWidget {
   const AuthDialog({super.key});

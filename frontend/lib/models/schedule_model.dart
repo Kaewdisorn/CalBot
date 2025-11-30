@@ -29,7 +29,7 @@ class ScheduleModel {
       title: json['title'] ?? '',
       start: DateTime.parse(json['start']),
       end: DateTime.parse(json['end']),
-      isAllDay: json['isAllDay'] ?? false,
+      isAllDay: _parseBool(json['isAllDay']),
       colorValue: json['colorValue'] ?? 0xFF42A5F5,
       recurrenceRule: json['recurrenceRule'],
       exceptionDateList: json['exceptionDateList'] != null
@@ -38,13 +38,23 @@ class ScheduleModel {
     );
   }
 
+  static bool _parseBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is String) return value.toLowerCase() == 'true';
+    return false;
+  }
+
   // Convert model to SfCalendar Appointment
   Appointment toCalendarAppointment() {
+    // For all-day events, set time to midnight
+    final DateTime startTime = isAllDay ? DateTime(start.year, start.month, start.day) : start;
+    final DateTime endTime = isAllDay ? DateTime(end.year, end.month, end.day) : end;
+
     return Appointment(
       id: id,
       subject: title,
-      startTime: start,
-      endTime: end,
+      startTime: startTime,
+      endTime: endTime,
       isAllDay: isAllDay,
       color: Color(colorValue),
       recurrenceRule: recurrenceRule,

@@ -16,10 +16,8 @@ Future<void> main() async {
   final box = GetStorage();
   final savedColorSeed = box.read('colorSeed') as int? ?? Colors.blue.toARGB32();
 
-  // Initialize AuthController first to check login status
-  Get.put(AuthController());
-
   // Put other controllers after storage is ready
+  Get.put(AuthController()); // Initialize AuthController first to check login status
   Get.put(HomeController());
   Get.put(SettingsController());
 

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
@@ -7,10 +8,23 @@ class AuthController extends GetxController {
   final isGuest = false.obs;
   final userName = ''.obs;
 
+  // Dialog-specific state
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final isLogin = true.obs;
+  final isLoading = false.obs;
+
   @override
   void onInit() {
     super.onInit();
     _checkAuthStatus();
+  }
+
+  @override
+  void onClose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.onClose();
   }
 
   void _checkAuthStatus() {
@@ -24,6 +38,40 @@ class AuthController extends GetxController {
     } else if (savedIsGuest) {
       isGuest.value = true;
     }
+  }
+
+  void handleLogin() {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      Get.snackbar('Error', 'Please fill in all fields');
+      return;
+    }
+
+    isLoading.value = true;
+
+    // Simulate API call delay
+    Future.delayed(const Duration(seconds: 1), () {
+      if (isLogin.value) {
+        login(email, password);
+      } else {
+        signup(email, password);
+      }
+      // Do not call Navigator.pop/Get.back() here — the view uses the controller's state to hide the dialog overlay.
+      isLoading.value = false;
+    });
+  }
+
+  void handleGuest() {
+    useAsGuest();
+    // Dialog overlay will hide via controller state; no Navigator.pop here.
+  }
+
+  void toggleAuthMode() {
+    isLogin.value = !isLogin.value;
+    emailController.clear();
+    passwordController.clear();
   }
 
   void login(String email, String password) {

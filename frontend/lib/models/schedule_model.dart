@@ -46,9 +46,9 @@ class ScheduleModel {
 
   // Convert model to SfCalendar Appointment
   Appointment toCalendarAppointment() {
-    // For all-day events, set time to midnight
-    final DateTime startTime = isAllDay ? DateTime(start.year, start.month, start.day) : start;
-    final DateTime endTime = isAllDay ? DateTime(end.year, end.month, end.day) : end;
+    // For all-day events, set time to 12:00 AM - 11:59 PM
+    final DateTime startTime = isAllDay ? DateTime(start.year, start.month, start.day, 0, 0, 0) : start;
+    final DateTime endTime = isAllDay ? DateTime(end.year, end.month, end.day, 23, 59, 59) : end;
 
     return Appointment(
       id: id,

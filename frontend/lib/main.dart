@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
+import 'controllers/auth_controller.dart';
 import 'controllers/home_controller.dart';
 import 'controllers/widgets_controller/setting_controller.dart';
 import 'views/home_view.dart';
@@ -11,11 +12,14 @@ Future<void> main() async {
 
   await GetStorage.init();
 
-  // Read saved color seed (fallback to green)
+  // Read saved color seed (fallback to blue)
   final box = GetStorage();
   final savedColorSeed = box.read('colorSeed') as int? ?? Colors.blue.toARGB32();
 
-  // Put controllers after storage is ready so they can read saved values in onInit
+  // Initialize AuthController first to check login status
+  Get.put(AuthController());
+
+  // Put other controllers after storage is ready
   Get.put(HomeController());
   Get.put(SettingsController());
 

@@ -2,16 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
+import '../controllers/auth_controller.dart';
 import '../controllers/home_controller.dart';
 import '../models/schedule_model.dart';
+import 'widgets/auth_dialog.dart';
 import 'widgets/custom_appbar.dart';
 import 'widgets/schedule_detail.dart';
 import 'widgets/settings_drawer.dart';
 
-class HomeView extends StatelessWidget {
-  final homeController = Get.find<HomeController>();
+class HomeView extends StatefulWidget {
+  const HomeView({super.key});
 
-  HomeView({super.key});
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  final homeController = Get.find<HomeController>();
+  final authController = Get.find<AuthController>();
+  bool _authDialogShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Show auth dialog if not logged in and not guest
+      if (!authController.isLoggedIn.value && !authController.isGuest.value && !_authDialogShown) {
+        _authDialogShown = true;
+        showDialog(context: context, barrierDismissible: false, builder: (context) => const AuthDialog());
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -36,8 +36,8 @@ class ScheduleDetailPopup extends StatelessWidget {
                     _dateTimeRow(appointment: appointment),
                     const SizedBox(height: 15),
 
-                    // --- Location (Conditional) ---
-                    if (appointment.location != null && appointment.location!.isNotEmpty) _buildInfoRow(Icons.location_on, "Location", appointment.location!),
+                    // --- Location ---
+                    _locationRow(appointment: appointment),
 
                     // --- Notes (Conditional) ---
                     if (appointment.notes != null && appointment.notes!.isNotEmpty) ...[
@@ -145,22 +145,22 @@ class ScheduleDetailPopup extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: Colors.grey, size: 20),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-              Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-            ],
-          ),
-        ),
-      ],
+  Widget _locationRow({required final Appointment appointment}) {
+    bool isVisible = false;
+
+    if (appointment.location != null && appointment.location!.isNotEmpty) {
+      isVisible = true;
+    }
+
+    return Visibility(
+      visible: isVisible,
+      child: Row(
+        children: [
+          const Icon(Icons.location_on, color: Colors.grey, size: 20),
+          const SizedBox(width: 12),
+          Text(appointment.location!, style: const TextStyle(fontSize: 16)),
+        ],
+      ),
     );
   }
 }

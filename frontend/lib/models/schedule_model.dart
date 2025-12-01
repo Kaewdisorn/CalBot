@@ -6,6 +6,7 @@ class ScheduleModel {
   final String title;
   final DateTime start;
   final DateTime end;
+  final String? location;
   final bool isAllDay;
   final int colorValue;
   final String? recurrenceRule;
@@ -17,6 +18,7 @@ class ScheduleModel {
     required this.start,
     required this.end,
     required this.isAllDay,
+    this.location,
     this.colorValue = 0xFF42A5F5, // default blue
     this.recurrenceRule,
     this.exceptionDateList,
@@ -29,6 +31,7 @@ class ScheduleModel {
       title: json['title'] ?? '',
       start: DateTime.parse(json['start']),
       end: DateTime.parse(json['end']),
+      location: json['location'] ?? '',
       isAllDay: _parseBool(json['isAllDay']),
       colorValue: json['colorValue'] ?? 0xFF42A5F5,
       recurrenceRule: json['recurrenceRule'],
@@ -51,6 +54,7 @@ class ScheduleModel {
       'title': title,
       'start': start.toIso8601String(),
       'end': end.toIso8601String(),
+      'location': location,
       'isAllDay': isAllDay,
       'colorValue': colorValue,
       if (recurrenceRule != null) 'recurrenceRule': recurrenceRule,
@@ -69,6 +73,7 @@ class ScheduleModel {
       subject: title,
       startTime: startTime,
       endTime: endTime,
+      location: location,
       isAllDay: isAllDay,
       color: Color(colorValue),
       recurrenceRule: recurrenceRule,

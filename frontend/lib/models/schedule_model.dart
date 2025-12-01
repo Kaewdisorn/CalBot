@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
@@ -28,26 +30,55 @@ class ScheduleModel {
 
   // Convert JSON from API to model
   factory ScheduleModel.fromJson(Map<String, dynamic> json) {
-    return ScheduleModel(
-      id: json['id'] ?? '',
-      title: json['title'] ?? '',
-      start: DateTime.parse(json['start']),
-      end: DateTime.parse(json['end']),
-      location: json['location'] ?? '',
-      isAllDay: _parseBool(json['isAllDay']),
-      note: json['note'] ?? '',
-      colorValue: json['colorValue'] ?? 0xFF42A5F5,
-      recurrenceRule: json['recurrenceRule'],
-      exceptionDateList: json['exceptionDateList'] != null
-          ? (json['exceptionDateList'] as List).map<DateTime>((e) => DateTime.parse(e as String)).toList()
-          : null,
-    );
-  }
+    // 1. Initialize _note to null first, so the compiler is satisfied.
+    // We use 'dynamic' to check the type safely before casting/encoding.
+    final dynamic noteRaw = json['note'];
+    String? parsedNote;
 
-  static bool _parseBool(dynamic value) {
-    if (value is bool) return value;
-    if (value is String) return value.toLowerCase() == 'true';
-    return false;
+    if (noteRaw is Map<String, dynamic>) {
+      // If it's a Map (e.g., {"isDone": true}), encode it to a String.
+      parsedNote = jsonEncode(noteRaw);
+    } else if (noteRaw is String) {
+      // If it's already a String, use it directly.
+      parsedNote = noteRaw;
+    }
+    // Otherwise, parsedNote remains null.
+
+    // 2. Extract and convert exception dates
+    List<DateTime>? exceptionDates;
+    if (json['exceptionDateList'] is List) {
+      // Ensure the list items are iterated and parsed safely
+      exceptionDates = (json['exceptionDateList'] as List<dynamic>).map((e) => DateTime.parse(e.toString())).toList();
+    }
+
+    // 3. Construct the Model, ensuring required fields are handled robustly.
+    return ScheduleModel(
+      // Use `as String? ?? ''` for required Strings to ensure type safety
+      // and provide a default empty string if the key is missing or null.
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+
+      // Date parsing: Safely check for the key/value before parsing.
+      start: DateTime.parse(json['start'] as String), // Assuming 'start' is always present and a String
+      end: DateTime.parse(json['end'] as String), // Assuming 'end' is always present and a String
+      // Location: Use safe casting and provide a default empty string.
+      location: json['location'] as String? ?? '',
+
+      // isAllDay: Use explicit null check and default to false.
+      isAllDay: json['isAllDay'] as bool? ?? false,
+
+      // Note: Use the parsed String
+      note: parsedNote,
+
+      // Color: Use null-coalescing with the default int value.
+      colorValue: json['colorValue'] as int? ?? 0xFF42A5F5,
+
+      // Recurrence: Simple casting.
+      recurrenceRule: json['recurrenceRule'] as String?,
+
+      // Exception Dates: Use the safely parsed list.
+      exceptionDateList: exceptionDates,
+    );
   }
 
   // Convert model to JSON

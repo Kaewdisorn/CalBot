@@ -8,6 +8,7 @@ class ScheduleModel {
   final DateTime end;
   final String? location;
   final bool isAllDay;
+  final String? note;
   final int colorValue;
   final String? recurrenceRule;
   final List<DateTime>? exceptionDateList;
@@ -18,6 +19,7 @@ class ScheduleModel {
     required this.start,
     required this.end,
     required this.isAllDay,
+    this.note,
     this.location,
     this.colorValue = 0xFF42A5F5, // default blue
     this.recurrenceRule,
@@ -33,6 +35,7 @@ class ScheduleModel {
       end: DateTime.parse(json['end']),
       location: json['location'] ?? '',
       isAllDay: _parseBool(json['isAllDay']),
+      note: json['note'] ?? '',
       colorValue: json['colorValue'] ?? 0xFF42A5F5,
       recurrenceRule: json['recurrenceRule'],
       exceptionDateList: json['exceptionDateList'] != null
@@ -48,19 +51,20 @@ class ScheduleModel {
   }
 
   // Convert model to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'start': start.toIso8601String(),
-      'end': end.toIso8601String(),
-      'location': location,
-      'isAllDay': isAllDay,
-      'colorValue': colorValue,
-      if (recurrenceRule != null) 'recurrenceRule': recurrenceRule,
-      if (exceptionDateList != null) 'exceptionDateList': exceptionDateList!.map((e) => e.toIso8601String()).toList(),
-    };
-  }
+  // Map<String, dynamic> toJson() {
+  //   return {
+  //     'id': id,
+  //     'title': title,
+  //     'start': start.toIso8601String(),
+  //     'end': end.toIso8601String(),
+  //     'location': location,
+  //     'isAllDay': isAllDay,
+  //     'note': note,
+  //     'colorValue': colorValue,
+  //     if (recurrenceRule != null) 'recurrenceRule': recurrenceRule,
+  //     if (exceptionDateList != null) 'exceptionDateList': exceptionDateList!.map((e) => e.toIso8601String()).toList(),
+  //   };
+  // }
 
   // Convert model to SfCalendar Appointment
   Appointment toCalendarAppointment() {
@@ -75,6 +79,7 @@ class ScheduleModel {
       endTime: endTime,
       location: location,
       isAllDay: isAllDay,
+      notes: note,
       color: Color(colorValue),
       recurrenceRule: recurrenceRule,
       recurrenceExceptionDates: exceptionDateList,

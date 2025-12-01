@@ -44,7 +44,8 @@ class HomeController extends GetxController {
     "end": "2025-12-02T16:00:00.000Z",
     "location": "Seoul",
     "colorValue": 4287457102,
-    "isAllDay" : true
+    "isAllDay" : true,
+    "note" : "{'isDone:true'}"
   },
   {
     "id": "3",

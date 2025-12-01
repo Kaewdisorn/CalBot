@@ -3,12 +3,16 @@ import 'package:get/get.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:intl/intl.dart';
 
+import '../../controllers/widgets_controller/schedule_detail_controller.dart';
+
 class ScheduleDetailPopup extends StatelessWidget {
   final Appointment appointment;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
-  const ScheduleDetailPopup({super.key, required this.appointment, this.onEdit, this.onDelete});
+  ScheduleDetailPopup({super.key, required this.appointment, this.onEdit, this.onDelete});
+
+  final scheduleDetailController = Get.find<ScheduleDetailController>();
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +55,36 @@ class ScheduleDetailPopup extends StatelessWidget {
                     ],
 
                     const SizedBox(height: 25),
+
+                    // ==========================================
+                    // --- NEW: Checkbox Section (GetX Style) ---
+                    // ==========================================
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      // Obx makes this specific widget listen to changes in isChecked
+                      child: Obx(
+                        () => CheckboxListTile(
+                          title: const Text(
+                            "Mark as done", // customize your text
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                          ),
+                          value: scheduleDetailController.isdone.value, // Access the value
+                          activeColor: Colors.blue, // Customize color
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                          dense: true,
+                          controlAffinity: ListTileControlAffinity.leading, // Checkbox on left
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          onChanged: (bool? newValue) {
+                            // Update the Rx value. The UI updates automatically.
+                            scheduleDetailController.isdone.value = newValue ?? false;
+                          },
+                        ),
+                      ),
+                    ),
+                    // ==========================================
 
                     // --- Action Buttons ---
                     Row(

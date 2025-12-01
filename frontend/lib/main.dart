@@ -4,6 +4,7 @@ import 'package:get_storage/get_storage.dart';
 
 import 'controllers/widgets_controller/auth_controller.dart';
 import 'controllers/home_controller.dart';
+import 'controllers/widgets_controller/schedule_detail_controller.dart';
 import 'controllers/widgets_controller/setting_controller.dart';
 import 'views/home_view.dart';
 
@@ -20,6 +21,7 @@ Future<void> main() async {
   Get.put(AuthController()); // Initialize AuthController first to check login status
   Get.put(HomeController());
   Get.put(SettingsController());
+  Get.put(ScheduleDetailController());
 
   runApp(MyApp(colorSeedValue: savedColorSeed));
 }

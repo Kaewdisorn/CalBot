@@ -42,49 +42,23 @@ class ScheduleDetailPopup extends StatelessWidget {
 
                     // --- Location ---
                     _locationRow(appointment: appointment),
+                    const SizedBox(height: 15),
 
-                    // --- Notes (Conditional) ---
-                    if (appointment.notes != null && appointment.notes!.isNotEmpty) ...[
-                      const SizedBox(height: 15),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        width: double.infinity,
-                        decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
-                        child: Text(appointment.notes!, style: TextStyle(color: Colors.grey[800], fontSize: 14)),
-                      ),
-                    ],
+                    // // --- Notes (Conditional) ---
+                    // if (appointment.notes != null && appointment.notes!.isNotEmpty) ...[
+                    //   const SizedBox(height: 15),
+                    //   Container(
+                    //     padding: const EdgeInsets.all(12),
+                    //     width: double.infinity,
+                    //     decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
+                    //     child: Text(appointment.notes!, style: TextStyle(color: Colors.grey[800], fontSize: 14)),
+                    //   ),
+                    // ],
+
+                    // --- Mark as done ---
+                    _markDoneRow(appointment: appointment),
 
                     const SizedBox(height: 25),
-
-                    // ==========================================
-                    // --- NEW: Checkbox Section (GetX Style) ---
-                    // ==========================================
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      // Obx makes this specific widget listen to changes in isChecked
-                      child: Obx(
-                        () => CheckboxListTile(
-                          title: const Text(
-                            "Mark as done", // customize your text
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                          ),
-                          value: scheduleDetailController.isdone.value, // Access the value
-                          activeColor: Colors.blue, // Customize color
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                          dense: true,
-                          controlAffinity: ListTileControlAffinity.leading, // Checkbox on left
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          onChanged: (bool? newValue) {
-                            // Update the Rx value. The UI updates automatically.
-                            scheduleDetailController.isdone.value = newValue ?? false;
-                          },
-                        ),
-                      ),
-                    ),
-                    // ==========================================
 
                     // --- Action Buttons ---
                     Row(
@@ -194,6 +168,36 @@ class ScheduleDetailPopup extends StatelessWidget {
           const SizedBox(width: 12),
           Text(appointment.location!, style: const TextStyle(fontSize: 16)),
         ],
+      ),
+    );
+  }
+
+  Widget _markDoneRow({required final Appointment appointment}) {
+    scheduleDetailController.checkIsDone(appointment);
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      // Obx makes this specific widget listen to changes in isChecked
+      child: Obx(
+        () => CheckboxListTile(
+          title: const Text(
+            "Mark as done", // customize your text
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          value: scheduleDetailController.isdone.value, // Access the value
+          activeColor: Colors.blue, // Customize color
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+          dense: true,
+          controlAffinity: ListTileControlAffinity.leading, // Checkbox on left
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          onChanged: (bool? newValue) {
+            // Update the Rx value. The UI updates automatically.
+            scheduleDetailController.isdone.value = newValue ?? false;
+          },
+        ),
       ),
     );
   }

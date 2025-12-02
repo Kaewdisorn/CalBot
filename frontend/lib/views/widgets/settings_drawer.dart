@@ -82,38 +82,87 @@ class SettingsDrawer extends StatelessWidget {
             sizeFactor: settingController.animation,
             axisAlignment: -1,
             child: Padding(
-              padding: const EdgeInsets.only(left: 40, bottom: 12, top: 6, right: 5),
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: SettingsController.palette.map((color) {
-                  return Obx(() {
-                    final selected = settingController.selectedColor.value == color;
+              padding: const EdgeInsets.only(left: 16, bottom: 12, top: 6, right: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Color palette
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: SettingsController.palette.map((color) {
+                      return Obx(() {
+                        final selected = settingController.isColorSelected(color);
 
-                    return GestureDetector(
-                      onTap: () => settingController.setColor(color),
-                      child: SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Container(
-                              width: 26,
-                              height: 26,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                                boxShadow: selected ? [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 1))] : null,
-                              ),
+                        return GestureDetector(
+                          onTap: () => settingController.setColor(color),
+                          child: SizedBox(
+                            width: 30,
+                            height: 30,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Container(
+                                  width: 26,
+                                  height: 26,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                    boxShadow: selected ? [const BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 1))] : null,
+                                  ),
+                                ),
+                                if (selected) const Icon(Icons.check, color: Colors.white, size: 16),
+                              ],
                             ),
-                            if (selected) const Icon(Icons.check, color: Colors.white, size: 16),
-                          ],
+                          ),
+                        );
+                      });
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Custom color input
+                  Row(
+                    children: [
+                      // Color preview
+                      Obx(
+                        () => Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: settingController.selectedColor.value,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
                         ),
                       ),
-                    );
-                  });
-                }).toList(),
+                      const SizedBox(width: 12),
+                      // Hex input field
+                      Expanded(
+                        child: TextField(
+                          controller: settingController.customColorController,
+                          decoration: InputDecoration(
+                            labelText: 'Hex Code',
+                            hintText: '#FF5733',
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            errorText: settingController.customColorError.value,
+                            errorStyle: const TextStyle(fontSize: 11),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.check, size: 20),
+                              onPressed: () => settingController.applyCustomColor(settingController.customColorController.text),
+                              tooltip: 'Apply color',
+                            ),
+                          ),
+                          style: const TextStyle(fontSize: 14),
+                          onSubmitted: settingController.applyCustomColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),

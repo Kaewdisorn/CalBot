@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../controllers/home_controller.dart';
 import '../../controllers/widgets_controller/setting_controller.dart';
 
 class SettingsDrawer extends StatelessWidget {
@@ -9,6 +10,7 @@ class SettingsDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settingController = Get.find<SettingsController>();
+    final homeController = Get.find<HomeController>();
 
     return Drawer(
       width: 280,
@@ -23,6 +25,9 @@ class SettingsDrawer extends StatelessWidget {
             ),
             Divider(),
 
+            // ===== VIEW MODE =====
+            _agendaViewToggle(homeController),
+
             // ===== PROFILE =====
             // ListTile(leading: Icon(Icons.person), title: Text("Profile"), onTap: () {}),
 
@@ -33,9 +38,26 @@ class SettingsDrawer extends StatelessWidget {
 
             // ListTile(leading: Icon(Icons.notifications), title: Text("Notifications"), onTap: () {}),
 
-            // ListTile(leading: Icon(Icons.logout), title: Text("Logout"), onTap: () {}),
+            // ListTile(leading: Icon(Icons.logout), title: Text("Logout"), onTap: () {});
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _agendaViewToggle(HomeController homeController) {
+    return Obx(
+      () => ListTile(
+        leading: Icon(
+          homeController.isAgendaView.value ? Icons.view_agenda : Icons.calendar_view_month,
+          color: homeController.isAgendaView.value ? Colors.blue : null,
+        ),
+        title: const Text('Agenda View'),
+        subtitle: Text(
+          homeController.isAgendaView.value ? 'Enabled' : 'Disabled',
+          style: TextStyle(color: homeController.isAgendaView.value ? Colors.blue : Colors.grey, fontSize: 12),
+        ),
+        trailing: Switch(value: homeController.isAgendaView.value, onChanged: (val) => homeController.isAgendaView.value = val, activeThumbColor: Colors.blue),
       ),
     );
   }

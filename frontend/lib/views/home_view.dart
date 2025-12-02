@@ -22,6 +22,7 @@ class HomeView extends StatelessWidget {
         children: [
           Obx(() {
             final dataSource = ScheduleDataSource(homeController.scheduleList.toList());
+
             return SfCalendar(
               view: CalendarView.month,
               showDatePickerButton: true,
@@ -29,7 +30,10 @@ class HomeView extends StatelessWidget {
               showTodayButton: true,
               allowedViews: homeController.allowedViews,
               dataSource: dataSource,
-              monthViewSettings: const MonthViewSettings(appointmentDisplayMode: MonthAppointmentDisplayMode.appointment),
+              monthViewSettings: MonthViewSettings(
+                appointmentDisplayMode: homeController.isAgendaView.value ? MonthAppointmentDisplayMode.indicator : MonthAppointmentDisplayMode.appointment,
+                showAgenda: homeController.isAgendaView.value,
+              ),
               onTap: (CalendarTapDetails details) async {
                 // appointment tapped
                 final appts = details.appointments;

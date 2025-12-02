@@ -6,19 +6,11 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 import '../models/schedule_model.dart';
 
 class HomeController extends GetxController {
-  final List<CalendarView> allowedViews = <CalendarView>[
-    CalendarView.day,
-    CalendarView.week,
-    // CalendarView.workWeek,
-    CalendarView.timelineDay,
-    CalendarView.timelineWeek,
-    // CalendarView.timelineWorkWeek,
-    CalendarView.month,
-    CalendarView.schedule,
-  ];
+  final List<CalendarView> allowedViews = <CalendarView>[CalendarView.month, CalendarView.schedule];
 
   // observable schedule list — populated from JSON on init
   final RxList<ScheduleModel> scheduleList = <ScheduleModel>[].obs;
+  final RxBool isAgendaView = false.obs;
 
   @override
   void onInit() {

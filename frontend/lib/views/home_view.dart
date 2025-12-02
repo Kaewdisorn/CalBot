@@ -6,7 +6,7 @@ import '../controllers/home_controller.dart';
 import '../controllers/widgets_controller/setting_controller.dart';
 import '../models/schedule_model.dart';
 import 'widgets/custom_appbar.dart';
-import 'widgets/schedule_detail.dart';
+import 'widgets/schedule_form_dialog.dart';
 import 'widgets/settings_drawer.dart';
 
 class HomeView extends StatelessWidget {
@@ -43,14 +43,32 @@ class HomeView extends StatelessWidget {
                 // appointment tapped
                 final appts = details.appointments;
 
-                // not empty cell tapped
+                // Existing schedule tapped -> open edit popup
                 if (details.targetElement == CalendarElement.appointment && appts != null && appts.isNotEmpty) {
                   final Appointment tappedAppointment = appts[0] as Appointment;
-                  // show detail popup
-                  showDialog(
-                    context: context,
-                    builder: (context) => ScheduleDetailPopup(appointment: tappedAppointment, onEdit: () {}, onDelete: () {}),
-                  );
+
+                  // Find the matching ScheduleModel
+                  final existingSchedule = homeController.scheduleList.firstWhereOrNull((s) => s.id == tappedAppointment.id);
+
+                  if (existingSchedule != null) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => ScheduleFormDialog(
+                        existingSchedule: existingSchedule,
+                        onSave: (updatedSchedule) {
+                          // Update the schedule in the list
+                          final index = homeController.scheduleList.indexWhere((s) => s.id == updatedSchedule.id);
+                          if (index != -1) {
+                            homeController.scheduleList[index] = updatedSchedule;
+                          }
+                        },
+                        onDelete: () {
+                          // Remove the schedule from the list
+                          homeController.scheduleList.removeWhere((s) => s.id == existingSchedule.id);
+                        },
+                      ),
+                    );
+                  }
                   return;
                 }
 
@@ -59,34 +77,20 @@ class HomeView extends StatelessWidget {
                   return;
                 }
 
-                // empty cell tapped -> prompt to add
+                // Empty cell tapped -> open add popup
                 if (details.targetElement == CalendarElement.calendarCell || details.targetElement == CalendarElement.agenda) {
                   final DateTime? tapped = details.date;
                   if (tapped == null) return;
 
-                  final titleController = TextEditingController();
-                  final result = await showDialog<String?>(
+                  showDialog(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Add event'),
-                      content: TextField(
-                        controller: titleController,
-                        decoration: const InputDecoration(labelText: 'Title'),
-                        autofocus: true,
-                      ),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.of(context).pop(null), child: const Text('Cancel')),
-                        ElevatedButton(onPressed: () => Navigator.of(context).pop(titleController.text.trim()), child: const Text('Add')),
-                      ],
+                    builder: (context) => ScheduleFormDialog(
+                      initialDate: tapped,
+                      onSave: (newSchedule) {
+                        homeController.scheduleList.add(newSchedule);
+                      },
                     ),
                   );
-
-                  if (result != null && result.isNotEmpty) {
-                    final newId = DateTime.now().millisecondsSinceEpoch.toString();
-                    final newModel = ScheduleModel(id: newId, title: result, start: tapped, end: tapped.add(const Duration(hours: 1)), isAllDay: false);
-
-                    homeController.scheduleList.add(newModel);
-                  }
                 }
               },
             );

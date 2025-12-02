@@ -14,6 +14,7 @@ class ScheduleModel {
   final int colorValue;
   final String? recurrenceRule;
   final List<DateTime>? exceptionDateList;
+  final bool isDone;
 
   ScheduleModel({
     required this.id,
@@ -26,6 +27,7 @@ class ScheduleModel {
     this.colorValue = 0xFF42A5F5, // default blue
     this.recurrenceRule,
     this.exceptionDateList,
+    this.isDone = false,
   });
 
   // Convert JSON from API to model
@@ -78,6 +80,9 @@ class ScheduleModel {
 
       // Exception Dates: Use the safely parsed list.
       exceptionDateList: exceptionDates,
+
+      // isDone: Use explicit null check and default to false.
+      isDone: json['isDone'] as bool? ?? false,
     );
   }
 

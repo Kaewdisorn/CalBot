@@ -4,7 +4,10 @@ import 'package:get/get.dart';
 import '../../models/schedule_model.dart';
 
 /// Recurrence frequency options
-enum RecurrenceFrequency { none, daily, weekly, monthly, yearly, custom }
+enum RecurrenceFrequency { never, daily, weekly, monthly }
+
+/// Recurrence end type
+enum RecurrenceEndType { never, until, count }
 
 /// Days of week for weekly recurrence
 enum WeekDay { monday, tuesday, wednesday, thursday, friday, saturday, sunday }
@@ -25,13 +28,13 @@ class ScheduleFormController extends GetxController {
   final RxBool isDone = false.obs;
 
   // Recurrence state
-  final Rx<RecurrenceFrequency> recurrenceFrequency = RecurrenceFrequency.none.obs;
-  final RxInt recurrenceInterval = 1.obs; // Every X days/weeks/months/years
+  final Rx<RecurrenceFrequency> recurrenceFrequency = RecurrenceFrequency.never.obs;
+  final RxInt recurrenceInterval = 1.obs; // Every X days/weeks/months
   final RxList<WeekDay> selectedWeekDays = <WeekDay>[].obs; // For weekly recurrence
-  final RxInt recurrenceCount = 10.obs; // Number of occurrences (0 = forever)
+  final Rx<RecurrenceEndType> recurrenceEndType = RecurrenceEndType.never.obs;
+  final RxInt recurrenceCount = 10.obs; // Number of occurrences
   final Rx<DateTime?> recurrenceEndDate = Rx<DateTime?>(null); // End by date
-  final RxBool useEndDate = false.obs; // true = end by date, false = end by count
-  final RxInt monthlyOption = 0.obs; // 0 = day of month, 1 = day of week (e.g., 2nd Tuesday)
+  final RxInt monthlyDay = 1.obs; // Day of month for monthly recurrence
 
   // Edit mode tracking
   ScheduleModel? existingSchedule;
@@ -68,23 +71,22 @@ class ScheduleFormController extends GetxController {
     endTime.value = TimeOfDay.fromDateTime(schedule?.end ?? now.add(const Duration(hours: 1)));
     isAllDay.value = schedule?.isAllDay ?? false;
     selectedColor.value = schedule != null ? Color(schedule.colorValue) : colorPalette[0];
+    monthlyDay.value = startDate.value.day;
 
     // Parse existing recurrence rule
     if (schedule?.recurrenceRule != null && schedule!.recurrenceRule!.isNotEmpty) {
       _parseRecurrenceRule(schedule.recurrenceRule!);
     } else {
       // Reset recurrence state
-      recurrenceFrequency.value = RecurrenceFrequency.none;
+      recurrenceFrequency.value = RecurrenceFrequency.never;
       recurrenceInterval.value = 1;
       selectedWeekDays.clear();
       recurrenceCount.value = 10;
       recurrenceEndDate.value = null;
-      useEndDate.value = false;
-      monthlyOption.value = 0;
+      recurrenceEndType.value = RecurrenceEndType.never;
     }
 
     // For recurring events, check if this specific occurrence is done
-    // For non-recurring events, use the isDone flag directly
     if (schedule != null && schedule.isRecurring && tappedOccurrenceDate != null) {
       isDone.value = schedule.isOccurrenceDone(tappedOccurrenceDate);
     } else {
@@ -115,42 +117,36 @@ class ScheduleFormController extends GetxController {
       case 'MONTHLY':
         recurrenceFrequency.value = RecurrenceFrequency.monthly;
         break;
-      case 'YEARLY':
-        recurrenceFrequency.value = RecurrenceFrequency.yearly;
-        break;
       default:
-        recurrenceFrequency.value = RecurrenceFrequency.none;
+        recurrenceFrequency.value = RecurrenceFrequency.never;
     }
 
     // Parse interval
-    if (ruleMap.containsKey('INTERVAL')) {
-      recurrenceInterval.value = int.tryParse(ruleMap['INTERVAL']!) ?? 1;
-      if (recurrenceInterval.value > 1) {
-        recurrenceFrequency.value = RecurrenceFrequency.custom;
-      }
-    } else {
-      recurrenceInterval.value = 1;
-    }
+    recurrenceInterval.value = int.tryParse(ruleMap['INTERVAL'] ?? '1') ?? 1;
 
     // Parse count
     if (ruleMap.containsKey('COUNT')) {
       recurrenceCount.value = int.tryParse(ruleMap['COUNT']!) ?? 10;
-      useEndDate.value = false;
+      recurrenceEndType.value = RecurrenceEndType.count;
     }
 
     // Parse until date
     if (ruleMap.containsKey('UNTIL')) {
       try {
         final untilStr = ruleMap['UNTIL']!;
-        // Format: YYYYMMDDTHHMMSSZ or YYYYMMDD
         if (untilStr.length >= 8) {
           final year = int.parse(untilStr.substring(0, 4));
           final month = int.parse(untilStr.substring(4, 6));
           final day = int.parse(untilStr.substring(6, 8));
           recurrenceEndDate.value = DateTime(year, month, day);
-          useEndDate.value = true;
+          recurrenceEndType.value = RecurrenceEndType.until;
         }
       } catch (_) {}
+    }
+
+    // If no end condition, set to never
+    if (!ruleMap.containsKey('COUNT') && !ruleMap.containsKey('UNTIL')) {
+      recurrenceEndType.value = RecurrenceEndType.never;
     }
 
     // Parse BYDAY for weekly recurrence
@@ -158,7 +154,6 @@ class ScheduleFormController extends GetxController {
       selectedWeekDays.clear();
       final days = ruleMap['BYDAY']!.split(',');
       for (final day in days) {
-        // Remove any numeric prefix (e.g., "2TU" -> "TU")
         final dayCode = day.replaceAll(RegExp(r'[0-9-]'), '');
         switch (dayCode) {
           case 'MO':
@@ -184,22 +179,17 @@ class ScheduleFormController extends GetxController {
             break;
         }
       }
-      if (recurrenceFrequency.value == RecurrenceFrequency.weekly && selectedWeekDays.length > 1) {
-        recurrenceFrequency.value = RecurrenceFrequency.custom;
-      }
     }
 
-    // Parse BYSETPOS for monthly "nth weekday" option
-    if (ruleMap.containsKey('BYSETPOS') || (ruleMap.containsKey('BYDAY') && recurrenceFrequency.value == RecurrenceFrequency.monthly)) {
-      monthlyOption.value = 1; // nth weekday of month
-    } else {
-      monthlyOption.value = 0; // day of month
+    // Parse BYMONTHDAY for monthly recurrence
+    if (ruleMap.containsKey('BYMONTHDAY')) {
+      monthlyDay.value = int.tryParse(ruleMap['BYMONTHDAY']!) ?? startDate.value.day;
     }
   }
 
   /// Build recurrence rule string (RFC 5545 format)
   String? buildRecurrenceRule() {
-    if (recurrenceFrequency.value == RecurrenceFrequency.none) {
+    if (recurrenceFrequency.value == RecurrenceFrequency.never) {
       return null;
     }
 
@@ -216,30 +206,17 @@ class ScheduleFormController extends GetxController {
       case RecurrenceFrequency.monthly:
         parts.add('FREQ=MONTHLY');
         break;
-      case RecurrenceFrequency.yearly:
-        parts.add('FREQ=YEARLY');
-        break;
-      case RecurrenceFrequency.custom:
-        // Determine base frequency from context
-        if (selectedWeekDays.isNotEmpty) {
-          parts.add('FREQ=WEEKLY');
-        } else if (monthlyOption.value > 0) {
-          parts.add('FREQ=MONTHLY');
-        } else {
-          parts.add('FREQ=DAILY');
-        }
-        break;
       default:
         return null;
     }
 
-    // Interval (only if > 1 or custom)
+    // Interval
     if (recurrenceInterval.value > 1) {
       parts.add('INTERVAL=${recurrenceInterval.value}');
     }
 
     // BYDAY for weekly recurrence
-    if ((recurrenceFrequency.value == RecurrenceFrequency.weekly || recurrenceFrequency.value == RecurrenceFrequency.custom) && selectedWeekDays.isNotEmpty) {
+    if (recurrenceFrequency.value == RecurrenceFrequency.weekly && selectedWeekDays.isNotEmpty) {
       final dayStrings = selectedWeekDays.map((d) {
         switch (d) {
           case WeekDay.monday:
@@ -261,22 +238,26 @@ class ScheduleFormController extends GetxController {
       parts.add('BYDAY=${dayStrings.join(",")}');
     }
 
-    // Monthly options
-    if (recurrenceFrequency.value == RecurrenceFrequency.monthly && monthlyOption.value == 1) {
-      // nth weekday of month (e.g., 2nd Tuesday)
-      final weekOfMonth = ((startDate.value.day - 1) ~/ 7) + 1;
-      final weekday = startDate.value.weekday;
-      final dayCode = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'][weekday - 1];
-      parts.add('BYDAY=$weekOfMonth$dayCode');
+    // BYMONTHDAY for monthly recurrence
+    if (recurrenceFrequency.value == RecurrenceFrequency.monthly) {
+      parts.add('BYMONTHDAY=${monthlyDay.value}');
     }
 
     // End condition
-    if (useEndDate.value && recurrenceEndDate.value != null) {
-      final d = recurrenceEndDate.value!;
-      final untilStr = '${d.year.toString().padLeft(4, '0')}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}T235959Z';
-      parts.add('UNTIL=$untilStr');
-    } else if (recurrenceCount.value > 0) {
-      parts.add('COUNT=${recurrenceCount.value}');
+    switch (recurrenceEndType.value) {
+      case RecurrenceEndType.until:
+        if (recurrenceEndDate.value != null) {
+          final d = recurrenceEndDate.value!;
+          final untilStr = '${d.year.toString().padLeft(4, '0')}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}T235959Z';
+          parts.add('UNTIL=$untilStr');
+        }
+        break;
+      case RecurrenceEndType.count:
+        parts.add('COUNT=${recurrenceCount.value}');
+        break;
+      case RecurrenceEndType.never:
+        // No end condition - repeats forever
+        break;
     }
 
     return parts.join(';');
@@ -292,7 +273,7 @@ class ScheduleFormController extends GetxController {
 
   void setStartDate(DateTime date) {
     startDate.value = date;
-    // Auto-adjust end date if needed
+    monthlyDay.value = date.day; // Update monthly day when start date changes
     if (endDate.value.isBefore(startDate.value)) {
       endDate.value = startDate.value;
     }
@@ -329,11 +310,17 @@ class ScheduleFormController extends GetxController {
       final weekday = WeekDay.values[startDate.value.weekday - 1];
       selectedWeekDays.add(weekday);
     }
+    // Set default monthly day
+    if (freq == RecurrenceFrequency.monthly) {
+      monthlyDay.value = startDate.value.day;
+    }
   }
 
   void toggleWeekDay(WeekDay day) {
     if (selectedWeekDays.contains(day)) {
-      selectedWeekDays.remove(day);
+      if (selectedWeekDays.length > 1) {
+        selectedWeekDays.remove(day);
+      }
     } else {
       selectedWeekDays.add(day);
     }
@@ -351,15 +338,15 @@ class ScheduleFormController extends GetxController {
     recurrenceEndDate.value = date;
   }
 
-  void setUseEndDate(bool value) {
-    useEndDate.value = value;
+  void setRecurrenceEndType(RecurrenceEndType type) {
+    recurrenceEndType.value = type;
   }
 
-  void setMonthlyOption(int option) {
-    monthlyOption.value = option;
+  void setMonthlyDay(int day) {
+    monthlyDay.value = day.clamp(1, 31);
   }
 
-  /// Validate and build the schedule model, returns null if validation fails
+  /// Validate and build the schedule model
   ScheduleModel? buildSchedule() {
     final title = titleController.text.trim();
     if (title.isEmpty) {
@@ -410,23 +397,18 @@ class ScheduleFormController extends GetxController {
     bool newIsDone = isDone.value;
 
     if (existingSchedule != null && existingSchedule!.isRecurring && tappedOccurrenceDate != null) {
-      // For recurring events, update the specific occurrence in doneOccurrences list
       final normalizedDate = DateTime(tappedOccurrenceDate!.year, tappedOccurrenceDate!.month, tappedOccurrenceDate!.day);
 
       if (isDone.value) {
-        // Add to doneOccurrences if not already present
         if (!existingSchedule!.isOccurrenceDone(tappedOccurrenceDate!)) {
           newDoneOccurrences = [...existingSchedule!.doneOccurrences, normalizedDate];
         }
       } else {
-        // Remove from doneOccurrences
         newDoneOccurrences = existingSchedule!.doneOccurrences.where((d) {
           final normalizedDone = DateTime(d.year, d.month, d.day);
           return !normalizedDone.isAtSameMomentAs(normalizedDate);
         }).toList();
       }
-
-      // For recurring events, isDone field stays as original (it's not used for individual occurrences)
       newIsDone = existingSchedule!.isDone;
     }
 
@@ -448,8 +430,8 @@ class ScheduleFormController extends GetxController {
 
   /// Get human-readable recurrence description
   String getRecurrenceDescription() {
-    if (recurrenceFrequency.value == RecurrenceFrequency.none) {
-      return 'Does not repeat';
+    if (recurrenceFrequency.value == RecurrenceFrequency.never) {
+      return 'Never';
     }
 
     String desc = '';
@@ -457,51 +439,27 @@ class ScheduleFormController extends GetxController {
 
     switch (recurrenceFrequency.value) {
       case RecurrenceFrequency.daily:
-        desc = interval == 1 ? 'Every day' : 'Every $interval days';
+        desc = interval == 1 ? 'Daily' : 'Every $interval days';
         break;
       case RecurrenceFrequency.weekly:
         if (selectedWeekDays.isEmpty) {
-          desc = interval == 1 ? 'Every week' : 'Every $interval weeks';
-        } else if (selectedWeekDays.length == 1) {
-          desc = interval == 1
-              ? 'Every week on ${_getWeekDayName(selectedWeekDays.first)}'
-              : 'Every $interval weeks on ${_getWeekDayName(selectedWeekDays.first)}';
+          desc = interval == 1 ? 'Weekly' : 'Every $interval weeks';
         } else {
           final days = selectedWeekDays.map((d) => _getWeekDayShort(d)).join(', ');
-          desc = interval == 1 ? 'Every week on $days' : 'Every $interval weeks on $days';
+          desc = interval == 1 ? 'Weekly on $days' : 'Every $interval weeks on $days';
         }
         break;
       case RecurrenceFrequency.monthly:
-        if (monthlyOption.value == 1) {
-          final weekOfMonth = ((startDate.value.day - 1) ~/ 7) + 1;
-          final ordinal = _getOrdinal(weekOfMonth);
-          final weekdayName = _getWeekDayName(WeekDay.values[startDate.value.weekday - 1]);
-          desc = interval == 1 ? 'Every month on the $ordinal $weekdayName' : 'Every $interval months on the $ordinal $weekdayName';
-        } else {
-          desc = interval == 1 ? 'Every month on day ${startDate.value.day}' : 'Every $interval months on day ${startDate.value.day}';
-        }
-        break;
-      case RecurrenceFrequency.yearly:
-        desc = interval == 1 ? 'Every year' : 'Every $interval years';
-        break;
-      case RecurrenceFrequency.custom:
-        desc = 'Custom';
+        desc = interval == 1 ? 'Monthly on day ${monthlyDay.value}' : 'Every $interval months on day ${monthlyDay.value}';
         break;
       default:
-        desc = 'Does not repeat';
-    }
-
-    // Add end condition
-    if (useEndDate.value && recurrenceEndDate.value != null) {
-      desc += ', until ${recurrenceEndDate.value!.day}/${recurrenceEndDate.value!.month}/${recurrenceEndDate.value!.year}';
-    } else if (recurrenceCount.value > 0) {
-      desc += ', ${recurrenceCount.value} times';
+        desc = 'Never';
     }
 
     return desc;
   }
 
-  String _getWeekDayName(WeekDay day) {
+  String getWeekDayName(WeekDay day) {
     switch (day) {
       case WeekDay.monday:
         return 'Monday';
@@ -537,12 +495,5 @@ class ScheduleFormController extends GetxController {
       case WeekDay.sunday:
         return 'Sun';
     }
-  }
-
-  String _getOrdinal(int n) {
-    if (n == 1) return '1st';
-    if (n == 2) return '2nd';
-    if (n == 3) return '3rd';
-    return '${n}th';
   }
 }

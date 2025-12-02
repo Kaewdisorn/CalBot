@@ -409,290 +409,177 @@ class ScheduleFormDialog extends StatelessWidget {
 
   Widget _buildRecurrencePicker(BuildContext context, ScheduleFormController controller) {
     final color = controller.selectedColor.value;
-    final isRecurring = controller.recurrenceFrequency.value != RecurrenceFrequency.none;
+    final isRecurring = controller.recurrenceFrequency.value != RecurrenceFrequency.never;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Recurrence toggle/selector
-        InkWell(
-          onTap: () => _showRecurrenceDialog(context, controller),
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isRecurring ? color.withAlpha(15) : Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: isRecurring ? color.withAlpha(100) : Colors.grey.shade200),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.repeat, color: isRecurring ? color : Colors.grey.shade600, size: 22),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Repeat',
-                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        controller.getRecurrenceDescription(),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isRecurring ? color : Colors.black87,
-                          fontWeight: isRecurring ? FontWeight.w500 : FontWeight.normal,
-                        ),
-                      ),
+        // Repeat dropdown
+        Row(
+          children: [
+            Icon(Icons.repeat, color: color, size: 22),
+            const SizedBox(width: 12),
+            Text('Repeat', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<RecurrenceFrequency>(
+                    value: controller.recurrenceFrequency.value,
+                    isExpanded: true,
+                    icon: Icon(Icons.keyboard_arrow_down, color: color),
+                    style: TextStyle(fontSize: 14, color: Colors.black87, fontWeight: isRecurring ? FontWeight.w500 : FontWeight.normal),
+                    items: const [
+                      DropdownMenuItem(value: RecurrenceFrequency.never, child: Text('Never')),
+                      DropdownMenuItem(value: RecurrenceFrequency.daily, child: Text('Daily')),
+                      DropdownMenuItem(value: RecurrenceFrequency.weekly, child: Text('Weekly')),
+                      DropdownMenuItem(value: RecurrenceFrequency.monthly, child: Text('Monthly')),
                     ],
+                    onChanged: (value) {
+                      if (value != null) controller.setRecurrenceFrequency(value);
+                    },
                   ),
                 ),
-                Icon(Icons.chevron_right, color: Colors.grey.shade400),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
+
+        // Show additional options based on frequency
+        if (isRecurring) ...[const SizedBox(height: 12), _buildRecurrenceOptions(context, controller, color)],
       ],
     );
   }
 
-  void _showRecurrenceDialog(BuildContext context, ScheduleFormController controller) {
-    final color = controller.selectedColor.value;
+  Widget _buildRecurrenceOptions(BuildContext context, ScheduleFormController controller, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withAlpha(10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withAlpha(30)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Interval picker (Every N days/weeks/months)
+          _buildIntervalRow(controller, color),
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Obx(
-        () => Container(
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
-          decoration: const BoxDecoration(
+          // Weekly: day selector
+          if (controller.recurrenceFrequency.value == RecurrenceFrequency.weekly) ...[const SizedBox(height: 12), _buildWeekDaySelector(controller, color)],
+
+          // Monthly: day of month selector
+          if (controller.recurrenceFrequency.value == RecurrenceFrequency.monthly) ...[const SizedBox(height: 12), _buildMonthDaySelector(controller, color)],
+
+          // End condition
+          const SizedBox(height: 12),
+          _buildEndCondition(context, controller, color),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIntervalRow(ScheduleFormController controller, Color color) {
+    String unitLabel;
+    switch (controller.recurrenceFrequency.value) {
+      case RecurrenceFrequency.daily:
+        unitLabel = controller.recurrenceInterval.value == 1 ? 'day' : 'days';
+        break;
+      case RecurrenceFrequency.weekly:
+        unitLabel = controller.recurrenceInterval.value == 1 ? 'week' : 'weeks';
+        break;
+      case RecurrenceFrequency.monthly:
+        unitLabel = controller.recurrenceInterval.value == 1 ? 'month' : 'months';
+        break;
+      default:
+        unitLabel = 'days';
+    }
+
+    return Row(
+      children: [
+        Text('Every', style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+        const SizedBox(width: 8),
+        // Interval stepper
+        Container(
+          decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade300),
           ),
-          child: Column(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle bar
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
-              ),
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Icon(Icons.repeat, color: color),
-                    const SizedBox(width: 12),
-                    const Text('Repeat', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Done',
-                        style: TextStyle(color: color, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
+              InkWell(
+                onTap: controller.recurrenceInterval.value > 1 ? () => controller.setRecurrenceInterval(controller.recurrenceInterval.value - 1) : null,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  child: Icon(Icons.remove, size: 18, color: controller.recurrenceInterval.value > 1 ? color : Colors.grey.shade400),
                 ),
               ),
-              const Divider(height: 1),
-              // Content
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Frequency options
-                      _buildFrequencyOptions(controller, color),
-                      const SizedBox(height: 20),
-
-                      // Advanced options (only show if recurring)
-                      if (controller.recurrenceFrequency.value != RecurrenceFrequency.none) ...[
-                        // Custom interval
-                        if (controller.recurrenceFrequency.value == RecurrenceFrequency.custom) ...[
-                          _buildIntervalPicker(controller, color),
-                          const SizedBox(height: 16),
-                        ],
-
-                        // Weekly day selector
-                        if (controller.recurrenceFrequency.value == RecurrenceFrequency.weekly ||
-                            (controller.recurrenceFrequency.value == RecurrenceFrequency.custom && controller.selectedWeekDays.isNotEmpty)) ...[
-                          _buildWeekDaySelector(controller, color),
-                          const SizedBox(height: 16),
-                        ],
-
-                        // Monthly options
-                        if (controller.recurrenceFrequency.value == RecurrenceFrequency.monthly) ...[
-                          _buildMonthlyOptions(controller, color),
-                          const SizedBox(height: 16),
-                        ],
-
-                        // End condition
-                        _buildEndCondition(context, controller, color),
-                      ],
-                    ],
-                  ),
+              Container(
+                width: 32,
+                alignment: Alignment.center,
+                child: Text('${controller.recurrenceInterval.value}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              ),
+              InkWell(
+                onTap: () => controller.setRecurrenceInterval(controller.recurrenceInterval.value + 1),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  child: Icon(Icons.add, size: 18, color: color),
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildFrequencyOptions(ScheduleFormController controller, Color color) {
-    final options = [
-      (RecurrenceFrequency.none, 'Does not repeat', Icons.close),
-      (RecurrenceFrequency.daily, 'Every day', Icons.today),
-      (RecurrenceFrequency.weekly, 'Every week', Icons.view_week),
-      (RecurrenceFrequency.monthly, 'Every month', Icons.calendar_view_month),
-      (RecurrenceFrequency.yearly, 'Every year', Icons.event),
-      (RecurrenceFrequency.custom, 'Custom...', Icons.tune),
-    ];
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: options.map((option) {
-        final isSelected = controller.recurrenceFrequency.value == option.$1;
-        return InkWell(
-          onTap: () => controller.setRecurrenceFrequency(option.$1),
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: isSelected ? color.withAlpha(20) : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: isSelected ? color : Colors.transparent, width: 1.5),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(option.$3, size: 18, color: isSelected ? color : Colors.grey.shade600),
-                const SizedBox(width: 8),
-                Text(
-                  option.$2,
-                  style: TextStyle(fontSize: 14, color: isSelected ? color : Colors.black87, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal),
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildIntervalPicker(ScheduleFormController controller, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Repeat every',
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            // Interval number
-            Container(
-              width: 80,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove, size: 18),
-                    onPressed: controller.recurrenceInterval.value > 1 ? () => controller.setRecurrenceInterval(controller.recurrenceInterval.value - 1) : null,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 28, minHeight: 36),
-                  ),
-                  Expanded(
-                    child: Text(
-                      '${controller.recurrenceInterval.value}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add, size: 18),
-                    onPressed: () => controller.setRecurrenceInterval(controller.recurrenceInterval.value + 1),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 28, minHeight: 36),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Unit dropdown
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: color.withAlpha(15),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: color.withAlpha(50)),
-              ),
-              child: Text(
-                controller.selectedWeekDays.isNotEmpty
-                    ? (controller.recurrenceInterval.value == 1 ? 'week' : 'weeks')
-                    : (controller.recurrenceInterval.value == 1 ? 'day' : 'days'),
-                style: TextStyle(fontSize: 14, color: color, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ],
-        ),
+        const SizedBox(width: 8),
+        Text(unitLabel, style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
       ],
     );
   }
 
   Widget _buildWeekDaySelector(ScheduleFormController controller, Color color) {
     final days = [
-      (WeekDay.monday, 'M'),
-      (WeekDay.tuesday, 'T'),
-      (WeekDay.wednesday, 'W'),
-      (WeekDay.thursday, 'T'),
-      (WeekDay.friday, 'F'),
-      (WeekDay.saturday, 'S'),
-      (WeekDay.sunday, 'S'),
+      (WeekDay.monday, 'M', 'Mon'),
+      (WeekDay.tuesday, 'T', 'Tue'),
+      (WeekDay.wednesday, 'W', 'Wed'),
+      (WeekDay.thursday, 'T', 'Thu'),
+      (WeekDay.friday, 'F', 'Fri'),
+      (WeekDay.saturday, 'S', 'Sat'),
+      (WeekDay.sunday, 'S', 'Sun'),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Repeat on',
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 10),
+        Text('On', style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+        const SizedBox(height: 8),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: days.map((day) {
             final isSelected = controller.selectedWeekDays.contains(day.$1);
-            return GestureDetector(
-              onTap: () => controller.toggleWeekDay(day.$1),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isSelected ? color : Colors.grey.shade100,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: isSelected ? color : Colors.grey.shade300, width: 1.5),
-                ),
-                child: Center(
-                  child: Text(
-                    day.$2,
-                    style: TextStyle(fontSize: 14, color: isSelected ? Colors.white : Colors.black87, fontWeight: FontWeight.w600),
+            return Tooltip(
+              message: day.$3,
+              child: GestureDetector(
+                onTap: () => controller.toggleWeekDay(day.$1),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: isSelected ? color : Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: isSelected ? color : Colors.grey.shade300),
+                  ),
+                  child: Center(
+                    child: Text(
+                      day.$2,
+                      style: TextStyle(fontSize: 13, color: isSelected ? Colors.white : Colors.black87, fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
               ),
@@ -703,71 +590,34 @@ class ScheduleFormDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildMonthlyOptions(ScheduleFormController controller, Color color) {
-    final dayOfMonth = controller.startDate.value.day;
-    final weekOfMonth = ((dayOfMonth - 1) ~/ 7) + 1;
-    final weekdayName = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][controller.startDate.value.weekday - 1];
-    final ordinal = _getOrdinalSuffix(weekOfMonth);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildMonthDaySelector(ScheduleFormController controller, Color color) {
+    return Row(
       children: [
-        Text(
-          'Monthly on',
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: () => controller.setMonthlyOption(0),
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: controller.monthlyOption.value == 0 ? color.withAlpha(20) : Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: controller.monthlyOption.value == 0 ? color : Colors.transparent, width: 1.5),
-                  ),
-                  child: Text(
-                    'Day $dayOfMonth',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: controller.monthlyOption.value == 0 ? color : Colors.black87,
-                      fontWeight: controller.monthlyOption.value == 0 ? FontWeight.w600 : FontWeight.normal,
-                    ),
-                  ),
-                ),
-              ),
+        Text('On day', style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+        const SizedBox(width: 8),
+        Container(
+          width: 70,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              value: controller.monthlyDay.value.clamp(1, 31),
+              isExpanded: true,
+              icon: Icon(Icons.keyboard_arrow_down, size: 18, color: color),
+              style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w500),
+              items: List.generate(31, (i) => i + 1).map((day) => DropdownMenuItem(value: day, child: Text('$day'))).toList(),
+              onChanged: (value) {
+                if (value != null) controller.setMonthlyDay(value);
+              },
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: InkWell(
-                onTap: () => controller.setMonthlyOption(1),
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: controller.monthlyOption.value == 1 ? color.withAlpha(20) : Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: controller.monthlyOption.value == 1 ? color : Colors.transparent, width: 1.5),
-                  ),
-                  child: Text(
-                    '$ordinal $weekdayName',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: controller.monthlyOption.value == 1 ? color : Colors.black87,
-                      fontWeight: controller.monthlyOption.value == 1 ? FontWeight.w600 : FontWeight.normal,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
+        const SizedBox(width: 8),
+        Text('of the month', style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
       ],
     );
   }
@@ -776,78 +626,44 @@ class ScheduleFormDialog extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Ends',
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 10),
-        // End by count
-        InkWell(
-          onTap: () => controller.setUseEndDate(false),
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: !controller.useEndDate.value ? color.withAlpha(15) : Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: !controller.useEndDate.value ? color.withAlpha(100) : Colors.grey.shade200),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  !controller.useEndDate.value ? Icons.radio_button_checked : Icons.radio_button_off,
-                  color: !controller.useEndDate.value ? color : Colors.grey,
-                  size: 20,
+        Row(
+          children: [
+            Text('Ends', style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<RecurrenceEndType>(
+                  value: controller.recurrenceEndType.value,
+                  icon: Icon(Icons.keyboard_arrow_down, size: 18, color: color),
+                  style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  items: const [
+                    DropdownMenuItem(value: RecurrenceEndType.never, child: Text('Never')),
+                    DropdownMenuItem(value: RecurrenceEndType.until, child: Text('Until date')),
+                    DropdownMenuItem(value: RecurrenceEndType.count, child: Text('After count')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) controller.setRecurrenceEndType(value);
+                  },
                 ),
-                const SizedBox(width: 12),
-                const Text('After', style: TextStyle(fontSize: 14)),
-                const SizedBox(width: 12),
-                Container(
-                  width: 70,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.remove, size: 16),
-                        onPressed: controller.recurrenceCount.value > 1 ? () => controller.setRecurrenceCount(controller.recurrenceCount.value - 1) : null,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 24, minHeight: 32),
-                      ),
-                      Expanded(
-                        child: Text(
-                          '${controller.recurrenceCount.value}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add, size: 16),
-                        onPressed: () => controller.setRecurrenceCount(controller.recurrenceCount.value + 1),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 24, minHeight: 32),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text('occurrences', style: TextStyle(fontSize: 14)),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
-        const SizedBox(height: 10),
-        // End by date
-        InkWell(
-          onTap: () async {
-            controller.setUseEndDate(true);
-            if (controller.recurrenceEndDate.value == null) {
+
+        // Show end date picker
+        if (controller.recurrenceEndType.value == RecurrenceEndType.until) ...[
+          const SizedBox(height: 8),
+          InkWell(
+            onTap: () async {
               final picked = await showDatePicker(
                 context: context,
-                initialDate: controller.startDate.value.add(const Duration(days: 30)),
+                initialDate: controller.recurrenceEndDate.value ?? controller.startDate.value.add(const Duration(days: 30)),
                 firstDate: controller.startDate.value,
                 lastDate: DateTime(2100),
                 builder: (context, child) => Theme(
@@ -855,71 +671,74 @@ class ScheduleFormDialog extends StatelessWidget {
                   child: child!,
                 ),
               );
-              if (picked != null) {
-                controller.setRecurrenceEndDate(picked);
-              }
-            }
-          },
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: controller.useEndDate.value ? color.withAlpha(15) : Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: controller.useEndDate.value ? color.withAlpha(100) : Colors.grey.shade200),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  controller.useEndDate.value ? Icons.radio_button_checked : Icons.radio_button_off,
-                  color: controller.useEndDate.value ? color : Colors.grey,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                const Text('On', style: TextStyle(fontSize: 14)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: InkWell(
-                    onTap: () async {
-                      controller.setUseEndDate(true);
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: controller.recurrenceEndDate.value ?? controller.startDate.value.add(const Duration(days: 30)),
-                        firstDate: controller.startDate.value,
-                        lastDate: DateTime(2100),
-                        builder: (context, child) => Theme(
-                          data: Theme.of(context).copyWith(colorScheme: ColorScheme.light(primary: color)),
-                          child: child!,
-                        ),
-                      );
-                      if (picked != null) {
-                        controller.setRecurrenceEndDate(picked);
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            controller.recurrenceEndDate.value != null ? DateFormat('MMM d, yyyy').format(controller.recurrenceEndDate.value!) : 'Select date',
-                            style: TextStyle(fontSize: 14, color: controller.recurrenceEndDate.value != null ? Colors.black87 : Colors.grey),
-                          ),
-                          const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                        ],
-                      ),
-                    ),
+              if (picked != null) controller.setRecurrenceEndDate(picked);
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.calendar_today, size: 16, color: color),
+                  const SizedBox(width: 8),
+                  Text(
+                    controller.recurrenceEndDate.value != null ? DateFormat('MMM d, yyyy').format(controller.recurrenceEndDate.value!) : 'Select date',
+                    style: TextStyle(fontSize: 14, color: controller.recurrenceEndDate.value != null ? Colors.black87 : Colors.grey),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
+        ],
+
+        // Show count picker
+        if (controller.recurrenceEndType.value == RecurrenceEndType.count) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text('After', style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+              const SizedBox(width: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    InkWell(
+                      onTap: controller.recurrenceCount.value > 1 ? () => controller.setRecurrenceCount(controller.recurrenceCount.value - 1) : null,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        child: Icon(Icons.remove, size: 18, color: controller.recurrenceCount.value > 1 ? color : Colors.grey.shade400),
+                      ),
+                    ),
+                    Container(
+                      width: 40,
+                      alignment: Alignment.center,
+                      child: Text('${controller.recurrenceCount.value}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                    ),
+                    InkWell(
+                      onTap: () => controller.setRecurrenceCount(controller.recurrenceCount.value + 1),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        child: Icon(Icons.add, size: 18, color: color),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text('occurrences', style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -1075,13 +894,5 @@ class ScheduleFormDialog extends StatelessWidget {
       Get.back();
       onSave(schedule);
     }
-  }
-
-  /// Helper to get ordinal suffix (1st, 2nd, 3rd, 4th, etc.)
-  String _getOrdinalSuffix(int n) {
-    if (n == 1) return '1st';
-    if (n == 2) return '2nd';
-    if (n == 3) return '3rd';
-    return '${n}th';
   }
 }

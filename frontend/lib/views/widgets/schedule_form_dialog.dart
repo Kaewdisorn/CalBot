@@ -7,19 +7,21 @@ import '../../models/schedule_model.dart';
 
 /// A professional, reusable dialog for adding/editing schedules.
 /// Pass [existingSchedule] to edit mode, or leave null for add mode.
+/// For recurring events, pass [tappedOccurrenceDate] to track which occurrence was tapped.
 class ScheduleFormDialog extends StatelessWidget {
   final ScheduleModel? existingSchedule;
   final DateTime? initialDate;
+  final DateTime? tappedOccurrenceDate; // For recurring events - the specific occurrence that was tapped
   final Function(ScheduleModel) onSave;
   final VoidCallback? onDelete;
 
-  const ScheduleFormDialog({super.key, this.existingSchedule, this.initialDate, required this.onSave, this.onDelete});
+  const ScheduleFormDialog({super.key, this.existingSchedule, this.initialDate, this.tappedOccurrenceDate, required this.onSave, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
     // Create and initialize controller
     final controller = Get.put(ScheduleFormController());
-    controller.initialize(schedule: existingSchedule, initialDate: initialDate);
+    controller.initialize(schedule: existingSchedule, initialDate: initialDate, tappedOccurrenceDate: tappedOccurrenceDate);
 
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;

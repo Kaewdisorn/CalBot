@@ -22,6 +22,9 @@ class ScheduleFormController extends GetxController {
   ScheduleModel? existingSchedule;
   bool get isEditMode => existingSchedule != null;
 
+  // For recurring events - track which occurrence was tapped
+  DateTime? tappedOccurrenceDate;
+
   // Color palette for schedule
   static const List<Color> colorPalette = [
     Color(0xFF42A5F5), // Blue
@@ -35,8 +38,9 @@ class ScheduleFormController extends GetxController {
   ];
 
   /// Initialize the controller with optional existing schedule or initial date
-  void initialize({ScheduleModel? schedule, DateTime? initialDate}) {
+  void initialize({ScheduleModel? schedule, DateTime? initialDate, DateTime? tappedOccurrenceDate}) {
     existingSchedule = schedule;
+    this.tappedOccurrenceDate = tappedOccurrenceDate;
     final now = initialDate ?? DateTime.now();
 
     titleController = TextEditingController(text: schedule?.title ?? '');
@@ -49,7 +53,14 @@ class ScheduleFormController extends GetxController {
     endTime.value = TimeOfDay.fromDateTime(schedule?.end ?? now.add(const Duration(hours: 1)));
     isAllDay.value = schedule?.isAllDay ?? false;
     selectedColor.value = schedule != null ? Color(schedule.colorValue) : colorPalette[0];
-    isDone.value = schedule?.isDone ?? false;
+
+    // For recurring events, check if this specific occurrence is done
+    // For non-recurring events, use the isDone flag directly
+    if (schedule != null && schedule.isRecurring && tappedOccurrenceDate != null) {
+      isDone.value = schedule.isOccurrenceDone(tappedOccurrenceDate);
+    } else {
+      isDone.value = schedule?.isDone ?? false;
+    }
   }
 
   @override
@@ -135,6 +146,31 @@ class ScheduleFormController extends GetxController {
       return null;
     }
 
+    // Handle recurring events - update doneOccurrences list
+    List<DateTime> newDoneOccurrences = existingSchedule?.doneOccurrences ?? [];
+    bool newIsDone = isDone.value;
+
+    if (existingSchedule != null && existingSchedule!.isRecurring && tappedOccurrenceDate != null) {
+      // For recurring events, update the specific occurrence in doneOccurrences list
+      final normalizedDate = DateTime(tappedOccurrenceDate!.year, tappedOccurrenceDate!.month, tappedOccurrenceDate!.day);
+
+      if (isDone.value) {
+        // Add to doneOccurrences if not already present
+        if (!existingSchedule!.isOccurrenceDone(tappedOccurrenceDate!)) {
+          newDoneOccurrences = [...existingSchedule!.doneOccurrences, normalizedDate];
+        }
+      } else {
+        // Remove from doneOccurrences
+        newDoneOccurrences = existingSchedule!.doneOccurrences.where((d) {
+          final normalizedDone = DateTime(d.year, d.month, d.day);
+          return !normalizedDone.isAtSameMomentAs(normalizedDate);
+        }).toList();
+      }
+
+      // For recurring events, isDone field stays as original (it's not used for individual occurrences)
+      newIsDone = existingSchedule!.isDone;
+    }
+
     return ScheduleModel(
       id: existingSchedule?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       title: title,
@@ -146,7 +182,8 @@ class ScheduleFormController extends GetxController {
       colorValue: selectedColor.value.toARGB32(),
       recurrenceRule: existingSchedule?.recurrenceRule,
       exceptionDateList: existingSchedule?.exceptionDateList,
-      isDone: isDone.value,
+      isDone: newIsDone,
+      doneOccurrences: newDoneOccurrences,
     );
   }
 }

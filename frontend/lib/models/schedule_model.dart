@@ -8,12 +8,13 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 class NoteData {
   final bool isDone;
   final String? description;
+  final List<DateTime> doneOccurrences; // For recurring events - track which occurrences are done
 
   // Add more fields as needed in the future
   // final String? category;
   // final int? priority;
 
-  const NoteData({this.isDone = false, this.description});
+  const NoteData({this.isDone = false, this.description, this.doneOccurrences = const []});
 
   /// Parse NoteData from JSON string (stored in Appointment.notes)
   factory NoteData.fromJsonString(String? jsonString) {
@@ -23,7 +24,14 @@ class NoteData {
 
     try {
       final Map<String, dynamic> json = jsonDecode(jsonString);
-      return NoteData(isDone: json['isDone'] as bool? ?? false, description: json['description'] as String?);
+
+      // Parse doneOccurrences list
+      List<DateTime> occurrences = [];
+      if (json['doneOccurrences'] is List) {
+        occurrences = (json['doneOccurrences'] as List<dynamic>).map((e) => DateTime.parse(e.toString())).toList();
+      }
+
+      return NoteData(isDone: json['isDone'] as bool? ?? false, description: json['description'] as String?, doneOccurrences: occurrences);
     } catch (e) {
       // If parsing fails, treat the whole string as description (backward compatibility)
       return NoteData(description: jsonString);
@@ -32,11 +40,53 @@ class NoteData {
 
   /// Convert to JSON string for storing in Appointment.notes
   String toJsonString() {
-    return jsonEncode({'isDone': isDone, if (description != null && description!.isNotEmpty) 'description': description});
+    return jsonEncode({
+      'isDone': isDone,
+      if (description != null && description!.isNotEmpty) 'description': description,
+      if (doneOccurrences.isNotEmpty) 'doneOccurrences': doneOccurrences.map((d) => d.toIso8601String()).toList(),
+    });
   }
 
   /// Check if there's any meaningful data
-  bool get isEmpty => !isDone && (description == null || description!.isEmpty);
+  bool get isEmpty => !isDone && (description == null || description!.isEmpty) && doneOccurrences.isEmpty;
+
+  /// Check if a specific occurrence is marked as done (for recurring events)
+  bool isOccurrenceDone(DateTime occurrenceDate) {
+    // Normalize to just date for comparison (ignore time component)
+    final normalizedDate = DateTime(occurrenceDate.year, occurrenceDate.month, occurrenceDate.day);
+    return doneOccurrences.any((d) {
+      final normalizedDone = DateTime(d.year, d.month, d.day);
+      return normalizedDone.isAtSameMomentAs(normalizedDate);
+    });
+  }
+
+  /// Create a copy with an occurrence added to done list
+  NoteData addDoneOccurrence(DateTime occurrenceDate) {
+    if (isOccurrenceDone(occurrenceDate)) return this; // Already marked
+    return NoteData(isDone: isDone, description: description, doneOccurrences: [...doneOccurrences, occurrenceDate]);
+  }
+
+  /// Create a copy with an occurrence removed from done list
+  NoteData removeDoneOccurrence(DateTime occurrenceDate) {
+    final normalizedDate = DateTime(occurrenceDate.year, occurrenceDate.month, occurrenceDate.day);
+    return NoteData(
+      isDone: isDone,
+      description: description,
+      doneOccurrences: doneOccurrences.where((d) {
+        final normalizedDone = DateTime(d.year, d.month, d.day);
+        return !normalizedDone.isAtSameMomentAs(normalizedDate);
+      }).toList(),
+    );
+  }
+
+  /// Create a copy with updated isDone for occurrence
+  NoteData copyWithOccurrenceDone(DateTime occurrenceDate, bool done) {
+    if (done) {
+      return addDoneOccurrence(occurrenceDate);
+    } else {
+      return removeDoneOccurrence(occurrenceDate);
+    }
+  }
 }
 
 class ScheduleModel {
@@ -51,6 +101,10 @@ class ScheduleModel {
   final String? recurrenceRule;
   final List<DateTime>? exceptionDateList;
   final bool isDone;
+  final List<DateTime> doneOccurrences; // For recurring events
+
+  /// Check if this is a recurring event
+  bool get isRecurring => recurrenceRule != null && recurrenceRule!.isNotEmpty;
 
   ScheduleModel({
     required this.id,
@@ -64,6 +118,7 @@ class ScheduleModel {
     this.recurrenceRule,
     this.exceptionDateList,
     this.isDone = false,
+    this.doneOccurrences = const [],
   });
 
   // Convert JSON from API to model
@@ -104,6 +159,7 @@ class ScheduleModel {
       recurrenceRule: json['recurrenceRule'] as String?,
       exceptionDateList: exceptionDates,
       isDone: isDoneValue,
+      doneOccurrences: noteData.doneOccurrences, // Preserve done occurrences
     );
   }
 
@@ -129,12 +185,13 @@ class ScheduleModel {
     final DateTime startTime = isAllDay ? DateTime(start.year, start.month, start.day, 0, 0, 0) : start;
     final DateTime endTime = isAllDay ? DateTime(end.year, end.month, end.day, 23, 59, 59) : end;
 
-    // Store extended data (isDone, description) as JSON in notes field
-    final noteData = NoteData(isDone: isDone, description: note);
+    // Store extended data (isDone, description, doneOccurrences) as JSON in notes field
+    final noteData = NoteData(isDone: isDone, description: note, doneOccurrences: doneOccurrences);
     final String? notesJson = noteData.isEmpty ? null : noteData.toJsonString();
 
-    // If done, show as gray color
-    final Color displayColor = isDone ? Colors.grey : Color(colorValue);
+    // For non-recurring events, use gray if done
+    // For recurring events, keep original color (individual occurrences will be handled in appointmentBuilder)
+    final Color displayColor = (!isRecurring && isDone) ? Colors.grey : Color(colorValue);
 
     return Appointment(
       id: id,
@@ -151,7 +208,72 @@ class ScheduleModel {
   }
 
   /// Get NoteData from this schedule
-  NoteData get noteData => NoteData(isDone: isDone, description: note);
+  NoteData get noteData => NoteData(isDone: isDone, description: note, doneOccurrences: doneOccurrences);
+
+  /// Check if a specific occurrence is done (for recurring events)
+  bool isOccurrenceDone(DateTime occurrenceDate) {
+    if (!isRecurring) return isDone;
+    final normalizedDate = DateTime(occurrenceDate.year, occurrenceDate.month, occurrenceDate.day);
+    return doneOccurrences.any((d) {
+      final normalizedDone = DateTime(d.year, d.month, d.day);
+      return normalizedDone.isAtSameMomentAs(normalizedDate);
+    });
+  }
+
+  /// Create a copy with occurrence done status updated
+  ScheduleModel copyWithOccurrenceDone(DateTime occurrenceDate, bool done) {
+    if (!isRecurring) {
+      // Non-recurring: just update isDone
+      return ScheduleModel(
+        id: id,
+        title: title,
+        start: start,
+        end: end,
+        isAllDay: isAllDay,
+        note: note,
+        location: location,
+        colorValue: colorValue,
+        recurrenceRule: recurrenceRule,
+        exceptionDateList: exceptionDateList,
+        isDone: done,
+        doneOccurrences: doneOccurrences,
+      );
+    }
+
+    // Recurring: update doneOccurrences list
+    final normalizedDate = DateTime(occurrenceDate.year, occurrenceDate.month, occurrenceDate.day);
+    List<DateTime> newDoneOccurrences;
+
+    if (done) {
+      // Add to list if not already present
+      if (!isOccurrenceDone(occurrenceDate)) {
+        newDoneOccurrences = [...doneOccurrences, normalizedDate];
+      } else {
+        newDoneOccurrences = doneOccurrences;
+      }
+    } else {
+      // Remove from list
+      newDoneOccurrences = doneOccurrences.where((d) {
+        final normalizedDone = DateTime(d.year, d.month, d.day);
+        return !normalizedDone.isAtSameMomentAs(normalizedDate);
+      }).toList();
+    }
+
+    return ScheduleModel(
+      id: id,
+      title: title,
+      start: start,
+      end: end,
+      isAllDay: isAllDay,
+      note: note,
+      location: location,
+      colorValue: colorValue,
+      recurrenceRule: recurrenceRule,
+      exceptionDateList: exceptionDateList,
+      isDone: isDone,
+      doneOccurrences: newDoneOccurrences,
+    );
+  }
 
   /// Helper to parse NoteData from an Appointment's notes field
   static NoteData parseNoteData(String? notes) => NoteData.fromJsonString(notes);

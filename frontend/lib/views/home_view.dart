@@ -43,11 +43,18 @@ class HomeView extends StatelessWidget {
               appointmentBuilder: (context, calendarAppointmentDetails) {
                 final Appointment appointment = calendarAppointmentDetails.appointments.first as Appointment;
                 final noteData = ScheduleModel.parseNoteData(appointment.notes);
-                final bool isDone = noteData.isDone;
+
+                // For recurring events, check if this specific occurrence is done
+                // For non-recurring events, check the isDone flag
+                final bool isRecurring = appointment.recurrenceRule != null && appointment.recurrenceRule!.isNotEmpty;
+                final bool isDone = isRecurring ? noteData.isOccurrenceDone(appointment.startTime) : noteData.isDone;
+
+                // Apply gray color for done occurrences
+                final Color displayColor = isDone ? Colors.grey : appointment.color;
 
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  decoration: BoxDecoration(color: appointment.color, borderRadius: BorderRadius.circular(4)),
+                  decoration: BoxDecoration(color: displayColor, borderRadius: BorderRadius.circular(4)),
                   child: Text(
                     appointment.subject,
                     style: TextStyle(
@@ -75,10 +82,14 @@ class HomeView extends StatelessWidget {
                   final existingSchedule = homeController.scheduleList.firstWhereOrNull((s) => s.id == tappedAppointment.id);
 
                   if (existingSchedule != null) {
+                    // For recurring events, pass the tapped occurrence date
+                    final DateTime? tappedOccurrenceDate = existingSchedule.isRecurring ? tappedAppointment.startTime : null;
+
                     showDialog(
                       context: context,
                       builder: (context) => ScheduleFormDialog(
                         existingSchedule: existingSchedule,
+                        tappedOccurrenceDate: tappedOccurrenceDate, // Pass the occurrence date
                         onSave: (updatedSchedule) {
                           // Update the schedule in the list
                           final index = homeController.scheduleList.indexWhere((s) => s.id == updatedSchedule.id);

@@ -3,6 +3,42 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
+/// Extended note data stored as JSON in Appointment.notes field
+/// This allows storing additional fields that Appointment doesn't support
+class NoteData {
+  final bool isDone;
+  final String? description;
+
+  // Add more fields as needed in the future
+  // final String? category;
+  // final int? priority;
+
+  const NoteData({this.isDone = false, this.description});
+
+  /// Parse NoteData from JSON string (stored in Appointment.notes)
+  factory NoteData.fromJsonString(String? jsonString) {
+    if (jsonString == null || jsonString.isEmpty) {
+      return const NoteData();
+    }
+
+    try {
+      final Map<String, dynamic> json = jsonDecode(jsonString);
+      return NoteData(isDone: json['isDone'] as bool? ?? false, description: json['description'] as String?);
+    } catch (e) {
+      // If parsing fails, treat the whole string as description (backward compatibility)
+      return NoteData(description: jsonString);
+    }
+  }
+
+  /// Convert to JSON string for storing in Appointment.notes
+  String toJsonString() {
+    return jsonEncode({'isDone': isDone, if (description != null && description!.isNotEmpty) 'description': description});
+  }
+
+  /// Check if there's any meaningful data
+  bool get isEmpty => !isDone && (description == null || description!.isEmpty);
+}
+
 class ScheduleModel {
   final String id;
   final String title;
@@ -32,57 +68,42 @@ class ScheduleModel {
 
   // Convert JSON from API to model
   factory ScheduleModel.fromJson(Map<String, dynamic> json) {
-    // 1. Initialize _note to null first, so the compiler is satisfied.
-    // We use 'dynamic' to check the type safely before casting/encoding.
+    // 1. Parse note field - it may contain extended data as JSON
     final dynamic noteRaw = json['note'];
-    String? parsedNote;
+    String? noteJsonString;
+    NoteData noteData = const NoteData();
 
     if (noteRaw is Map<String, dynamic>) {
-      // If it's a Map (e.g., {"isDone": true}), encode it to a String.
-      parsedNote = jsonEncode(noteRaw);
+      // If it's already a Map, encode it to JSON string
+      noteJsonString = jsonEncode(noteRaw);
+      noteData = NoteData.fromJsonString(noteJsonString);
     } else if (noteRaw is String) {
-      // If it's already a String, use it directly.
-      parsedNote = noteRaw;
+      noteJsonString = noteRaw;
+      noteData = NoteData.fromJsonString(noteRaw);
     }
-    // Otherwise, parsedNote remains null.
 
     // 2. Extract and convert exception dates
     List<DateTime>? exceptionDates;
     if (json['exceptionDateList'] is List) {
-      // Ensure the list items are iterated and parsed safely
       exceptionDates = (json['exceptionDateList'] as List<dynamic>).map((e) => DateTime.parse(e.toString())).toList();
     }
 
-    // 3. Construct the Model, ensuring required fields are handled robustly.
+    // 3. Determine isDone - check both direct field and note data
+    final bool isDoneValue = json['isDone'] as bool? ?? noteData.isDone;
+
+    // 4. Construct the Model
     return ScheduleModel(
-      // Use `as String? ?? ''` for required Strings to ensure type safety
-      // and provide a default empty string if the key is missing or null.
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? '',
-
-      // Date parsing: Safely check for the key/value before parsing.
-      start: DateTime.parse(json['start'] as String).toLocal(), // Assuming 'start' is always present and a String
-      end: DateTime.parse(json['end'] as String).toLocal(), // Assuming 'end' is always present and a String
-      // Location: Use safe casting and provide a default empty string.
+      start: DateTime.parse(json['start'] as String).toLocal(),
+      end: DateTime.parse(json['end'] as String).toLocal(),
       location: json['location'] as String? ?? '',
-
-      // isAllDay: Use explicit null check and default to false.
       isAllDay: json['isAllDay'] as bool? ?? false,
-
-      // Note: Use the parsed String
-      note: parsedNote,
-
-      // Color: Use null-coalescing with the default int value.
+      note: noteData.description, // Extract description from note data
       colorValue: json['colorValue'] as int? ?? 0xFF42A5F5,
-
-      // Recurrence: Simple casting.
       recurrenceRule: json['recurrenceRule'] as String?,
-
-      // Exception Dates: Use the safely parsed list.
       exceptionDateList: exceptionDates,
-
-      // isDone: Use explicit null check and default to false.
-      isDone: json['isDone'] as bool? ?? false,
+      isDone: isDoneValue,
     );
   }
 
@@ -108,6 +129,13 @@ class ScheduleModel {
     final DateTime startTime = isAllDay ? DateTime(start.year, start.month, start.day, 0, 0, 0) : start;
     final DateTime endTime = isAllDay ? DateTime(end.year, end.month, end.day, 23, 59, 59) : end;
 
+    // Store extended data (isDone, description) as JSON in notes field
+    final noteData = NoteData(isDone: isDone, description: note);
+    final String? notesJson = noteData.isEmpty ? null : noteData.toJsonString();
+
+    // If done, show as gray color
+    final Color displayColor = isDone ? Colors.grey : Color(colorValue);
+
     return Appointment(
       id: id,
       subject: title,
@@ -115,10 +143,16 @@ class ScheduleModel {
       endTime: endTime,
       location: location,
       isAllDay: isAllDay,
-      notes: note,
-      color: Color(colorValue),
+      notes: notesJson, // Store extended data as JSON
+      color: displayColor,
       recurrenceRule: recurrenceRule,
       recurrenceExceptionDates: exceptionDateList,
     );
   }
+
+  /// Get NoteData from this schedule
+  NoteData get noteData => NoteData(isDone: isDone, description: note);
+
+  /// Helper to parse NoteData from an Appointment's notes field
+  static NoteData parseNoteData(String? notes) => NoteData.fromJsonString(notes);
 }

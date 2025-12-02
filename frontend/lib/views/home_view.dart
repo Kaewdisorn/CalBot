@@ -39,6 +39,30 @@ class HomeView extends StatelessWidget {
                 appointmentDisplayMode: homeController.isAgendaView.value ? MonthAppointmentDisplayMode.indicator : MonthAppointmentDisplayMode.appointment,
                 showAgenda: homeController.isAgendaView.value,
               ),
+              // Custom appointment builder to show strikethrough for done items
+              appointmentBuilder: (context, calendarAppointmentDetails) {
+                final Appointment appointment = calendarAppointmentDetails.appointments.first as Appointment;
+                final noteData = ScheduleModel.parseNoteData(appointment.notes);
+                final bool isDone = noteData.isDone;
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(color: appointment.color, borderRadius: BorderRadius.circular(4)),
+                  child: Text(
+                    appointment.subject,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none,
+                      decorationColor: Colors.white,
+                      decorationThickness: 2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              },
               onTap: (CalendarTapDetails details) async {
                 // appointment tapped
                 final appts = details.appointments;

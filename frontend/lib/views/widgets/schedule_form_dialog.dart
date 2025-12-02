@@ -125,11 +125,11 @@ class ScheduleFormDialog extends StatelessWidget {
   }
 
   Widget _buildHeader(ScheduleFormController controller) {
-    final color = controller.selectedColor.value;
+    final selectedColor = controller.selectedColor.value;
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 20, 16, 16),
       decoration: BoxDecoration(
-        color: color.withAlpha(25),
+        color: selectedColor.withAlpha(25),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Row(
@@ -137,7 +137,7 @@ class ScheduleFormDialog extends StatelessWidget {
           Container(
             width: 4,
             height: 28,
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+            decoration: BoxDecoration(color: selectedColor, borderRadius: BorderRadius.circular(2)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -160,7 +160,7 @@ class ScheduleFormDialog extends StatelessWidget {
   }
 
   Widget _buildTitleField(ScheduleFormController controller) {
-    final color = controller.selectedColor.value;
+    final themeColor = Theme.of(Get.context!).colorScheme.primary;
     return TextField(
       controller: controller.titleController,
       autofocus: !controller.isEditMode,
@@ -172,7 +172,7 @@ class ScheduleFormDialog extends StatelessWidget {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: color, width: 2),
+          borderSide: BorderSide(color: themeColor, width: 2),
         ),
         filled: true,
         fillColor: Colors.grey.shade50,
@@ -181,10 +181,10 @@ class ScheduleFormDialog extends StatelessWidget {
   }
 
   Widget _buildAllDayAndDoneRow(ScheduleFormController controller) {
-    final color = controller.selectedColor.value;
+    final themeColor = Theme.of(Get.context!).colorScheme.primary;
     final isDone = controller.isDone.value;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -193,31 +193,44 @@ class ScheduleFormDialog extends StatelessWidget {
       child: Row(
         children: [
           // All Day section
-          Icon(Icons.sunny, color: color, size: 20),
-          const SizedBox(width: 6),
-          const Text('All Day', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-          Switch(
-            value: controller.isAllDay.value,
-            onChanged: controller.toggleAllDay,
-            activeThumbColor: color,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          Expanded(
+            child: Row(
+              children: [
+                Icon(Icons.sunny, color: themeColor, size: 20),
+                const SizedBox(width: 6),
+                const Text('All Day', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                const Spacer(),
+                Switch(
+                  value: controller.isAllDay.value,
+                  onChanged: controller.toggleAllDay,
+                  activeThumbColor: themeColor,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(width: 8),
-          Container(width: 1, height: 24, color: Colors.grey.shade300),
-          const SizedBox(width: 8),
+          Container(width: 1, height: 28, color: Colors.grey.shade300),
           // Mark as Done section
-          Icon(isDone ? Icons.check_circle : Icons.check_circle_outline, color: isDone ? Colors.green : Colors.grey.shade600, size: 20),
-          const SizedBox(width: 6),
-          Text(
-            'Done',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: isDone ? Colors.green.shade700 : Colors.black87),
-          ),
-          Checkbox(
-            value: isDone,
-            onChanged: (val) => controller.toggleIsDone(val ?? false),
-            activeColor: Colors.green,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
+          Expanded(
+            child: Row(
+              children: [
+                const SizedBox(width: 8),
+                Icon(isDone ? Icons.check_circle : Icons.check_circle_outline, color: isDone ? Colors.green : Colors.grey.shade600, size: 20),
+                const SizedBox(width: 6),
+                Text(
+                  'Mark as Done',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: isDone ? Colors.green.shade700 : Colors.black87),
+                ),
+                const Spacer(),
+                Checkbox(
+                  value: isDone,
+                  onChanged: (val) => controller.toggleIsDone(val ?? false),
+                  activeColor: Colors.green,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -227,7 +240,7 @@ class ScheduleFormDialog extends StatelessWidget {
   Widget _buildDateTimePickers(BuildContext context, ScheduleFormController controller) {
     final dateFormat = DateFormat('EEE, MMM d, yyyy');
     final timeFormat = DateFormat('h:mm a');
-    final color = controller.selectedColor.value;
+    final themeColor = Theme.of(context).colorScheme.primary;
 
     return Column(
       children: [
@@ -243,7 +256,7 @@ class ScheduleFormDialog extends StatelessWidget {
           timeStr: timeFormat.format(DateTime(2000, 1, 1, controller.startTime.value.hour, controller.startTime.value.minute)),
           onDateTap: () => _pickDate(context, controller, isStart: true),
           onTimeTap: controller.isAllDay.value ? null : () => _pickTime(context, controller, isStart: true),
-          color: color,
+          color: themeColor,
         ),
         const SizedBox(height: 12),
         // End Date/Time
@@ -258,7 +271,7 @@ class ScheduleFormDialog extends StatelessWidget {
           timeStr: timeFormat.format(DateTime(2000, 1, 1, controller.endTime.value.hour, controller.endTime.value.minute)),
           onDateTap: () => _pickDate(context, controller, isStart: false),
           onTimeTap: controller.isAllDay.value ? null : () => _pickTime(context, controller, isStart: false),
-          color: color,
+          color: themeColor,
         ),
       ],
     );
@@ -337,7 +350,7 @@ class ScheduleFormDialog extends StatelessWidget {
   }
 
   Widget _buildLocationField(ScheduleFormController controller) {
-    final color = controller.selectedColor.value;
+    final themeColor = Theme.of(Get.context!).colorScheme.primary;
     return TextField(
       controller: controller.locationController,
       style: const TextStyle(fontSize: 16),
@@ -348,7 +361,7 @@ class ScheduleFormDialog extends StatelessWidget {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: color, width: 2),
+          borderSide: BorderSide(color: themeColor, width: 2),
         ),
         filled: true,
         fillColor: Colors.grey.shade50,
@@ -357,7 +370,7 @@ class ScheduleFormDialog extends StatelessWidget {
   }
 
   Widget _buildNoteField(ScheduleFormController controller) {
-    final color = controller.selectedColor.value;
+    final themeColor = Theme.of(Get.context!).colorScheme.primary;
     return TextField(
       controller: controller.noteController,
       style: const TextStyle(fontSize: 16),
@@ -369,7 +382,7 @@ class ScheduleFormDialog extends StatelessWidget {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: color, width: 2),
+          borderSide: BorderSide(color: themeColor, width: 2),
         ),
         filled: true,
         fillColor: Colors.grey.shade50,
@@ -379,6 +392,7 @@ class ScheduleFormDialog extends StatelessWidget {
 
   Widget _buildColorPicker(ScheduleFormController controller) {
     final selectedColor = controller.selectedColor.value;
+    final themeColor = Theme.of(Get.context!).colorScheme.primary;
     // Check if current color is a preset color
     final isPresetColor = ScheduleFormController.colorPalette.any((c) => c.toARGB32() == selectedColor.toARGB32());
 
@@ -396,85 +410,86 @@ class ScheduleFormDialog extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        // Preset colors row
+        // Single row: Preview + Preset colors + Custom input
         Row(
           children: [
+            // Current color preview
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: selectedColor,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300, width: 1),
+                boxShadow: [BoxShadow(color: selectedColor.withAlpha(100), blurRadius: 4, offset: const Offset(0, 2))],
+              ),
+            ),
+            const SizedBox(width: 10),
             // Preset color circles
             ...ScheduleFormController.colorPalette.map((color) {
               final isSelected = selectedColor.toARGB32() == color.toARGB32();
               return Padding(
-                padding: const EdgeInsets.only(right: 10),
+                padding: const EdgeInsets.only(right: 6),
                 child: GestureDetector(
                   onTap: () => controller.setColor(color),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    width: 32,
-                    height: 32,
+                    width: 28,
+                    height: 28,
                     decoration: BoxDecoration(
                       color: color,
                       shape: BoxShape.circle,
                       border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
                       boxShadow: [
-                        BoxShadow(color: isSelected ? color.withAlpha(150) : Colors.black12, blurRadius: isSelected ? 6 : 3, offset: const Offset(0, 2)),
+                        BoxShadow(color: isSelected ? color.withAlpha(150) : Colors.black12, blurRadius: isSelected ? 4 : 2, offset: const Offset(0, 1)),
                       ],
                     ),
-                    child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
+                    child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 14) : null,
                   ),
                 ),
               );
             }),
             // Custom color indicator (if custom color is selected)
             if (!isPresetColor)
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: selectedColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                  boxShadow: [BoxShadow(color: selectedColor.withAlpha(150), blurRadius: 6, offset: const Offset(0, 2))],
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: selectedColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [BoxShadow(color: selectedColor.withAlpha(150), blurRadius: 4, offset: const Offset(0, 1))],
+                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 14),
                 ),
-                child: const Icon(Icons.check, color: Colors.white, size: 16),
               ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        // Custom color input row
-        Row(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: selectedColor,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-            ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 4),
+            // Custom hex input
             Expanded(
               child: SizedBox(
-                height: 36,
+                height: 32,
                 child: TextField(
                   controller: controller.customColorController,
-                  style: const TextStyle(fontSize: 14),
+                  style: const TextStyle(fontSize: 13),
                   decoration: InputDecoration(
-                    hintText: 'Custom hex (e.g., FF5733)',
-                    hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                    hintText: 'Hex',
+                    hintStyle: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                     prefixText: '#',
-                    prefixStyle: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                    prefixStyle: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(6),
                       borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(6),
                       borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: selectedColor, width: 2),
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(color: themeColor, width: 2),
                     ),
                     filled: true,
                     fillColor: Colors.grey.shade50,
@@ -483,17 +498,18 @@ class ScheduleFormDialog extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
+            // Apply button
             SizedBox(
-              height: 36,
+              height: 32,
               child: ElevatedButton(
                 onPressed: controller.applyCustomColor,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: selectedColor,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  backgroundColor: themeColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                 ),
-                child: const Text('Apply', style: TextStyle(color: Colors.white, fontSize: 13)),
+                child: const Text('Apply', style: TextStyle(color: Colors.white, fontSize: 12)),
               ),
             ),
           ],
@@ -503,7 +519,7 @@ class ScheduleFormDialog extends StatelessWidget {
   }
 
   Widget _buildRecurrencePicker(BuildContext context, ScheduleFormController controller) {
-    final color = controller.selectedColor.value;
+    final themeColor = Theme.of(context).colorScheme.primary;
     final isRecurring = controller.recurrenceFrequency.value != RecurrenceFrequency.never;
 
     return Column(
@@ -512,7 +528,7 @@ class ScheduleFormDialog extends StatelessWidget {
         // Repeat dropdown
         Row(
           children: [
-            Icon(Icons.repeat, color: color, size: 22),
+            Icon(Icons.repeat, color: themeColor, size: 22),
             const SizedBox(width: 12),
             Text('Repeat', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
             const SizedBox(width: 12),
@@ -528,7 +544,7 @@ class ScheduleFormDialog extends StatelessWidget {
                   child: DropdownButton<RecurrenceFrequency>(
                     value: controller.recurrenceFrequency.value,
                     isExpanded: true,
-                    icon: Icon(Icons.keyboard_arrow_down, color: color),
+                    icon: Icon(Icons.keyboard_arrow_down, color: themeColor),
                     style: TextStyle(fontSize: 14, color: Colors.black87, fontWeight: isRecurring ? FontWeight.w500 : FontWeight.normal),
                     items: const [
                       DropdownMenuItem(value: RecurrenceFrequency.never, child: Text('Never')),
@@ -547,7 +563,7 @@ class ScheduleFormDialog extends StatelessWidget {
         ),
 
         // Show additional options based on frequency
-        if (isRecurring) ...[const SizedBox(height: 12), _buildRecurrenceOptions(context, controller, color)],
+        if (isRecurring) ...[const SizedBox(height: 12), _buildRecurrenceOptions(context, controller, themeColor)],
       ],
     );
   }
@@ -942,7 +958,7 @@ class ScheduleFormDialog extends StatelessWidget {
   }
 
   Widget _buildActionButtons(ScheduleFormController controller) {
-    final color = controller.selectedColor.value;
+    final themeColor = Theme.of(Get.context!).colorScheme.primary;
 
     // If in edit mode with delete option, show both buttons in a row
     if (controller.isEditMode && onDelete != null) {
@@ -973,7 +989,7 @@ class ScheduleFormDialog extends StatelessWidget {
                 style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: color,
+                backgroundColor: themeColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 elevation: 2,
@@ -995,7 +1011,7 @@ class ScheduleFormDialog extends StatelessWidget {
           style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: color,
+          backgroundColor: themeColor,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           elevation: 2,
@@ -1006,6 +1022,7 @@ class ScheduleFormDialog extends StatelessWidget {
 
   Future<void> _pickDate(BuildContext context, ScheduleFormController controller, {required bool isStart}) async {
     final initial = isStart ? controller.startDate.value : controller.endDate.value;
+    final themeColor = Theme.of(context).colorScheme.primary;
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -1013,7 +1030,7 @@ class ScheduleFormDialog extends StatelessWidget {
       lastDate: DateTime(2100),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(colorScheme: ColorScheme.light(primary: controller.selectedColor.value)),
+          data: Theme.of(context).copyWith(colorScheme: ColorScheme.light(primary: themeColor)),
           child: child!,
         );
       },
@@ -1029,12 +1046,13 @@ class ScheduleFormDialog extends StatelessWidget {
 
   Future<void> _pickTime(BuildContext context, ScheduleFormController controller, {required bool isStart}) async {
     final initial = isStart ? controller.startTime.value : controller.endTime.value;
+    final themeColor = Theme.of(context).colorScheme.primary;
     final picked = await showTimePicker(
       context: context,
       initialTime: initial,
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(colorScheme: ColorScheme.light(primary: controller.selectedColor.value)),
+          data: Theme.of(context).copyWith(colorScheme: ColorScheme.light(primary: themeColor)),
           child: child!,
         );
       },

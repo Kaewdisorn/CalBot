@@ -17,10 +17,13 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final headerColor = settingController.selectedColor.value;
-
     return Scaffold(
-      appBar: CustomAppBar(toolbarHeight: 60, titleText: 'Halulu', logoAsset: 'assets/images/halulu_128x128.png', appbarColor: headerColor),
+      appBar: CustomAppBar(
+        toolbarHeight: 60,
+        titleText: 'Halulu',
+        logoAsset: 'assets/images/halulu_128x128.png',
+        appbarColor: settingController.selectedColor.value,
+      ),
       endDrawer: const SettingsDrawer(),
       body: Stack(
         children: [
@@ -34,7 +37,7 @@ class HomeView extends StatelessWidget {
               showTodayButton: true,
               allowedViews: homeController.allowedViews,
               dataSource: dataSource,
-              headerStyle: CalendarHeaderStyle(backgroundColor: headerColor.withAlpha(1)),
+              headerStyle: CalendarHeaderStyle(backgroundColor: settingController.selectedColor.value.withAlpha(1)),
               monthViewSettings: MonthViewSettings(
                 appointmentDisplayMode: homeController.isAgendaView.value ? MonthAppointmentDisplayMode.indicator : MonthAppointmentDisplayMode.appointment,
                 showAgenda: homeController.isAgendaView.value,

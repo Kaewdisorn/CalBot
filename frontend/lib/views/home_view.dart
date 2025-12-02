@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../controllers/home_controller.dart';
+import '../controllers/widgets_controller/setting_controller.dart';
 import '../models/schedule_model.dart';
 import 'widgets/custom_appbar.dart';
 import 'widgets/schedule_detail.dart';
@@ -12,11 +13,14 @@ class HomeView extends StatelessWidget {
   HomeView({super.key});
 
   final homeController = Get.find<HomeController>();
+  final settingController = Get.find<SettingsController>();
 
   @override
   Widget build(BuildContext context) {
+    final headerColor = settingController.selectedColor.value;
+
     return Scaffold(
-      appBar: CustomAppBar(toolbarHeight: 60, titleText: 'Halulu', logoAsset: 'assets/images/halulu_128x128.png'),
+      appBar: CustomAppBar(toolbarHeight: 60, titleText: 'Halulu', logoAsset: 'assets/images/halulu_128x128.png', appbarColor: headerColor),
       endDrawer: const SettingsDrawer(),
       body: Stack(
         children: [
@@ -30,6 +34,7 @@ class HomeView extends StatelessWidget {
               showTodayButton: true,
               allowedViews: homeController.allowedViews,
               dataSource: dataSource,
+              headerStyle: CalendarHeaderStyle(backgroundColor: headerColor.withAlpha(1)),
               monthViewSettings: MonthViewSettings(
                 appointmentDisplayMode: homeController.isAgendaView.value ? MonthAppointmentDisplayMode.indicator : MonthAppointmentDisplayMode.appointment,
                 showAgenda: homeController.isAgendaView.value,
@@ -46,6 +51,11 @@ class HomeView extends StatelessWidget {
                     context: context,
                     builder: (context) => ScheduleDetailPopup(appointment: tappedAppointment, onEdit: () {}, onDelete: () {}),
                   );
+                  return;
+                }
+
+                // Disable "add event" popup when in agenda view
+                if (homeController.isAgendaView.value) {
                   return;
                 }
 

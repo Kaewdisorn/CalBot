@@ -4,13 +4,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double toolbarHeight;
   final String titleText;
   final String logoAsset;
+  final MaterialColor? appbarColor;
 
-  const CustomAppBar({super.key, required this.toolbarHeight, required this.titleText, required this.logoAsset});
+  const CustomAppBar({super.key, required this.toolbarHeight, required this.titleText, required this.logoAsset, this.appbarColor});
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: appbarColor?.withAlpha(50) ?? Colors.white,
       elevation: 2,
       toolbarHeight: toolbarHeight,
       title: Row(

@@ -18,6 +18,9 @@ RUN flutter config --enable-web
 # Build release
 RUN flutter build web --release
 
+# Add cache-busting meta tags to index.html
+RUN sed -i '/<head>/a \  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n  <meta http-equiv="Pragma" content="no-cache">\n  <meta http-equiv="Expires" content="0">' /app/frontend/build/web/index.html
+
 
 # ---------------------------------------------------------
 # STAGE 2 — Build Node Backend

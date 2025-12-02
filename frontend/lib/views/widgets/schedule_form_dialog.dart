@@ -86,8 +86,8 @@ class ScheduleFormDialog extends StatelessWidget {
                         _buildTitleField(controller),
                         const SizedBox(height: 16),
 
-                        // All Day Toggle
-                        _buildAllDayToggle(controller),
+                        // All Day & Mark as Done Row
+                        _buildAllDayAndDoneRow(controller),
                         const SizedBox(height: 12),
 
                         // Date & Time Pickers
@@ -106,8 +106,8 @@ class ScheduleFormDialog extends StatelessWidget {
                         _buildNoteField(controller),
                         const SizedBox(height: 16),
 
-                        // Color Picker & Mark as Done in Row
-                        _buildColorAndDoneRow(controller, isMobile),
+                        // Color Picker with custom color input
+                        _buildColorPicker(controller),
                         const SizedBox(height: 20),
 
                         // Action Buttons
@@ -180,26 +180,45 @@ class ScheduleFormDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildAllDayToggle(ScheduleFormController controller) {
+  Widget _buildAllDayAndDoneRow(ScheduleFormController controller) {
     final color = controller.selectedColor.value;
+    final isDone = controller.isDone.value;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Icon(Icons.sunny, color: color, size: 22),
-              const SizedBox(width: 12),
-              const Text('All Day', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-            ],
+          // All Day section
+          Icon(Icons.sunny, color: color, size: 20),
+          const SizedBox(width: 6),
+          const Text('All Day', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          Switch(
+            value: controller.isAllDay.value,
+            onChanged: controller.toggleAllDay,
+            activeThumbColor: color,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          Switch(value: controller.isAllDay.value, onChanged: controller.toggleAllDay, activeThumbColor: color),
+          const SizedBox(width: 8),
+          Container(width: 1, height: 24, color: Colors.grey.shade300),
+          const SizedBox(width: 8),
+          // Mark as Done section
+          Icon(isDone ? Icons.check_circle : Icons.check_circle_outline, color: isDone ? Colors.green : Colors.grey.shade600, size: 20),
+          const SizedBox(width: 6),
+          Text(
+            'Done',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: isDone ? Colors.green.shade700 : Colors.black87),
+          ),
+          Checkbox(
+            value: isDone,
+            onChanged: (val) => controller.toggleIsDone(val ?? false),
+            activeColor: Colors.green,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+          ),
         ],
       ),
     );
@@ -358,24 +377,11 @@ class ScheduleFormDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildColorAndDoneRow(ScheduleFormController controller, bool isMobile) {
-    // if (isMobile) {
-    // Stack vertically on mobile
-    return Column(children: [_buildColorPicker(controller), const SizedBox(height: 12), _buildMarkAsDoneToggle(controller)]);
-    // }
-
-    // Side by side on larger screens
-    // return Row(
-    //   crossAxisAlignment: CrossAxisAlignment.start,
-    //   children: [
-    //     Expanded(child: _buildColorPicker(controller)),
-    //     const SizedBox(width: 16),
-    //     Expanded(child: _buildMarkAsDoneToggle(controller)),
-    //   ],
-    // );
-  }
-
   Widget _buildColorPicker(ScheduleFormController controller) {
+    final selectedColor = controller.selectedColor.value;
+    // Check if current color is a preset color
+    final isPresetColor = ScheduleFormController.colorPalette.any((c) => c.toARGB32() == selectedColor.toARGB32());
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -390,27 +396,107 @@ class ScheduleFormDialog extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: ScheduleFormController.colorPalette.map((color) {
-            final isSelected = controller.selectedColor.value.toARGB32() == color.toARGB32();
-            return GestureDetector(
-              onTap: () => controller.setColor(color),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+        // Preset colors row
+        Row(
+          children: [
+            // Preset color circles
+            ...ScheduleFormController.colorPalette.map((color) {
+              final isSelected = selectedColor.toARGB32() == color.toARGB32();
+              return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: GestureDetector(
+                  onTap: () => controller.setColor(color),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
+                      boxShadow: [
+                        BoxShadow(color: isSelected ? color.withAlpha(150) : Colors.black12, blurRadius: isSelected ? 6 : 3, offset: const Offset(0, 2)),
+                      ],
+                    ),
+                    child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
+                  ),
+                ),
+              );
+            }),
+            // Custom color indicator (if custom color is selected)
+            if (!isPresetColor)
+              Container(
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: color,
+                  color: selectedColor,
                   shape: BoxShape.circle,
-                  border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
-                  boxShadow: [BoxShadow(color: isSelected ? color.withAlpha(150) : Colors.black12, blurRadius: isSelected ? 6 : 3, offset: const Offset(0, 2))],
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [BoxShadow(color: selectedColor.withAlpha(150), blurRadius: 6, offset: const Offset(0, 2))],
                 ),
-                child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
+                child: const Icon(Icons.check, color: Colors.white, size: 16),
               ),
-            );
-          }).toList(),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Custom color input row
+        Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: selectedColor,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: SizedBox(
+                height: 36,
+                child: TextField(
+                  controller: controller.customColorController,
+                  style: const TextStyle(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'Custom hex (e.g., FF5733)',
+                    hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                    prefixText: '#',
+                    prefixStyle: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: selectedColor, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                  ),
+                  onSubmitted: (_) => controller.applyCustomColor(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 36,
+              child: ElevatedButton(
+                onPressed: controller.applyCustomColor,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: selectedColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('Apply', style: TextStyle(color: Colors.white, fontSize: 13)),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -852,39 +938,6 @@ class ScheduleFormDialog extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildMarkAsDoneToggle(ScheduleFormController controller) {
-    final isDone = controller.isDone.value;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDone ? Colors.green.shade50 : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDone ? Colors.green.shade300 : Colors.grey.shade200),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(isDone ? Icons.check_circle : Icons.check_circle_outline, color: isDone ? Colors.green : Colors.grey.shade600, size: 22),
-              const SizedBox(width: 12),
-              Text(
-                'Mark as Done',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: isDone ? Colors.green.shade700 : Colors.black87),
-              ),
-            ],
-          ),
-          Checkbox(
-            value: isDone,
-            onChanged: (val) => controller.toggleIsDone(val ?? false),
-            activeColor: Colors.green,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-          ),
-        ],
-      ),
     );
   }
 

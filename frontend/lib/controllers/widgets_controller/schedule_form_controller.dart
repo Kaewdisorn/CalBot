@@ -52,16 +52,16 @@ class ScheduleFormController extends GetxController {
   // For recurring events - track which occurrence was tapped
   DateTime? tappedOccurrenceDate;
 
-  // Color palette for schedule
+  // Custom color input controller
+  late TextEditingController customColorController;
+
+  // Color palette for schedule - Top 5 best colors
   static const List<Color> colorPalette = [
     Color(0xFF42A5F5), // Blue
     Color(0xFF66BB6A), // Green
     Color(0xFFEF5350), // Red
     Color(0xFFAB47BC), // Purple
     Color(0xFFFF7043), // Orange
-    Color(0xFF26A69A), // Teal
-    Color(0xFFEC407A), // Pink
-    Color(0xFF5C6BC0), // Indigo
   ];
 
   /// Initialize the controller with optional existing schedule or initial date
@@ -73,6 +73,7 @@ class ScheduleFormController extends GetxController {
     titleController = TextEditingController(text: schedule?.title ?? '');
     locationController = TextEditingController(text: schedule?.location ?? '');
     noteController = TextEditingController(text: schedule?.note ?? '');
+    customColorController = TextEditingController();
 
     startDate.value = schedule?.start ?? now;
     startTime.value = TimeOfDay.fromDateTime(schedule?.start ?? now);
@@ -381,7 +382,33 @@ class ScheduleFormController extends GetxController {
     titleController.dispose();
     locationController.dispose();
     noteController.dispose();
+    customColorController.dispose();
     super.onClose();
+  }
+
+  /// Apply custom color from hex input
+  void applyCustomColor() {
+    final text = customColorController.text.trim();
+    if (text.isEmpty) return;
+
+    // Remove # if present and validate hex format
+    final hex = text.replaceAll('#', '').toUpperCase();
+    final hexRegex = RegExp(r'^[0-9A-F]{6}$');
+
+    if (hexRegex.hasMatch(hex)) {
+      final colorValue = int.parse('FF$hex', radix: 16);
+      selectedColor.value = Color(colorValue);
+      customColorController.clear();
+    } else {
+      Get.snackbar(
+        'Invalid Color',
+        'Please enter a valid 6-digit hex code (e.g., FF5733)',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    }
   }
 
   void setStartDate(DateTime date) {

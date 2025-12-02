@@ -12,6 +12,12 @@ enum RecurrenceEndType { never, until, count }
 /// Days of week for weekly recurrence
 enum WeekDay { monday, tuesday, wednesday, thursday, friday, saturday, sunday }
 
+/// Monthly repeat mode
+enum MonthlyRepeatMode { byDay, byWeekPosition }
+
+/// Week position in month
+enum WeekPosition { first, second, third, fourth, last }
+
 class ScheduleFormController extends GetxController {
   // Text controllers
   late TextEditingController titleController;
@@ -35,6 +41,9 @@ class ScheduleFormController extends GetxController {
   final RxInt recurrenceCount = 10.obs; // Number of occurrences
   final Rx<DateTime?> recurrenceEndDate = Rx<DateTime?>(null); // End by date
   final RxInt monthlyDay = 1.obs; // Day of month for monthly recurrence
+  final Rx<MonthlyRepeatMode> monthlyRepeatMode = MonthlyRepeatMode.byDay.obs;
+  final Rx<WeekPosition> monthlyWeekPosition = WeekPosition.first.obs;
+  final Rx<WeekDay> monthlyWeekDay = WeekDay.monday.obs;
 
   // Edit mode tracking
   ScheduleModel? existingSchedule;
@@ -184,6 +193,50 @@ class ScheduleFormController extends GetxController {
     // Parse BYMONTHDAY for monthly recurrence
     if (ruleMap.containsKey('BYMONTHDAY')) {
       monthlyDay.value = int.tryParse(ruleMap['BYMONTHDAY']!) ?? startDate.value.day;
+      monthlyRepeatMode.value = MonthlyRepeatMode.byDay;
+    }
+
+    // Parse BYDAY with week position for monthly recurrence (e.g., 1MO, 2TU, -1FR)
+    if (recurrenceFrequency.value == RecurrenceFrequency.monthly && ruleMap.containsKey('BYDAY')) {
+      final byday = ruleMap['BYDAY']!;
+      monthlyRepeatMode.value = MonthlyRepeatMode.byWeekPosition;
+      // Parse week position
+      if (byday.startsWith('-1')) {
+        monthlyWeekPosition.value = WeekPosition.last;
+      } else if (byday.startsWith('1')) {
+        monthlyWeekPosition.value = WeekPosition.first;
+      } else if (byday.startsWith('2')) {
+        monthlyWeekPosition.value = WeekPosition.second;
+      } else if (byday.startsWith('3')) {
+        monthlyWeekPosition.value = WeekPosition.third;
+      } else if (byday.startsWith('4')) {
+        monthlyWeekPosition.value = WeekPosition.fourth;
+      }
+      // Parse weekday
+      final dayCode = byday.replaceAll(RegExp(r'[0-9-]'), '');
+      switch (dayCode) {
+        case 'MO':
+          monthlyWeekDay.value = WeekDay.monday;
+          break;
+        case 'TU':
+          monthlyWeekDay.value = WeekDay.tuesday;
+          break;
+        case 'WE':
+          monthlyWeekDay.value = WeekDay.wednesday;
+          break;
+        case 'TH':
+          monthlyWeekDay.value = WeekDay.thursday;
+          break;
+        case 'FR':
+          monthlyWeekDay.value = WeekDay.friday;
+          break;
+        case 'SA':
+          monthlyWeekDay.value = WeekDay.saturday;
+          break;
+        case 'SU':
+          monthlyWeekDay.value = WeekDay.sunday;
+          break;
+      }
     }
   }
 
@@ -238,9 +291,56 @@ class ScheduleFormController extends GetxController {
       parts.add('BYDAY=${dayStrings.join(",")}');
     }
 
-    // BYMONTHDAY for monthly recurrence
+    // Monthly recurrence - by day or by week position
     if (recurrenceFrequency.value == RecurrenceFrequency.monthly) {
-      parts.add('BYMONTHDAY=${monthlyDay.value}');
+      if (monthlyRepeatMode.value == MonthlyRepeatMode.byDay) {
+        parts.add('BYMONTHDAY=${monthlyDay.value}');
+      } else {
+        // By week position (e.g., 1MO = first Monday, -1FR = last Friday)
+        String posStr;
+        switch (monthlyWeekPosition.value) {
+          case WeekPosition.first:
+            posStr = '1';
+            break;
+          case WeekPosition.second:
+            posStr = '2';
+            break;
+          case WeekPosition.third:
+            posStr = '3';
+            break;
+          case WeekPosition.fourth:
+            posStr = '4';
+            break;
+          case WeekPosition.last:
+            posStr = '-1';
+            break;
+        }
+        String dayStr;
+        switch (monthlyWeekDay.value) {
+          case WeekDay.monday:
+            dayStr = 'MO';
+            break;
+          case WeekDay.tuesday:
+            dayStr = 'TU';
+            break;
+          case WeekDay.wednesday:
+            dayStr = 'WE';
+            break;
+          case WeekDay.thursday:
+            dayStr = 'TH';
+            break;
+          case WeekDay.friday:
+            dayStr = 'FR';
+            break;
+          case WeekDay.saturday:
+            dayStr = 'SA';
+            break;
+          case WeekDay.sunday:
+            dayStr = 'SU';
+            break;
+        }
+        parts.add('BYDAY=$posStr$dayStr');
+      }
     }
 
     // End condition
@@ -310,9 +410,13 @@ class ScheduleFormController extends GetxController {
       final weekday = WeekDay.values[startDate.value.weekday - 1];
       selectedWeekDays.add(weekday);
     }
-    // Set default monthly day
+    // Set default monthly options
     if (freq == RecurrenceFrequency.monthly) {
       monthlyDay.value = startDate.value.day;
+      monthlyWeekDay.value = WeekDay.values[startDate.value.weekday - 1];
+      // Calculate week position
+      final weekOfMonth = ((startDate.value.day - 1) ~/ 7);
+      monthlyWeekPosition.value = WeekPosition.values[weekOfMonth.clamp(0, 3)];
     }
   }
 
@@ -344,6 +448,18 @@ class ScheduleFormController extends GetxController {
 
   void setMonthlyDay(int day) {
     monthlyDay.value = day.clamp(1, 31);
+  }
+
+  void setMonthlyRepeatMode(MonthlyRepeatMode mode) {
+    monthlyRepeatMode.value = mode;
+  }
+
+  void setMonthlyWeekPosition(WeekPosition position) {
+    monthlyWeekPosition.value = position;
+  }
+
+  void setMonthlyWeekDay(WeekDay day) {
+    monthlyWeekDay.value = day;
   }
 
   /// Validate and build the schedule model
@@ -450,7 +566,13 @@ class ScheduleFormController extends GetxController {
         }
         break;
       case RecurrenceFrequency.monthly:
-        desc = interval == 1 ? 'Monthly on day ${monthlyDay.value}' : 'Every $interval months on day ${monthlyDay.value}';
+        if (monthlyRepeatMode.value == MonthlyRepeatMode.byDay) {
+          desc = interval == 1 ? 'Monthly on day ${monthlyDay.value}' : 'Every $interval months on day ${monthlyDay.value}';
+        } else {
+          final posName = _getWeekPositionName(monthlyWeekPosition.value);
+          final dayName = getWeekDayName(monthlyWeekDay.value);
+          desc = interval == 1 ? 'Monthly on $posName $dayName' : 'Every $interval months on $posName $dayName';
+        }
         break;
       default:
         desc = 'Never';
@@ -494,6 +616,21 @@ class ScheduleFormController extends GetxController {
         return 'Sat';
       case WeekDay.sunday:
         return 'Sun';
+    }
+  }
+
+  String _getWeekPositionName(WeekPosition pos) {
+    switch (pos) {
+      case WeekPosition.first:
+        return 'first';
+      case WeekPosition.second:
+        return 'second';
+      case WeekPosition.third:
+        return 'third';
+      case WeekPosition.fourth:
+        return 'fourth';
+      case WeekPosition.last:
+        return 'last';
     }
   }
 }

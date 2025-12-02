@@ -98,8 +98,34 @@ class HomeView extends StatelessWidget {
                           }
                         },
                         onDelete: () {
-                          // Remove the schedule from the list
+                          // Remove the entire schedule series from the list
                           homeController.scheduleList.removeWhere((s) => s.id == existingSchedule.id);
+                        },
+                        onDeleteSingle: (occurrenceDate) {
+                          // Delete single occurrence by adding it to exception dates
+                          final index = homeController.scheduleList.indexWhere((s) => s.id == existingSchedule.id);
+                          if (index != -1) {
+                            final schedule = homeController.scheduleList[index];
+                            // Normalize the date
+                            final normalizedDate = DateTime(occurrenceDate.year, occurrenceDate.month, occurrenceDate.day);
+                            // Add to exception list
+                            final List<DateTime> newExceptionDates = [...(schedule.exceptionDateList ?? <DateTime>[]), normalizedDate];
+                            // Create updated schedule with new exception date
+                            homeController.scheduleList[index] = ScheduleModel(
+                              id: schedule.id,
+                              title: schedule.title,
+                              start: schedule.start,
+                              end: schedule.end,
+                              isAllDay: schedule.isAllDay,
+                              note: schedule.note,
+                              location: schedule.location,
+                              colorValue: schedule.colorValue,
+                              recurrenceRule: schedule.recurrenceRule,
+                              exceptionDateList: newExceptionDates,
+                              isDone: schedule.isDone,
+                              doneOccurrences: schedule.doneOccurrences,
+                            );
+                          }
                         },
                       ),
                     );

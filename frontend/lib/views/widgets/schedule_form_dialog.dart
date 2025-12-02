@@ -13,9 +13,18 @@ class ScheduleFormDialog extends StatelessWidget {
   final DateTime? initialDate;
   final DateTime? tappedOccurrenceDate; // For recurring events - the specific occurrence that was tapped
   final Function(ScheduleModel) onSave;
-  final VoidCallback? onDelete;
+  final VoidCallback? onDelete; // Delete entire series
+  final Function(DateTime)? onDeleteSingle; // Delete single occurrence (for recurring events)
 
-  const ScheduleFormDialog({super.key, this.existingSchedule, this.initialDate, this.tappedOccurrenceDate, required this.onSave, this.onDelete});
+  const ScheduleFormDialog({
+    super.key,
+    this.existingSchedule,
+    this.initialDate,
+    this.tappedOccurrenceDate,
+    required this.onSave,
+    this.onDelete,
+    this.onDeleteSingle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -594,6 +603,10 @@ class ScheduleFormDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
+          Text(
+            controller.recurrenceFrequency.value == RecurrenceFrequency.weekly ? 'weeks' : 'times',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+          ),
           Text('times', style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
         ],
       );
@@ -885,11 +898,7 @@ class ScheduleFormDialog extends StatelessWidget {
           // Delete Button
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: () {
-                Get.delete<ScheduleFormController>();
-                Get.back();
-                onDelete!();
-              },
+              onPressed: () => _handleDelete(controller),
               icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
               label: const Text('Delete', style: TextStyle(color: Colors.redAccent, fontSize: 14)),
               style: OutlinedButton.styleFrom(
@@ -992,6 +1001,54 @@ class ScheduleFormDialog extends StatelessWidget {
       Get.delete<ScheduleFormController>();
       Get.back();
       onSave(schedule);
+    }
+  }
+
+  void _handleDelete(ScheduleFormController controller) {
+    // Check if this is a recurring event
+    if (existingSchedule != null && existingSchedule!.isRecurring && tappedOccurrenceDate != null) {
+      // Show confirmation dialog for recurring events
+      Get.dialog(
+        AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.delete_outline, color: Colors.redAccent),
+              SizedBox(width: 8),
+              Text('Delete Event'),
+            ],
+          ),
+          content: const Text('This is a recurring event. What would you like to delete?'),
+          actions: [
+            TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+            OutlinedButton(
+              onPressed: () {
+                Get.back(); // Close confirmation dialog
+                Get.delete<ScheduleFormController>();
+                Get.back(); // Close form dialog
+                onDeleteSingle?.call(tappedOccurrenceDate!);
+              },
+              style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.orange)),
+              child: const Text('This Event Only', style: TextStyle(color: Colors.orange)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Get.back(); // Close confirmation dialog
+                Get.delete<ScheduleFormController>();
+                Get.back(); // Close form dialog
+                onDelete?.call();
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+              child: const Text('All Events', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Non-recurring event - delete directly
+      Get.delete<ScheduleFormController>();
+      Get.back();
+      onDelete?.call();
     }
   }
 }

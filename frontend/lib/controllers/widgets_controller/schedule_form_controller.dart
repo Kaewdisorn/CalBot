@@ -133,32 +133,7 @@ class ScheduleFormController extends GetxController {
     // Parse interval
     recurrenceInterval.value = int.tryParse(ruleMap['INTERVAL'] ?? '1') ?? 1;
 
-    // Parse count
-    if (ruleMap.containsKey('COUNT')) {
-      recurrenceCount.value = int.tryParse(ruleMap['COUNT']!) ?? 10;
-      recurrenceEndType.value = RecurrenceEndType.count;
-    }
-
-    // Parse until date
-    if (ruleMap.containsKey('UNTIL')) {
-      try {
-        final untilStr = ruleMap['UNTIL']!;
-        if (untilStr.length >= 8) {
-          final year = int.parse(untilStr.substring(0, 4));
-          final month = int.parse(untilStr.substring(4, 6));
-          final day = int.parse(untilStr.substring(6, 8));
-          recurrenceEndDate.value = DateTime(year, month, day);
-          recurrenceEndType.value = RecurrenceEndType.until;
-        }
-      } catch (_) {}
-    }
-
-    // If no end condition, set to never
-    if (!ruleMap.containsKey('COUNT') && !ruleMap.containsKey('UNTIL')) {
-      recurrenceEndType.value = RecurrenceEndType.never;
-    }
-
-    // Parse BYDAY for weekly recurrence
+    // Parse BYDAY for weekly recurrence (must be parsed before COUNT adjustment)
     if (ruleMap.containsKey('BYDAY')) {
       selectedWeekDays.clear();
       final days = ruleMap['BYDAY']!.split(',');
@@ -188,6 +163,37 @@ class ScheduleFormController extends GetxController {
             break;
         }
       }
+    }
+
+    // Parse count (after BYDAY so we can adjust for weekly recurrence)
+    if (ruleMap.containsKey('COUNT')) {
+      int rawCount = int.tryParse(ruleMap['COUNT']!) ?? 10;
+      // For weekly recurrence with multiple days, divide by number of days to get weeks
+      if (recurrenceFrequency.value == RecurrenceFrequency.weekly && selectedWeekDays.length > 1) {
+        recurrenceCount.value = (rawCount / selectedWeekDays.length).ceil();
+      } else {
+        recurrenceCount.value = rawCount;
+      }
+      recurrenceEndType.value = RecurrenceEndType.count;
+    }
+
+    // Parse until date
+    if (ruleMap.containsKey('UNTIL')) {
+      try {
+        final untilStr = ruleMap['UNTIL']!;
+        if (untilStr.length >= 8) {
+          final year = int.parse(untilStr.substring(0, 4));
+          final month = int.parse(untilStr.substring(4, 6));
+          final day = int.parse(untilStr.substring(6, 8));
+          recurrenceEndDate.value = DateTime(year, month, day);
+          recurrenceEndType.value = RecurrenceEndType.until;
+        }
+      } catch (_) {}
+    }
+
+    // If no end condition, set to never
+    if (!ruleMap.containsKey('COUNT') && !ruleMap.containsKey('UNTIL')) {
+      recurrenceEndType.value = RecurrenceEndType.never;
     }
 
     // Parse BYMONTHDAY for monthly recurrence
@@ -353,7 +359,14 @@ class ScheduleFormController extends GetxController {
         }
         break;
       case RecurrenceEndType.count:
-        parts.add('COUNT=${recurrenceCount.value}');
+        // For weekly recurrence with multiple days, COUNT means number of weeks
+        // So we multiply by the number of selected days to get total occurrences
+        if (recurrenceFrequency.value == RecurrenceFrequency.weekly && selectedWeekDays.length > 1) {
+          final totalOccurrences = recurrenceCount.value * selectedWeekDays.length;
+          parts.add('COUNT=$totalOccurrences');
+        } else {
+          parts.add('COUNT=${recurrenceCount.value}');
+        }
         break;
       case RecurrenceEndType.never:
         // No end condition - repeats forever

@@ -59,8 +59,8 @@ class ScheduleModel {
       title: json['title'] as String? ?? '',
 
       // Date parsing: Safely check for the key/value before parsing.
-      start: DateTime.parse(json['start'] as String), // Assuming 'start' is always present and a String
-      end: DateTime.parse(json['end'] as String), // Assuming 'end' is always present and a String
+      start: DateTime.parse(json['start'] as String).toLocal(), // Assuming 'start' is always present and a String
+      end: DateTime.parse(json['end'] as String).toLocal(), // Assuming 'end' is always present and a String
       // Location: Use safe casting and provide a default empty string.
       location: json['location'] as String? ?? '',
 

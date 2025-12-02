@@ -21,75 +21,90 @@ class ScheduleFormDialog extends StatelessWidget {
     final controller = Get.put(ScheduleFormController());
     controller.initialize(schedule: existingSchedule, initialDate: initialDate);
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Responsive sizing
+    final bool isMobile = screenWidth < 600;
+    final bool isTablet = screenWidth >= 600 && screenWidth < 1024;
+
+    // Dialog width based on screen size
+    double dialogWidth;
+    if (isMobile) {
+      dialogWidth = screenWidth * 0.95;
+    } else if (isTablet) {
+      dialogWidth = 500;
+    } else {
+      dialogWidth = 520;
+    }
+
+    // Max height based on screen size
+    final maxHeight = isMobile ? screenHeight * 0.9 : screenHeight * 0.85;
+
+    // Padding based on screen size
+    final horizontalPadding = isMobile ? 8.0 : 16.0;
+    final contentPadding = isMobile ? 16.0 : 24.0;
+
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          double maxWidth = constraints.maxWidth > 500 ? 500 : constraints.maxWidth;
-          return Center(
-            child: Obx(
-              () => Container(
-                width: maxWidth,
-                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [BoxShadow(color: Colors.black.withAlpha(40), blurRadius: 20, offset: const Offset(0, 10))],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header
-                    _buildHeader(controller),
-
-                    // Form Content
-                    Flexible(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Title Field
-                            _buildTitleField(controller),
-                            const SizedBox(height: 20),
-
-                            // All Day Toggle
-                            _buildAllDayToggle(controller),
-                            const SizedBox(height: 16),
-
-                            // Date & Time Pickers
-                            _buildDateTimePickers(context, controller),
-                            const SizedBox(height: 20),
-
-                            // Location Field
-                            _buildLocationField(controller),
-                            const SizedBox(height: 20),
-
-                            // Note Field
-                            _buildNoteField(controller),
-                            const SizedBox(height: 20),
-
-                            // Color Picker
-                            _buildColorPicker(controller),
-                            const SizedBox(height: 20),
-
-                            // Mark as Done Toggle
-                            _buildMarkAsDoneToggle(controller),
-                            const SizedBox(height: 24),
-
-                            // Action Buttons
-                            _buildActionButtons(controller),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+      insetPadding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 16),
+      child: Center(
+        child: Obx(
+          () => Container(
+            width: dialogWidth,
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(color: Colors.black.withAlpha(40), blurRadius: 20, offset: const Offset(0, 10))],
             ),
-          );
-        },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                _buildHeader(controller),
+
+                // Form Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(contentPadding, 16, contentPadding, contentPadding),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title Field
+                        _buildTitleField(controller),
+                        const SizedBox(height: 16),
+
+                        // All Day Toggle
+                        _buildAllDayToggle(controller),
+                        const SizedBox(height: 12),
+
+                        // Date & Time Pickers
+                        _buildDateTimePickers(context, controller),
+                        const SizedBox(height: 16),
+
+                        // Location Field
+                        _buildLocationField(controller),
+                        const SizedBox(height: 16),
+
+                        // Note Field
+                        _buildNoteField(controller),
+                        const SizedBox(height: 16),
+
+                        // Color Picker & Mark as Done in Row for larger screens
+                        _buildColorAndDoneRow(controller, isMobile),
+                        const SizedBox(height: 20),
+
+                        // Action Buttons
+                        _buildActionButtons(controller),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -328,6 +343,23 @@ class ScheduleFormDialog extends StatelessWidget {
     );
   }
 
+  Widget _buildColorAndDoneRow(ScheduleFormController controller, bool isMobile) {
+    if (isMobile) {
+      // Stack vertically on mobile
+      return Column(children: [_buildColorPicker(controller), const SizedBox(height: 12), _buildMarkAsDoneToggle(controller)]);
+    }
+
+    // Side by side on larger screens
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: _buildColorPicker(controller)),
+        const SizedBox(width: 16),
+        Expanded(child: _buildMarkAsDoneToggle(controller)),
+      ],
+    );
+  }
+
   Widget _buildColorPicker(ScheduleFormController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,25 +374,25 @@ class ScheduleFormDialog extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: 10,
+          runSpacing: 10,
           children: ScheduleFormController.colorPalette.map((color) {
             final isSelected = controller.selectedColor.value.value == color.value;
             return GestureDetector(
               onTap: () => controller.setColor(color),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                width: 36,
-                height: 36,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   color: color,
                   shape: BoxShape.circle,
-                  border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
-                  boxShadow: [BoxShadow(color: isSelected ? color.withAlpha(150) : Colors.black12, blurRadius: isSelected ? 8 : 4, offset: const Offset(0, 2))],
+                  border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
+                  boxShadow: [BoxShadow(color: isSelected ? color.withAlpha(150) : Colors.black12, blurRadius: isSelected ? 6 : 3, offset: const Offset(0, 2))],
                 ),
-                child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 20) : null,
+                child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
               ),
             );
           }).toList(),
@@ -372,7 +404,7 @@ class ScheduleFormDialog extends StatelessWidget {
   Widget _buildMarkAsDoneToggle(ScheduleFormController controller) {
     final isDone = controller.isDone.value;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: isDone ? Colors.green.shade50 : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -404,49 +436,68 @@ class ScheduleFormDialog extends StatelessWidget {
 
   Widget _buildActionButtons(ScheduleFormController controller) {
     final color = controller.selectedColor.value;
-    return Column(
-      children: [
-        // Save Button
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () => _handleSave(controller),
-            icon: Icon(controller.isEditMode ? Icons.save : Icons.add, color: Colors.white),
-            label: Text(
-              controller.isEditMode ? 'Save Changes' : 'Add Schedule',
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: color,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 2,
-            ),
-          ),
-        ),
 
-        // Delete Button (only in edit mode)
-        if (controller.isEditMode && onDelete != null) ...[
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
+    // If in edit mode with delete option, show both buttons in a row
+    if (controller.isEditMode && onDelete != null) {
+      return Row(
+        children: [
+          // Delete Button
+          Expanded(
             child: OutlinedButton.icon(
               onPressed: () {
                 Get.delete<ScheduleFormController>();
                 Get.back();
                 onDelete!();
               },
-              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-              label: const Text('Delete Schedule', style: TextStyle(color: Colors.redAccent, fontSize: 16)),
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
+              label: const Text('Delete', style: TextStyle(color: Colors.redAccent, fontSize: 14)),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 side: const BorderSide(color: Colors.redAccent),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Save Button
+          Expanded(
+            flex: 2,
+            child: ElevatedButton.icon(
+              onPressed: () => _handleSave(controller),
+              icon: const Icon(Icons.save, color: Colors.white, size: 18),
+              label: const Text(
+                'Save',
+                style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: 2,
               ),
             ),
           ),
         ],
-      ],
+      );
+    }
+
+    // Add mode - only show add button
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () => _handleSave(controller),
+        icon: const Icon(Icons.add, color: Colors.white, size: 18),
+        label: const Text(
+          'Add Schedule',
+          style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          elevation: 2,
+        ),
+      ),
     );
   }
 

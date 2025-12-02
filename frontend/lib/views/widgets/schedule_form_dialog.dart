@@ -91,7 +91,7 @@ class ScheduleFormDialog extends StatelessWidget {
                         _buildNoteField(controller),
                         const SizedBox(height: 16),
 
-                        // Color Picker & Mark as Done in Row for larger screens
+                        // Color Picker & Mark as Done in Row
                         _buildColorAndDoneRow(controller, isMobile),
                         const SizedBox(height: 20),
 
@@ -184,7 +184,7 @@ class ScheduleFormDialog extends StatelessWidget {
               const Text('All Day', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             ],
           ),
-          Switch(value: controller.isAllDay.value, onChanged: controller.toggleAllDay, activeColor: color),
+          Switch(value: controller.isAllDay.value, onChanged: controller.toggleAllDay, activeThumbColor: color),
         ],
       ),
     );
@@ -344,20 +344,20 @@ class ScheduleFormDialog extends StatelessWidget {
   }
 
   Widget _buildColorAndDoneRow(ScheduleFormController controller, bool isMobile) {
-    if (isMobile) {
-      // Stack vertically on mobile
-      return Column(children: [_buildColorPicker(controller), const SizedBox(height: 12), _buildMarkAsDoneToggle(controller)]);
-    }
+    // if (isMobile) {
+    // Stack vertically on mobile
+    return Column(children: [_buildColorPicker(controller), const SizedBox(height: 12), _buildMarkAsDoneToggle(controller)]);
+    // }
 
     // Side by side on larger screens
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: _buildColorPicker(controller)),
-        const SizedBox(width: 16),
-        Expanded(child: _buildMarkAsDoneToggle(controller)),
-      ],
-    );
+    // return Row(
+    //   crossAxisAlignment: CrossAxisAlignment.start,
+    //   children: [
+    //     Expanded(child: _buildColorPicker(controller)),
+    //     const SizedBox(width: 16),
+    //     Expanded(child: _buildMarkAsDoneToggle(controller)),
+    //   ],
+    // );
   }
 
   Widget _buildColorPicker(ScheduleFormController controller) {
@@ -379,7 +379,7 @@ class ScheduleFormDialog extends StatelessWidget {
           spacing: 10,
           runSpacing: 10,
           children: ScheduleFormController.colorPalette.map((color) {
-            final isSelected = controller.selectedColor.value.value == color.value;
+            final isSelected = controller.selectedColor.value.toARGB32() == color.toARGB32();
             return GestureDetector(
               onTap: () => controller.setColor(color),
               child: AnimatedContainer(

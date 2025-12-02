@@ -143,7 +143,7 @@ class ScheduleFormController extends GetxController {
       location: locationController.text.trim().isEmpty ? null : locationController.text.trim(),
       isAllDay: isAllDay.value,
       note: noteController.text.trim().isEmpty ? null : noteController.text.trim(),
-      colorValue: selectedColor.value.value,
+      colorValue: selectedColor.value.toARGB32(),
       recurrenceRule: existingSchedule?.recurrenceRule,
       exceptionDateList: existingSchedule?.exceptionDateList,
       isDone: isDone.value,

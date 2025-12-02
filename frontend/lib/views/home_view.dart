@@ -17,164 +17,168 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        toolbarHeight: 60,
-        titleText: 'Halulu',
-        logoAsset: 'assets/images/halulu_128x128.png',
-        appbarColor: settingController.selectedColor.value,
-      ),
-      endDrawer: const SettingsDrawer(),
-      body: Stack(
-        children: [
-          Obx(() {
-            final dataSource = ScheduleDataSource(homeController.scheduleList.toList());
+    return Obx(
+      () => Scaffold(
+        appBar: CustomAppBar(
+          toolbarHeight: 60,
+          titleText: 'Halulu',
+          logoAsset: 'assets/images/halulu_128x128.png',
+          appbarColor: settingController.selectedColor.value,
+        ),
+        endDrawer: const SettingsDrawer(),
+        body: Stack(
+          children: [
+            Builder(
+              builder: (context) {
+                final dataSource = ScheduleDataSource(homeController.scheduleList.toList());
 
-            return SfCalendar(
-              view: CalendarView.month,
-              showDatePickerButton: true,
-              showNavigationArrow: true,
-              showTodayButton: true,
-              allowedViews: homeController.allowedViews,
-              dataSource: dataSource,
-              headerStyle: CalendarHeaderStyle(backgroundColor: settingController.selectedColor.value.withAlpha(1)),
-              monthViewSettings: MonthViewSettings(
-                appointmentDisplayMode: homeController.isAgendaView.value ? MonthAppointmentDisplayMode.indicator : MonthAppointmentDisplayMode.appointment,
-                showAgenda: homeController.isAgendaView.value,
-              ),
-              // Custom appointment builder to show strikethrough for done items
-              appointmentBuilder: (context, calendarAppointmentDetails) {
-                final Appointment appointment = calendarAppointmentDetails.appointments.first as Appointment;
-                final noteData = ScheduleModel.parseNoteData(appointment.notes);
-
-                // For recurring events, check if this specific occurrence is done
-                // For non-recurring events, check the isDone flag
-                final bool isRecurring = appointment.recurrenceRule != null && appointment.recurrenceRule!.isNotEmpty;
-                final bool isDone = isRecurring ? noteData.isOccurrenceDone(appointment.startTime) : noteData.isDone;
-
-                // Apply gray color for done occurrences
-                final Color displayColor = isDone ? Colors.grey : appointment.color;
-
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  decoration: BoxDecoration(color: displayColor, borderRadius: BorderRadius.circular(4)),
-                  child: Text(
-                    appointment.subject,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none,
-                      decorationColor: Colors.white,
-                      decorationThickness: 2,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                return SfCalendar(
+                  view: CalendarView.month,
+                  showDatePickerButton: true,
+                  showNavigationArrow: true,
+                  showTodayButton: true,
+                  allowedViews: homeController.allowedViews,
+                  dataSource: dataSource,
+                  headerStyle: CalendarHeaderStyle(backgroundColor: settingController.selectedColor.value.withAlpha(1)),
+                  monthViewSettings: MonthViewSettings(
+                    appointmentDisplayMode: homeController.isAgendaView.value ? MonthAppointmentDisplayMode.indicator : MonthAppointmentDisplayMode.appointment,
+                    showAgenda: homeController.isAgendaView.value,
                   ),
-                );
-              },
-              onTap: (CalendarTapDetails details) async {
-                // appointment tapped
-                final appts = details.appointments;
+                  // Custom appointment builder to show strikethrough for done items
+                  appointmentBuilder: (context, calendarAppointmentDetails) {
+                    final Appointment appointment = calendarAppointmentDetails.appointments.first as Appointment;
+                    final noteData = ScheduleModel.parseNoteData(appointment.notes);
 
-                // Existing schedule tapped -> open edit popup
-                if (details.targetElement == CalendarElement.appointment && appts != null && appts.isNotEmpty) {
-                  final Appointment tappedAppointment = appts[0] as Appointment;
+                    // For recurring events, check if this specific occurrence is done
+                    // For non-recurring events, check the isDone flag
+                    final bool isRecurring = appointment.recurrenceRule != null && appointment.recurrenceRule!.isNotEmpty;
+                    final bool isDone = isRecurring ? noteData.isOccurrenceDone(appointment.startTime) : noteData.isDone;
 
-                  // Find the matching ScheduleModel
-                  final existingSchedule = homeController.scheduleList.firstWhereOrNull((s) => s.id == tappedAppointment.id);
+                    // Apply gray color for done occurrences
+                    final Color displayColor = isDone ? Colors.grey : appointment.color;
 
-                  if (existingSchedule != null) {
-                    // For recurring events, pass the tapped occurrence date
-                    final DateTime? tappedOccurrenceDate = existingSchedule.isRecurring ? tappedAppointment.startTime : null;
-
-                    showDialog(
-                      context: context,
-                      builder: (context) => ScheduleFormDialog(
-                        existingSchedule: existingSchedule,
-                        tappedOccurrenceDate: tappedOccurrenceDate, // Pass the occurrence date
-                        onSave: (updatedSchedule) {
-                          // Update the schedule in the list
-                          final index = homeController.scheduleList.indexWhere((s) => s.id == updatedSchedule.id);
-                          if (index != -1) {
-                            homeController.scheduleList[index] = updatedSchedule;
-                          }
-                        },
-                        onDelete: () {
-                          // Remove the entire schedule series from the list
-                          homeController.scheduleList.removeWhere((s) => s.id == existingSchedule.id);
-                        },
-                        onDeleteSingle: (occurrenceDate) {
-                          // Delete single occurrence by adding it to exception dates
-                          final index = homeController.scheduleList.indexWhere((s) => s.id == existingSchedule.id);
-                          if (index != -1) {
-                            final schedule = homeController.scheduleList[index];
-                            // Normalize the date
-                            final normalizedDate = DateTime(occurrenceDate.year, occurrenceDate.month, occurrenceDate.day);
-                            // Add to exception list
-                            final List<DateTime> newExceptionDates = [...(schedule.exceptionDateList ?? <DateTime>[]), normalizedDate];
-                            // Create updated schedule with new exception date
-                            homeController.scheduleList[index] = ScheduleModel(
-                              id: schedule.id,
-                              title: schedule.title,
-                              start: schedule.start,
-                              end: schedule.end,
-                              isAllDay: schedule.isAllDay,
-                              note: schedule.note,
-                              location: schedule.location,
-                              colorValue: schedule.colorValue,
-                              recurrenceRule: schedule.recurrenceRule,
-                              exceptionDateList: newExceptionDates,
-                              isDone: schedule.isDone,
-                              doneOccurrences: schedule.doneOccurrences,
-                            );
-                          }
-                        },
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(color: displayColor, borderRadius: BorderRadius.circular(4)),
+                      child: Text(
+                        appointment.subject,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none,
+                          decorationColor: Colors.white,
+                          decorationThickness: 2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     );
-                  }
-                  return;
-                }
+                  },
+                  onTap: (CalendarTapDetails details) async {
+                    // appointment tapped
+                    final appts = details.appointments;
 
-                // Disable "add event" popup when in agenda view
-                if (homeController.isAgendaView.value) {
-                  return;
-                }
+                    // Existing schedule tapped -> open edit popup
+                    if (details.targetElement == CalendarElement.appointment && appts != null && appts.isNotEmpty) {
+                      final Appointment tappedAppointment = appts[0] as Appointment;
 
-                // Empty cell tapped -> open add popup
-                if (details.targetElement == CalendarElement.calendarCell || details.targetElement == CalendarElement.agenda) {
-                  final DateTime? tapped = details.date;
-                  if (tapped == null) return;
+                      // Find the matching ScheduleModel
+                      final existingSchedule = homeController.scheduleList.firstWhereOrNull((s) => s.id == tappedAppointment.id);
 
-                  showDialog(
-                    context: context,
-                    builder: (context) => ScheduleFormDialog(
-                      initialDate: tapped,
-                      onSave: (newSchedule) {
-                        homeController.scheduleList.add(newSchedule);
-                      },
-                    ),
-                  );
-                }
+                      if (existingSchedule != null) {
+                        // For recurring events, pass the tapped occurrence date
+                        final DateTime? tappedOccurrenceDate = existingSchedule.isRecurring ? tappedAppointment.startTime : null;
+
+                        showDialog(
+                          context: context,
+                          builder: (context) => ScheduleFormDialog(
+                            existingSchedule: existingSchedule,
+                            tappedOccurrenceDate: tappedOccurrenceDate, // Pass the occurrence date
+                            onSave: (updatedSchedule) {
+                              // Update the schedule in the list
+                              final index = homeController.scheduleList.indexWhere((s) => s.id == updatedSchedule.id);
+                              if (index != -1) {
+                                homeController.scheduleList[index] = updatedSchedule;
+                              }
+                            },
+                            onDelete: () {
+                              // Remove the entire schedule series from the list
+                              homeController.scheduleList.removeWhere((s) => s.id == existingSchedule.id);
+                            },
+                            onDeleteSingle: (occurrenceDate) {
+                              // Delete single occurrence by adding it to exception dates
+                              final index = homeController.scheduleList.indexWhere((s) => s.id == existingSchedule.id);
+                              if (index != -1) {
+                                final schedule = homeController.scheduleList[index];
+                                // Normalize the date
+                                final normalizedDate = DateTime(occurrenceDate.year, occurrenceDate.month, occurrenceDate.day);
+                                // Add to exception list
+                                final List<DateTime> newExceptionDates = [...(schedule.exceptionDateList ?? <DateTime>[]), normalizedDate];
+                                // Create updated schedule with new exception date
+                                homeController.scheduleList[index] = ScheduleModel(
+                                  id: schedule.id,
+                                  title: schedule.title,
+                                  start: schedule.start,
+                                  end: schedule.end,
+                                  isAllDay: schedule.isAllDay,
+                                  note: schedule.note,
+                                  location: schedule.location,
+                                  colorValue: schedule.colorValue,
+                                  recurrenceRule: schedule.recurrenceRule,
+                                  exceptionDateList: newExceptionDates,
+                                  isDone: schedule.isDone,
+                                  doneOccurrences: schedule.doneOccurrences,
+                                );
+                              }
+                            },
+                          ),
+                        );
+                      }
+                      return;
+                    }
+
+                    // Disable "add event" popup when in agenda view
+                    if (homeController.isAgendaView.value) {
+                      return;
+                    }
+
+                    // Empty cell tapped -> open add popup
+                    if (details.targetElement == CalendarElement.calendarCell || details.targetElement == CalendarElement.agenda) {
+                      final DateTime? tapped = details.date;
+                      if (tapped == null) return;
+
+                      showDialog(
+                        context: context,
+                        builder: (context) => ScheduleFormDialog(
+                          initialDate: tapped,
+                          onSave: (newSchedule) {
+                            homeController.scheduleList.add(newSchedule);
+                          },
+                        ),
+                      );
+                    }
+                  },
+                );
               },
-            );
-          }),
+            ),
 
-          // Auth overlay: dim background + centered dialog
-          // Obx(() {
-          //   if (!Get.find<AuthController>().isLoggedIn.value && !Get.find<AuthController>().isGuest.value) {
-          //     return Stack(
-          //       children: [
-          //         const ModalBarrier(color: Colors.black54, dismissible: false),
-          //         Center(
-          //           child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 480), child: const AuthDialog()),
-          //         ),
-          //       ],
-          //     );
-          //   }
-          //   return const SizedBox.shrink();
-          // }),
-        ],
+            // Auth overlay: dim background + centered dialog
+            // Obx(() {
+            //   if (!Get.find<AuthController>().isLoggedIn.value && !Get.find<AuthController>().isGuest.value) {
+            //     return Stack(
+            //       children: [
+            //         const ModalBarrier(color: Colors.black54, dismissible: false),
+            //         Center(
+            //           child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 480), child: const AuthDialog()),
+            //         ),
+            //       ],
+            //     );
+            //   }
+            //   return const SizedBox.shrink();
+            // }),
+          ],
+        ),
       ),
     );
   }

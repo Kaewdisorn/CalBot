@@ -163,21 +163,23 @@ class ScheduleModel {
     );
   }
 
-  // Convert model to JSON
-  // Map<String, dynamic> toJson() {
-  //   return {
-  //     'id': id,
-  //     'title': title,
-  //     'start': start.toIso8601String(),
-  //     'end': end.toIso8601String(),
-  //     'location': location,
-  //     'isAllDay': isAllDay,
-  //     'note': note,
-  //     'colorValue': colorValue,
-  //     if (recurrenceRule != null) 'recurrenceRule': recurrenceRule,
-  //     if (exceptionDateList != null) 'exceptionDateList': exceptionDateList!.map((e) => e.toIso8601String()).toList(),
-  //   };
-  // }
+  // Convert model to JSON for API
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'start': start.toUtc().toIso8601String(),
+      'end': end.toUtc().toIso8601String(),
+      'location': location,
+      'isAllDay': isAllDay,
+      'note': note,
+      'colorValue': colorValue,
+      'isDone': isDone,
+      if (recurrenceRule != null) 'recurrenceRule': recurrenceRule,
+      if (exceptionDateList != null && exceptionDateList!.isNotEmpty) 'exceptionDateList': exceptionDateList!.map((e) => e.toIso8601String()).toList(),
+      if (doneOccurrences.isNotEmpty) 'doneOccurrences': doneOccurrences.map((e) => e.toIso8601String()).toList(),
+    };
+  }
 
   // Convert model to SfCalendar Appointment
   Appointment toCalendarAppointment() {

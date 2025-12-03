@@ -1,82 +1,172 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:convert';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../models/schedule_model.dart';
+import '../repositories/schedule_repository.dart';
 
 class HomeController extends GetxController {
   final List<CalendarView> allowedViews = <CalendarView>[CalendarView.month, CalendarView.schedule];
 
-  // observable schedule list — populated from JSON on init
+  // Repository for API calls
+  final ScheduleRepository _repository = ScheduleRepository();
+
+  // Observable schedule list — populated from API
   final RxList<ScheduleModel> scheduleList = <ScheduleModel>[].obs;
   final RxBool isAgendaView = false.obs;
+
+  // Loading and error states
+  final RxBool isLoading = false.obs;
+  final RxnString errorMessage = RxnString(null);
 
   @override
   void onInit() {
     super.onInit();
-    _loadSampleSchedules();
+    fetchSchedules();
   }
 
-  void _loadSampleSchedules() {
-    final sampleData = [
-      {
-        "id": "1",
-        "title": "Team Meeting",
-        "start": "2025-12-03T10:00:00.000Z",
-        "end": "2025-12-03T11:00:00.000Z",
-        "recurrenceRule": "FREQ=DAILY;INTERVAL=1;COUNT=10",
-        "exceptionDateList": ["2025-12-07"],
-        "colorValue": 4282557941, // Blue - 0xFF42A5F5
-        "doneOccurrences": ["2025-12-03", "2025-12-04"],
-      },
-      {
-        "id": "2",
-        "title": "Weekly Review",
-        "start": "2025-12-03T14:00:00.000Z",
-        "end": "2025-12-03T15:00:00.000Z",
-        "recurrenceRule": "FREQ=WEEKLY;BYDAY=MO,WE,FR;COUNT=6",
-        "location": "Conference Room A",
-        "colorValue": 4284947020, // Green - 0xFF66BB6A
-      },
-      {
-        "id": "3",
-        "title": "Project Deadline",
-        "start": "2025-12-05T09:00:00.000Z",
-        "end": "2025-12-05T17:00:00.000Z",
-        "isAllDay": true,
-        "colorValue": 4293467984, // Red - 0xFFEF5350
-        "note": "Submit final report",
-        "isDone": false,
-      },
-      {
-        "id": "4",
-        "title": "Monthly Report",
-        "start": "2025-12-15T10:00:00.000Z",
-        "end": "2025-12-15T11:30:00.000Z",
-        "recurrenceRule": "FREQ=MONTHLY;BYMONTHDAY=15;COUNT=6",
-        "colorValue": 4289420220, // Purple - 0xFFAB47BC
-        "location": "Head Office",
-      },
-      {
-        "id": "5",
-        "title": "Gym Session",
-        "start": "2025-12-03T18:00:00.000Z",
-        "end": "2025-12-03T19:30:00.000Z",
-        "recurrenceRule": "FREQ=WEEKLY;BYDAY=TU,TH;COUNT=8",
-        "colorValue": 4294938179, // Orange - 0xFFFF7043
-        "isDone": false,
-      },
-    ];
+  @override
+  void onClose() {
+    _repository.dispose();
+    super.onClose();
+  }
 
-    final jsonString = jsonEncode(sampleData);
+  // ============ FETCH ALL SCHEDULES ============
 
-    try {
-      final jsonData = jsonDecode(jsonString) as List;
-      final models = jsonData.map((json) => ScheduleModel.fromJson(json)).toList();
-      scheduleList.assignAll(models);
-    } catch (e) {
-      debugPrint('Error loading sample schedules: $e');
+  Future<void> fetchSchedules() async {
+    isLoading.value = true;
+    errorMessage.value = null;
+
+    final response = await _repository.getSchedules();
+
+    response.when(
+      success: (data) {
+        scheduleList.assignAll(data);
+        debugPrint('✅ Loaded ${data.length} schedules');
+      },
+      failure: (error) {
+        errorMessage.value = error;
+        debugPrint('❌ Failed to load schedules: $error');
+        // Optionally show snackbar
+        Get.snackbar('Error', error, snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.redAccent, colorText: Colors.white);
+      },
+    );
+
+    isLoading.value = false;
+  }
+
+  // ============ CREATE SCHEDULE ============
+  /// Add new schedule via API
+  Future<bool> createSchedule(ScheduleModel schedule) async {
+    isLoading.value = true;
+
+    final response = await _repository.createSchedule(schedule);
+
+    bool success = false;
+    response.when(
+      success: (data) {
+        scheduleList.add(data);
+        debugPrint('✅ Created schedule: ${data.title}');
+        success = true;
+      },
+      failure: (error) {
+        debugPrint('❌ Failed to create schedule: $error');
+        Get.snackbar(
+          'Error',
+          'Failed to create schedule: $error',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+        );
+      },
+    );
+
+    isLoading.value = false;
+    return success;
+  }
+
+  // ============ UPDATE SCHEDULE ============
+  /// Update existing schedule via API
+  Future<bool> updateSchedule(ScheduleModel schedule) async {
+    isLoading.value = true;
+
+    final response = await _repository.updateSchedule(schedule);
+
+    bool success = false;
+    response.when(
+      success: (data) {
+        final index = scheduleList.indexWhere((s) => s.id == data.id);
+        if (index != -1) {
+          scheduleList[index] = data;
+        }
+        debugPrint('✅ Updated schedule: ${data.title}');
+        success = true;
+      },
+      failure: (error) {
+        debugPrint('❌ Failed to update schedule: $error');
+        Get.snackbar(
+          'Error',
+          'Failed to update schedule: $error',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+        );
+      },
+    );
+
+    isLoading.value = false;
+    return success;
+  }
+
+  // ============ DELETE SCHEDULE ============
+  /// Delete schedule via API
+  Future<bool> deleteSchedule(String id) async {
+    isLoading.value = true;
+
+    final response = await _repository.deleteSchedule(id);
+
+    bool success = false;
+    response.when(
+      success: (_) {
+        scheduleList.removeWhere((s) => s.id == id);
+        debugPrint('✅ Deleted schedule: $id');
+        success = true;
+      },
+      failure: (error) {
+        debugPrint('❌ Failed to delete schedule: $error');
+        Get.snackbar(
+          'Error',
+          'Failed to delete schedule: $error',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+        );
+      },
+    );
+
+    isLoading.value = false;
+    return success;
+  }
+
+  // ============ LOCAL OPERATIONS ============
+  // These update the local list immediately for responsive UI
+  // Call the API methods above when you want to persist changes
+
+  /// Add schedule to local list (for optimistic updates)
+  void addScheduleLocal(ScheduleModel schedule) {
+    scheduleList.add(schedule);
+  }
+
+  /// Update schedule in local list (for optimistic updates)
+  void updateScheduleLocal(ScheduleModel schedule) {
+    final index = scheduleList.indexWhere((s) => s.id == schedule.id);
+    if (index != -1) {
+      scheduleList[index] = schedule;
     }
+  }
+
+  /// Remove schedule from local list (for optimistic updates)
+  void removeScheduleLocal(String id) {
+    scheduleList.removeWhere((s) => s.id == id);
   }
 }

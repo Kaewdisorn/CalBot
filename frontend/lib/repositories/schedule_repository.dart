@@ -9,8 +9,6 @@ class ScheduleRepository {
   ScheduleRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
 
   // ============ GET ALL SCHEDULES ============
-  /// Fetch all schedules from API
-  /// Returns: List<ScheduleModel> or error
   Future<ApiResponse<List<ScheduleModel>>> getSchedules() async {
     return await _apiClient.get<List<ScheduleModel>>(
       ApiConfig.schedules,

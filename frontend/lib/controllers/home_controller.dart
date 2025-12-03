@@ -32,7 +32,6 @@ class HomeController extends GetxController {
   }
 
   // ============ FETCH ALL SCHEDULES ============
-
   Future<void> fetchSchedules() async {
     isLoading.value = true;
     errorMessage.value = null;

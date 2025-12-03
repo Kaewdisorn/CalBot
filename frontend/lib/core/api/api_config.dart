@@ -1,8 +1,5 @@
-/// API Configuration
-/// Centralized configuration for all API-related settings
 class ApiConfig {
   // ============ Base URLs ============
-  // Change this based on your environment
   static const String baseUrl = 'http://localhost:3000';
 
   // For production, you might use:

@@ -1,6 +1,7 @@
 class ApiConfig {
   // ============ Base URLs ============
-  static const String baseUrl = 'http://localhost:3000';
+  static const String baseUrl = 'https://halulu-project.onrender.com/';
+  // static const String baseUrl = 'http://localhost:3000';
 
   // For production, you might use:
   // static const String baseUrl = 'https://api.calbot.com';

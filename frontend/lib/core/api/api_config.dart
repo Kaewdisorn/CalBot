@@ -1,7 +1,15 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConfig {
   // ============ Base URLs ============
-  static const String baseUrl = 'https://halulu-project.onrender.com/';
-  // static const String baseUrl = 'http://localhost:3000';
+  static String get baseUrl {
+    const compileTime = String.fromEnvironment('BASE_URL', defaultValue: '');
+    if (compileTime.isNotEmpty) return compileTime;
+
+    // Use production URL in release builds, localhost in debug/profile
+    if (kReleaseMode) return 'https://halulu-project.onrender.com';
+    return 'http://localhost:3000';
+  }
 
   // For production, you might use:
   // static const String baseUrl = 'https://api.calbot.com';

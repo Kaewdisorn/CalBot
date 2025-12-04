@@ -20,24 +20,6 @@ backend/node-server/*.log
 # ===================
 # Backend (Python)
 # ===================
-backend/py-server/venv/
-backend/py-server/.env
-backend/py-server/.env.local
-backend/py-server/.env.*.local
-backend/py-server/__pycache__/
-backend/py-server/**/__pycache__/
-backend/py-server/*.py[cod]
-backend/py-server/.pytest_cache/
-backend/py-server/.coverage
-backend/py-server/htmlcov/
-backend/py-server/dist/
-backend/py-server/build/
-backend/py-server/*.egg-info/
-backend/py-server/*.log
-
-# ===================
-# Backend (Python) 2
-# ===================
 backend/bot-server/venv/
 
 # ===================

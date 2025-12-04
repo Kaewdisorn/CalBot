@@ -29,6 +29,9 @@ COPY --from=bot-builder /app/backend/bot-server ./backend/bot-server
 # Token must be passed at runtime via environment variable
 # Do NOT set default value here for security
 
+# just expose the port for potential webhooks or other integrations
+EXPOSE ${PORT:-7777}
+
 WORKDIR /app/backend/bot-server
 
 CMD ["python", "bots/discord_bot/main.py"]

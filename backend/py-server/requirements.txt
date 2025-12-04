@@ -1,8 +1,0 @@
-# FastAPI - Modern Python web framework
-fastapi==0.115.6
-
-# Uvicorn - ASGI server to run FastAPI
-uvicorn==0.34.0
-
-# python-dotenv - Load environment variables from .env file (optional)
-python-dotenv==1.0.1

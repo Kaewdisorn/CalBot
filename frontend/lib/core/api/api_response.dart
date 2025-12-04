@@ -40,7 +40,7 @@ class ApiResponse<T> {
   /// Transform data if success
   ApiResponse<R> map<R>(R Function(T data) transform) {
     if (isSuccess && data != null) {
-      return ApiResponse.success(transform(data!));
+      return ApiResponse.success(transform(data as T));
     }
     return ApiResponse.error(error ?? 'Unknown error', statusCode: statusCode);
   }

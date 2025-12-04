@@ -1,81 +1,60 @@
 """
-CalBot Python Server - Simple FastAPI Example
+CalBot Python Server - Main API Entry Point
 
-This is a minimal FastAPI app to help you understand the basics.
+This file creates and configures the FastAPI application.
 Run with: python main.py
-Then open: http://localhost:8001/docs (interactive API docs)
+
+Project Structure:
+- main.py     → API server (this file)
+- bot.py      → Discord bot (separate entry point)
+- app/        → Application code (routes, models, services)
 """
 
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+# Import the router that combines all API routes
+from app.api.router import api_router
 
 # Create the FastAPI app
 app = FastAPI(
     title="CalBot API",
-    description="Simple API for learning FastAPI",
+    description="Backend API for CalBot calendar application",
     version="1.0.0",
 )
 
 # Allow requests from Flutter web app (CORS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
-    allow_methods=["*"],  # Allow all HTTP methods
-    allow_headers=["*"],  # Allow all headers
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
+# Include all API routes with /api prefix
+# This connects: /api/health, /api/schedules, /api/ai, etc.
+app.include_router(api_router, prefix="/api")
 
-# ============================================================
-# ROUTES - These are your API endpoints
-# ============================================================
 
 @app.get("/")
 def root():
-    """
-    Root endpoint - just returns a welcome message.
-    
-    Try it: http://localhost:8001/
-    """
-    return {"message": "Hello World! Welcome to CalBot API 🗓️"}
+    """Root endpoint - API welcome message."""
+    return {
+        "message": "Welcome to CalBot API 🗓️",
+        "docs": "/docs",
+        "health": "/api/health",
+    }
 
-
-@app.get("/health")
-def health_check():
-    """
-    Health check endpoint - useful to verify server is running.
-    
-    Try it: http://localhost:8001/health
-    """
-    return {"status": "ok", "service": "py-server"}
-
-
-@app.get("/hello/{name}")
-def say_hello(name: str):
-    """
-    Dynamic route with a path parameter.
-    
-    Try it: http://localhost:8001/hello/YourName
-    
-    Args:
-        name: The name to greet (from URL path)
-    """
-    return {"message": f"Hello, {name}! 👋"}
-
-
-# ============================================================
-# Run the server when this file is executed directly
-# ============================================================
 
 if __name__ == "__main__":
-    import uvicorn
-    
-    print("\n🚀 Starting CalBot Python Server...")
+    print("\n🚀 Starting CalBot API Server...")
     print("📖 API Docs: http://localhost:8001/docs")
-    print("🔧 Health Check: http://localhost:8001/health\n")
-    
+    print("🔧 Health: http://localhost:8001/api/health\n")
+
     uvicorn.run(
-        "main:app",      # "filename:app_variable"
-        host="0.0.0.0",  # Listen on all interfaces
-        port=8001,       # Port number
-        reload=True,     # Auto-reload when code changes
+        "main:app",
+        host="0.0.0.0",
+        port=8001,
+        reload=True,
     )

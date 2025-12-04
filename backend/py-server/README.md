@@ -1,13 +1,47 @@
 # CalBot Python Server
 
-A simple FastAPI server for learning Python web development.
+A FastAPI server with a clean project structure for learning.
+
+## Project Structure
+
+```
+py-server/
+├── main.py              # API server entry point (run this)
+├── bot.py               # Discord bot entry point (for future)
+├── requirements.txt     # Python dependencies
+├── README.md
+│
+└── app/                 # Application code
+    ├── __init__.py
+    │
+    ├── api/             # API layer (HTTP endpoints)
+    │   ├── __init__.py
+    │   ├── router.py    # Combines all routes
+    │   └── routes/      # Individual route files
+    │       ├── __init__.py
+    │       ├── health.py    # /api/health
+    │       ├── schedule.py  # /api/schedules
+    │       └── ai.py        # /api/ai
+    │
+    ├── models/          # Data models (Pydantic)
+    │   ├── __init__.py
+    │   └── schedule.py  # Schedule, ScheduleCreate, ScheduleUpdate
+    │
+    ├── services/        # Business logic
+    │   ├── __init__.py
+    │   ├── schedule_service.py  # Schedule CRUD logic
+    │   └── ai_service.py        # AI parsing (placeholder)
+    │
+    └── core/            # Config and utilities
+        ├── __init__.py
+        └── config.py    # Settings from environment
+```
 
 ## Quick Start
 
 ```bash
 # 1. Activate virtual environment
 .\venv\Scripts\activate   # Windows
-source venv/bin/activate  # macOS/Linux
 
 # 2. Install dependencies
 pip install -r requirements.txt
@@ -20,35 +54,28 @@ python main.py
 
 | Method | URL | Description |
 |--------|-----|-------------|
-| GET | `/` | Hello World message |
-| GET | `/health` | Health check |
-| GET | `/hello/{name}` | Personalized greeting |
+| GET | `/` | Welcome message |
+| GET | `/api/health` | Health check |
+| GET | `/api/schedules` | Get all schedules |
+| POST | `/api/schedules` | Create schedule |
+| GET | `/api/schedules/{id}` | Get one schedule |
+| PUT | `/api/schedules/{id}` | Update schedule |
+| DELETE | `/api/schedules/{id}` | Delete schedule |
+| POST | `/api/ai/parse` | Parse natural language |
 
 ## API Documentation
 
-When server is running, open:
-- **Swagger UI**: http://localhost:8001/docs
-- **ReDoc**: http://localhost:8001/redoc
+Open http://localhost:8001/docs for interactive Swagger UI.
 
-## Understanding the Code
+## Architecture Flow
 
-```python
-# 1. Import FastAPI
-from fastapi import FastAPI
-
-# 2. Create an app instance
-app = FastAPI()
-
-# 3. Define routes using decorators
-@app.get("/")           # This handles GET requests to "/"
-def root():
-    return {"message": "Hello World!"}
-
-# 4. Run the server
-uvicorn.run("main:app", port=8001)
+```
+Request → Route → Service → (Database)
+            ↓        ↓
+         Model    Business
+       Validation   Logic
 ```
 
-That's it! FastAPI automatically:
-- Validates request/response data
-- Generates API documentation
-- Handles JSON serialization
+- **Routes**: Handle HTTP (request/response)
+- **Services**: Business logic (reusable by bot too)
+- **Models**: Data validation with Pydantic

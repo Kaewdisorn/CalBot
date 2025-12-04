@@ -36,6 +36,11 @@ backend/py-server/*.egg-info/
 backend/py-server/*.log
 
 # ===================
+# Backend (Python) 2
+# ===================
+backend/bot-server/venv/
+
+# ===================
 # IDE / Editor
 # ===================
 .vscode/settings.json

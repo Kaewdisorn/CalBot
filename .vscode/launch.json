@@ -22,12 +22,14 @@
       "internalConsoleOptions": "neverOpen"
     },
     {
-      "name": "Python Server",
+      "name": "Discord Bot",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/backend/py-server/main.py",
-      "cwd": "${workspaceFolder}/backend/py-server",
-      "console": "integratedTerminal"
+      "program": "${workspaceFolder}/backend/bot-server/bots/discord_bot/main.py",
+      "cwd": "${workspaceFolder}/backend/bot-server",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/backend/bot-server/.env",
+      "justMyCode": true
     }
   ]
 }

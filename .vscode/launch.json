@@ -20,6 +20,14 @@
       // "envFile": "${workspaceFolder}/backend/.env",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Python Server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/py-server/main.py",
+      "cwd": "${workspaceFolder}/backend/py-server",
+      "console": "integratedTerminal"
     }
   ]
 }

@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB_FILE=/run/secrets/db_name
+      - POSTGRES_USER_FILE=/run/secrets/db_user
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    secrets:
+      - db_name
+      - db_user
+      - db_password
+    volumes:
+      # Option A: Named volume (managed by Docker)
+      - postgres_data:/var/lib/postgresql/data
+
+      # Option B: Host path (uncomment to use instead)
+      # - /var/lib/calbot/postgres:/var/lib/postgresql/data
+
+      # Option C: Windows path example
+      # - C:/docker-data/postgres:/var/lib/postgresql/data
+
+      # Option D: Linux home directory
+      # - ~/calbot-data/postgres:/var/lib/postgresql/data
+    networks:
+      - calbot_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+networks:
+  calbot_network:
+    driver: overlay
+    attachable: true
+
+volumes:
+  postgres_data:
+    driver: local
+
+secrets:
+  db_name:
+    external: true
+  db_user:
+    external: true
+  db_password:
+    external: true

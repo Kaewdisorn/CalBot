@@ -6,3 +6,7 @@ frontend/pubspec.lock
 backend/node-server/node_modules
 frontend/build
 frontend/.flutter-plugins-dependencies
+
+
+# Python server
+backend/py-server/venv

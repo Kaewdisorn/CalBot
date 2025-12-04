@@ -1,0 +1,34 @@
+# ---------------------------------------------------------
+# STAGE 1 — Build Discord Bot (Python)
+# ---------------------------------------------------------
+FROM python:3.13-slim AS bot-builder
+
+WORKDIR /app/backend/bot-server
+
+# Copy requirements first (better caching)
+COPY backend/bot-server/requirements.in ./
+
+# Install from .in file (simpler deps, no version lock issues)
+RUN pip install --no-cache-dir discord.py openai python-dotenv
+
+# Copy bot source
+COPY backend/bot-server/ ./
+
+
+# ---------------------------------------------------------
+# STAGE 2 — Final Discord Bot Image
+# ---------------------------------------------------------
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Copy installed packages from bot-builder
+COPY --from=bot-builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY --from=bot-builder /app/backend/bot-server ./backend/bot-server
+
+# Token must be passed at runtime via environment variable
+# Do NOT set default value here for security
+
+WORKDIR /app/backend/bot-server
+
+CMD ["python", "bots/discord_bot/main.py"]

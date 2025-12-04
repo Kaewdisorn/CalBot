@@ -1,0 +1,58 @@
+# ---------------------------------------------------------
+# STAGE 1 — Build Flutter Web
+# ---------------------------------------------------------
+FROM ghcr.io/cirruslabs/flutter:stable AS flutter-builder
+
+WORKDIR /app/frontend
+
+# Copy Flutter project
+COPY frontend/ .
+
+RUN flutter clean
+
+RUN flutter pub get
+
+# Enable Flutter web
+RUN flutter config --enable-web
+
+# Build release
+RUN flutter build web --release
+
+# Add cache-busting meta tags to index.html
+RUN sed -i '/<head>/a \  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n  <meta http-equiv="Pragma" content="no-cache">\n  <meta http-equiv="Expires" content="0">' /app/frontend/build/web/index.html
+
+
+# ---------------------------------------------------------
+# STAGE 2 — Build Node Backend
+# ---------------------------------------------------------
+FROM node:20-alpine AS node-builder
+
+WORKDIR /app/backend/node-server
+
+# Copy only package files first (better caching)
+COPY backend/node-server/package*.json ./
+
+RUN npm install --production
+
+# Copy backend source
+COPY backend/node-server/src ./src
+
+
+# ---------------------------------------------------------
+# STAGE 3 — Final Web App Image (Node + Flutter)
+# ---------------------------------------------------------
+FROM node:20-alpine AS web-app
+
+WORKDIR /app
+
+# Copy backend build from stage 2
+COPY --from=node-builder /app/backend/node-server ./backend/node-server
+
+# Copy Flutter build from stage 1
+COPY --from=flutter-builder /app/frontend/build/web ./frontend/build/web
+
+EXPOSE ${PORT:-3000}
+
+WORKDIR /app/backend/node-server
+
+CMD ["node", "src/server.js"]

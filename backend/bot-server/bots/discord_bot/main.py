@@ -90,6 +90,12 @@ class MyDiscordBot(discord.Client):
             message: The Discord message object containing author, content, etc.
         """
         # =================================================================
+        # DEBUG LOGGING
+        # Shows all messages the bot receives (remove in production)
+        # =================================================================
+        print(f"📨 Message from {message.author.name}: {message.content[:50]}...")
+        
+        # =================================================================
         # IGNORE SELF
         # Prevent the bot from responding to its own messages (infinite loop)
         # =================================================================
@@ -97,13 +103,51 @@ class MyDiscordBot(discord.Client):
             return
         
         # =================================================================
-        # CHECK FOR MENTION
-        # self.user.mentioned_in() returns True if the bot was @mentioned
+        # IGNORE OTHER BOTS
+        # Prevent responding to other bots (avoids bot loops)
         # =================================================================
-        if self.user and self.user.mentioned_in(message):
+        if message.author.bot:
+            return
+        
+        # =================================================================
+        # CHECK FOR MENTION (Bot user OR Bot role)
+        # - self.user.mentioned_in() returns True if bot was @mentioned directly
+        # - Also check if any of the bot's roles were mentioned (@role)
+        # =================================================================
+        
+        # Check if bot user was mentioned directly
+        bot_mentioned = self.user and self.user.mentioned_in(message)
+        
+        # Check if any role the bot has was mentioned
+        # This allows users to mention a role like @CalBot-Role to trigger the bot
+        bot_role_mentioned = False
+        if message.guild and self.user:
+            bot_member = message.guild.get_member(self.user.id)
+            if bot_member:
+                # Check if any of the bot's roles were mentioned in the message
+                bot_role_mentioned = any(
+                    role in message.role_mentions 
+                    for role in bot_member.roles 
+                    if role.name != "@everyone"  # Ignore @everyone role
+                )
+        
+        if bot_mentioned or bot_role_mentioned:
+            mention_type = "directly" if bot_mentioned else "via role"
+            print(f"✅ Bot mentioned {mention_type} by {message.author.name} in #{message.channel.name}")
+            
             # Remove the bot mention from the message to get the actual question
             # e.g., "@CalBot what is the weather?" -> "what is the weather?"
-            user_message = message.content.replace(f'<@{self.user.id}>', '').strip()
+            user_message = message.content
+            
+            # Remove direct bot mention
+            if self.user:
+                user_message = user_message.replace(f'<@{self.user.id}>', '')
+            
+            # Remove role mentions (format: <@&ROLE_ID>)
+            for role in message.role_mentions:
+                user_message = user_message.replace(f'<@&{role.id}>', '')
+            
+            user_message = user_message.strip()
             
             # If user just mentioned the bot without any message
             if not user_message:

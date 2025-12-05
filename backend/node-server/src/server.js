@@ -1,13 +1,14 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+
+const envPath = path.resolve(__dirname, '../.env');
+require('dotenv').config({ path: envPath });
 
 const apiRoutes = require('./routes/api.js');
 const { testConnection } = require('./config/database.js');
 
 const app = express();
-const port = process.env.PORT || 3000;
 
 // -------------------------------
 // Middlewares
@@ -57,9 +58,12 @@ app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(flutterBuildPath, 'index.html'));
 });
 
+
 // -------------------------------
 // Start server
 // -------------------------------
+const port = process.env.PORT || 3000;
+
 app.listen(port, async () => {
   console.log(`🚀 Server running at http://localhost:${port}`);
 

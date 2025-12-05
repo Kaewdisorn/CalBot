@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 
 const apiRoutes = require('./routes/api.js');
+const { testConnection } = require('./config/database.js');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -59,6 +60,15 @@ app.get(/^\/(?!api).*/, (req, res) => {
 // -------------------------------
 // Start server
 // -------------------------------
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+app.listen(port, async () => {
+  console.log(`🚀 Server running at http://localhost:${port}`);
+
+  // Test database connection on startup
+  try {
+    await testConnection();
+  } catch (error) {
+    console.error('⚠️  Server started but database is not connected');
+    console.error('   Run: npm install pg');
+    console.error('   Then configure your .env file with database credentials');
+  }
 });

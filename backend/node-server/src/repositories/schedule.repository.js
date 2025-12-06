@@ -1,29 +1,6 @@
-/**
- * =============================================================================
- * Schedule Repository
- * =============================================================================
- * 
- * This repository handles all database operations for schedules.
- * It abstracts the database queries from the route handlers, making
- * the code more maintainable and testable.
- * 
- * Database Schema (v1.schedules):
- * - gid: UUID - Group/User ID (owner of the schedule)
- * - uid: UUID - Unique schedule ID
- * - properties: JSONB - All schedule data (title, start, end, etc.)
- * - created_at: TIMESTAMP
- * - updated_at: TIMESTAMP
- * 
- * USAGE:
- * const scheduleRepository = require('./repositories/schedule.repository');
- * const schedules = await scheduleRepository.findByGid('user-uuid-here');
- */
 
 const { query } = require('../config/database');
 
-// =============================================================================
-// SCHEMA CONFIGURATION
-// =============================================================================
 const SCHEMA = 'v1';
 const TABLE = 'schedules';
 const FULL_TABLE = `${SCHEMA}.${TABLE}`;
@@ -41,13 +18,11 @@ const FULL_TABLE = `${SCHEMA}.${TABLE}`;
  */
 const transformRowToSchedule = (row) => {
     if (!row) return null;
-
     const { gid, uid, properties, created_at, updated_at } = row;
 
     return {
         gid,
         uid,
-        // Spread all properties from JSONB
         title: properties?.title || '',
         start: properties?.start || null,
         end: properties?.end || null,
@@ -59,7 +34,6 @@ const transformRowToSchedule = (row) => {
         exceptionDateList: properties?.exceptionDateList || [],
         isDone: properties?.isDone || false,
         doneOccurrences: properties?.doneOccurrences || [],
-        // Timestamps
         createdAt: created_at,
         updatedAt: updated_at,
     };
@@ -78,66 +52,32 @@ const transformRowsToSchedules = (rows) => {
 // REPOSITORY METHODS
 // =============================================================================
 
-/**
- * Find all schedules by Group ID (gid)
- * This is the main method for fetching a user's schedules
- * 
- * @param {string} gid - Group/User UUID
- * @returns {Promise<Array>} - Array of schedule objects
- * 
- * @example
- * const schedules = await findByGid('a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4');
- */
-const findByGid = async (gid) => {
-    const sql = `
+const getSchedules = async (gid, uid) => {
+
+
+    if (gid != null && uid != null) {
+        // Get specific schedule by uid and gid
+        const sql = `
+        SELECT gid, uid, properties, created_at, updated_at
+        FROM ${FULL_TABLE}
+        WHERE uid = $1 AND gid = $2
+    `;
+        const result = await query(sql, [uid, gid]);
+        return result.rows.length > 0 ? transformRowToSchedule(result.rows[0]) : null;
+
+    } else {
+        // Get all schedules for gid
+        const sql = `
         SELECT gid, uid, properties, created_at, updated_at
         FROM ${FULL_TABLE}
         WHERE gid = $1
         ORDER BY (properties->>'start')::timestamptz ASC
     `;
-
-    const result = await query(sql, [gid]);
-    return transformRowsToSchedules(result.rows);
+        const result = await query(sql, [gid]);
+        return transformRowsToSchedules(result.rows);
+    }
 };
 
-/**
- * Find a single schedule by its UID
- * 
- * @param {string} uid - Schedule UUID
- * @returns {Promise<Object|null>} - Schedule object or null if not found
- * 
- * @example
- * const schedule = await findByUid('schedule-uuid-here');
- */
-const findByUid = async (uid) => {
-    const sql = `
-        SELECT gid, uid, properties, created_at, updated_at
-        FROM ${FULL_TABLE}
-        WHERE uid = $1
-    `;
-
-    const result = await query(sql, [uid]);
-    return result.rows.length > 0 ? transformRowToSchedule(result.rows[0]) : null;
-};
-
-/**
- * Find a schedule by UID and verify ownership (gid)
- * Used for update/delete operations to ensure user owns the schedule
- * 
- * @param {string} uid - Schedule UUID
- * @param {string} gid - Group/User UUID (owner)
- * @returns {Promise<Object|null>} - Schedule object or null if not found/not owned
- */
-const findByUidAndGid = async (uid, gid) => {
-    const sql = `
-        SELECT gid, uid, properties, created_at, updated_at
-        FROM ${FULL_TABLE}
-        WHERE uid = $1 AND gid = $2
-    `;
-
-    const result = await query(sql, [uid, gid]);
-    return result.rows.length > 0 ? transformRowToSchedule(result.rows[0]) : null;
-};
 
 /**
  * Create a new schedule
@@ -189,7 +129,7 @@ const create = async (gid, scheduleData) => {
  */
 const update = async (uid, gid, updateData) => {
     // First, get existing schedule to merge properties
-    const existing = await findByUidAndGid(uid, gid);
+    const existing = await getSchedules(uid, gid);
     if (!existing) return null;
 
     // Merge existing properties with updates
@@ -257,9 +197,7 @@ const countByGid = async (gid) => {
 // EXPORTS
 // =============================================================================
 module.exports = {
-    findByGid,
-    findByUid,
-    findByUidAndGid,
+    getSchedules,
     create,
     update,
     remove,

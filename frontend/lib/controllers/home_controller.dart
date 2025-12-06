@@ -41,7 +41,15 @@ class HomeController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
 
-    final response = await _repository.getSchedules(userId: currentUserId.value);
+    if (currentUserId.value == null) {
+      errorMessage.value = 'No user logged in';
+      isLoading.value = false;
+      return;
+    } else {
+      debugPrint('🔑 Fetching schedules for user: ${currentUserId.value}');
+    }
+
+    final response = await _repository.getSchedules(gid: currentUserId.value!);
 
     response.when(
       success: (data) {

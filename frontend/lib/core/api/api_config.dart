@@ -8,7 +8,7 @@ class ApiConfig {
 
     // Use production URL in release builds, localhost in debug/profile
     if (kReleaseMode) return 'https://halulu-project.onrender.com';
-    return 'http://localhost:3000';
+    return 'http://localhost:30001';
   }
 
   // For production, you might use:

@@ -1,3 +1,7 @@
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+
 import '../../core/api/api.dart';
 import '../models/schedule_model.dart';
 
@@ -10,20 +14,24 @@ class ScheduleRepository {
 
   // ============ GET ALL SCHEDULES ============
   /// Fetch all schedules, optionally filtered by userId
-  Future<ApiResponse<List<ScheduleModel>>> getSchedules({String? userId}) async {
+  Future<ApiResponse<List<ScheduleModel>>> getSchedules({required String gid}) async {
     String endpoint = ApiConfig.schedules;
-    if (userId != null) {
-      endpoint = '${ApiConfig.schedules}?userId=$userId';
-    }
 
-    return await _apiClient.get<List<ScheduleModel>>(
-      endpoint,
-      parser: (json) {
-        // API returns: { "data": [...] } or just [...]
-        final List<dynamic> list = json is List ? json : (json['data'] as List? ?? []);
-        return list.map((item) => ScheduleModel.fromJson(item as Map<String, dynamic>)).toList();
-      },
-    );
+    if (gid.isNotEmpty) {
+      endpoint = '${ApiConfig.schedules}?gid=$gid';
+
+      return await _apiClient.get<List<ScheduleModel>>(
+        endpoint,
+        parser: (json) {
+          // API returns: { "data": [...] } or just [...]
+          final List<dynamic> list = json is List ? json : (json['data'] as List? ?? []);
+          return list.map((item) => ScheduleModel.fromJson(item as Map<String, dynamic>)).toList();
+        },
+      );
+    } else {
+      debugPrint('⚠️ Warning: Fetching all schedules without gid filter');
+      return ApiResponse.error('User ID (gid) is required to fetch schedules');
+    }
   }
 
   // ============ GET SINGLE SCHEDULE ============

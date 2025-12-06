@@ -11,7 +11,6 @@ class ScheduleRepository {
   ScheduleRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
 
   // ============ GET ALL SCHEDULES ============
-  /// Fetch all schedules, optionally filtered by userId
   Future<ApiResponse<List<ScheduleModel>>> getSchedules({required String gid}) async {
     String endpoint = ApiConfig.schedules;
 

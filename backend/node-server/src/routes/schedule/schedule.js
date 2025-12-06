@@ -134,4 +134,106 @@ router.post('/', async (req, res) => {
     }
 });
 
+// GET /api/schedules/:id - Get a single schedule by ID
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const schedule = sampleSchedules.find(s => s.id === id);
+
+        if (!schedule) {
+            return res.status(404).json({ error: 'Schedule not found' });
+        }
+
+        return res.status(200).json({ data: schedule });
+    } catch (err) {
+        console.error('GET /api/schedules/:id error', err);
+        return res.status(500).json({ error: 'Failed to load schedule' });
+    }
+});
+
+// PUT /api/schedules/:id - Update an existing schedule
+router.put('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            title,
+            start,
+            end,
+            recurrenceRule,
+            exceptionDateList,
+            colorValue,
+            doneOccurrences,
+            isAllDay,
+            isDone,
+            location,
+            note
+        } = req.body;
+
+        // Find the schedule index
+        const index = sampleSchedules.findIndex(s => s.id === id);
+
+        if (index === -1) {
+            return res.status(404).json({ error: 'Schedule not found' });
+        }
+
+        // Update the schedule (merge with existing data)
+        const existingSchedule = sampleSchedules[index];
+        const updatedSchedule = {
+            ...existingSchedule,
+            title: title ?? existingSchedule.title,
+            start: start ?? existingSchedule.start,
+            end: end ?? existingSchedule.end,
+            recurrenceRule: recurrenceRule !== undefined ? recurrenceRule : existingSchedule.recurrenceRule,
+            exceptionDateList: exceptionDateList !== undefined ? exceptionDateList : existingSchedule.exceptionDateList,
+            colorValue: colorValue ?? existingSchedule.colorValue,
+            doneOccurrences: doneOccurrences !== undefined ? doneOccurrences : existingSchedule.doneOccurrences,
+            isAllDay: isAllDay !== undefined ? isAllDay : existingSchedule.isAllDay,
+            isDone: isDone !== undefined ? isDone : existingSchedule.isDone,
+            location: location !== undefined ? location : existingSchedule.location,
+            note: note !== undefined ? note : existingSchedule.note
+        };
+
+        // Replace in array
+        sampleSchedules[index] = updatedSchedule;
+
+        console.log('PUT /api/schedules/:id - Updated:', id, updatedSchedule.title);
+
+        return res.status(200).json({
+            data: updatedSchedule,
+            message: 'Schedule updated successfully'
+        });
+    } catch (err) {
+        console.error('PUT /api/schedules/:id error', err);
+        return res.status(500).json({ error: 'Failed to update schedule' });
+    }
+});
+
+// DELETE /api/schedules/:id - Delete a schedule
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the schedule index
+        const index = sampleSchedules.findIndex(s => s.id === id);
+
+        if (index === -1) {
+            return res.status(404).json({ error: 'Schedule not found' });
+        }
+
+        // Remove from array
+        const deletedSchedule = sampleSchedules.splice(index, 1)[0];
+
+        console.log('DELETE /api/schedules/:id - Deleted:', id, deletedSchedule.title);
+
+        return res.status(200).json({
+            message: 'Schedule deleted successfully',
+            data: { id: deletedSchedule.id }
+        });
+    } catch (err) {
+        console.error('DELETE /api/schedules/:id error', err);
+        return res.status(500).json({ error: 'Failed to delete schedule' });
+    }
+});
+
 module.exports = router;

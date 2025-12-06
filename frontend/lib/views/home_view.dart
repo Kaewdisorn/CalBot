@@ -94,18 +94,35 @@ class HomeView extends StatelessWidget {
                         builder: (context) => ScheduleFormDialog(
                           existingSchedule: existingSchedule,
                           tappedOccurrenceDate: tappedOccurrenceDate, // Pass the occurrence date
-                          onSave: (updatedSchedule) {
-                            // Update the schedule in the list
-                            final index = homeController.scheduleList.indexWhere((s) => s.id == updatedSchedule.id);
-                            if (index != -1) {
-                              homeController.scheduleList[index] = updatedSchedule;
+                          onSave: (updatedSchedule) async {
+                            // Call API to update schedule
+                            final success = await homeController.updateSchedule(updatedSchedule);
+                            if (success) {
+                              Get.snackbar(
+                                'Success',
+                                'Schedule "${updatedSchedule.title}" updated!',
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.green,
+                                colorText: Colors.white,
+                                duration: const Duration(seconds: 2),
+                              );
                             }
                           },
-                          onDelete: () {
-                            // Remove the entire schedule series from the list
-                            homeController.scheduleList.removeWhere((s) => s.id == existingSchedule.id);
+                          onDelete: () async {
+                            // Call API to delete the entire schedule series
+                            final success = await homeController.deleteSchedule(existingSchedule.id);
+                            if (success) {
+                              Get.snackbar(
+                                'Deleted',
+                                'Schedule "${existingSchedule.title}" deleted!',
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.orange,
+                                colorText: Colors.white,
+                                duration: const Duration(seconds: 2),
+                              );
+                            }
                           },
-                          onDeleteSingle: (occurrenceDate) {
+                          onDeleteSingle: (occurrenceDate) async {
                             // Delete single occurrence by adding it to exception dates
                             final index = homeController.scheduleList.indexWhere((s) => s.id == existingSchedule.id);
                             if (index != -1) {
@@ -115,7 +132,7 @@ class HomeView extends StatelessWidget {
                               // Add to exception list
                               final List<DateTime> newExceptionDates = [...(schedule.exceptionDateList ?? <DateTime>[]), normalizedDate];
                               // Create updated schedule with new exception date
-                              homeController.scheduleList[index] = ScheduleModel(
+                              final updatedSchedule = ScheduleModel(
                                 id: schedule.id,
                                 title: schedule.title,
                                 start: schedule.start,
@@ -129,6 +146,8 @@ class HomeView extends StatelessWidget {
                                 isDone: schedule.isDone,
                                 doneOccurrences: schedule.doneOccurrences,
                               );
+                              // Call API to update
+                              await homeController.updateSchedule(updatedSchedule);
                             }
                           },
                         ),
@@ -151,8 +170,19 @@ class HomeView extends StatelessWidget {
                       context: context,
                       builder: (context) => ScheduleFormDialog(
                         initialDate: tapped,
-                        onSave: (newSchedule) {
-                          homeController.scheduleList.add(newSchedule);
+                        onSave: (newSchedule) async {
+                          // Call API to create schedule
+                          final success = await homeController.createSchedule(newSchedule);
+                          if (success) {
+                            Get.snackbar(
+                              'Success',
+                              'Schedule "${newSchedule.title}" created!',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: Colors.green,
+                              colorText: Colors.white,
+                              duration: const Duration(seconds: 2),
+                            );
+                          }
                         },
                       ),
                     );

@@ -2,8 +2,8 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-# Load .env from repository root (adjust if your .env is elsewhere)
-BASE_DIR = Path(__file__).resolve().parents[2]  # backend/bot-server
+# Find .env file
+BASE_DIR = Path(__file__).resolve().parents[3]
 dotenv_path = BASE_DIR / ".env"
 load_dotenv(dotenv_path)
 

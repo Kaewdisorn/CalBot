@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# =============================================================================
-# Load .env and Deploy Stack Script
-# =============================================================================
-# Usage: ./deploy.sh <stack-file> <stack-name> [env-file]
-# Example: ./deploy.sh postgres-stack.yml calbot .env.postgres
-# =============================================================================
-
 set -e
 
 # Colors
@@ -16,10 +9,12 @@ ERROR='\033[0;31m'
 GRAY='\033[0;90m'
 NC='\033[0m'
 
+
 # Arguments
-STACK_FILE=$1
-STACK_NAME=$2
-ENV_FILE=${3:-.env}
+STACK_FILE=./database/postgres-stack.yml
+STACK_NAME="calbotstack"
+ENV_FILE="./.env"
+
 
 # Check arguments
 if [ -z "$STACK_FILE" ] || [ -z "$STACK_NAME" ]; then

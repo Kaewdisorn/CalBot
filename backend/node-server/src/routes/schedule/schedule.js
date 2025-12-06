@@ -1,7 +1,14 @@
 const express = require('express');
 const router = express.Router();
+const scheduleRepository = require('../../repositories/schedule.repository');
 
-// Sample schedule data (will be replaced with database query later)
+// =============================================================================
+// CONFIGURATION
+// Set to true to use database, false to use sample data (for development)
+// =============================================================================
+const USE_DATABASE = process.env.USE_DATABASE === 'true' || false;
+
+// Sample schedule data (used when USE_DATABASE is false)
 const sampleSchedules = [
     {
         gid: "a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4", // Owner of this schedule
@@ -64,11 +71,14 @@ const sampleSchedules = [
     }
 ];
 
-// GET /api/schedules - Get all schedules (optionally filtered by userId)
+// =============================================================================
+// GET /api/schedules - Get all schedules for a user (filtered by gid)
+// =============================================================================
 router.get('/', async (req, res) => {
     try {
         const { gid } = req.query;
 
+        // Validate gid is provided
         if (!gid) {
             return res.status(400).json({
                 error: 'Missing required query parameter: gid',
@@ -76,19 +86,32 @@ router.get('/', async (req, res) => {
             });
         }
 
-        // Filter by gid if provided
-        let data = sampleSchedules;
-        if (gid) {
+        let data;
+
+        if (USE_DATABASE) {
+            // ============ DATABASE QUERY ============
+            console.log(`📊 Fetching schedules from database for gid: ${gid}`);
+            data = await scheduleRepository.findByGid(String(gid));
+            console.log(`✅ Found ${data.length} schedules in database`);
+        } else {
+            // ============ SAMPLE DATA (Development) ============
+            console.log(`📋 Using sample data for gid: ${gid}`);
             data = sampleSchedules.filter(s => s.gid === gid);
         }
 
         return res.status(200).json({
             data,
-            meta: { count: data.length }
+            meta: {
+                count: data.length,
+                source: USE_DATABASE ? 'database' : 'sample'
+            }
         });
     } catch (err) {
-        console.error('GET /api/schedules error', err);
-        return res.status(500).json({ error: 'Failed to load schedules' });
+        console.error('GET /api/schedules error:', err);
+        return res.status(500).json({
+            error: 'Failed to load schedules',
+            details: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
     }
 });
 

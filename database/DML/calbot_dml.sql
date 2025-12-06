@@ -99,3 +99,9 @@ VALUES (
         "isDone": false
     }'::jsonb
 );
+
+-- Select all schedules for an user
+SELECT gid, uid, properties, created_at, updated_at
+FROM v1.schedules s 
+WHERE gid = 'a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4'
+ORDER BY (properties->>'start')::timestamptz ASC

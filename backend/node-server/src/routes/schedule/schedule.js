@@ -75,4 +75,63 @@ router.get('/', async (_req, res) => {
     }
 });
 
+// POST /api/schedules - Create a new schedule
+router.post('/', async (req, res) => {
+    try {
+        const {
+            title,
+            start,
+            end,
+            recurrenceRule,
+            exceptionDateList,
+            colorValue,
+            doneOccurrences,
+            isAllDay,
+            isDone,
+            location,
+            note
+        } = req.body;
+
+        // Validate required fields
+        if (!title || !start || !end) {
+            return res.status(400).json({
+                error: 'Missing required fields',
+                required: ['title', 'start', 'end']
+            });
+        }
+
+        // Generate a new ID (temporary - will use database auto-increment later)
+        const newId = String(sampleSchedules.length + 1);
+
+        // Create new schedule object
+        const newSchedule = {
+            id: newId,
+            title,
+            start,
+            end,
+            recurrenceRule: recurrenceRule || null,
+            exceptionDateList: exceptionDateList || [],
+            colorValue: colorValue || 4282557941, // Default blue
+            doneOccurrences: doneOccurrences || [],
+            isAllDay: isAllDay || false,
+            isDone: isDone || false,
+            location: location || null,
+            note: note || null
+        };
+
+        // Add to sample data (temporary - will insert into database later)
+        sampleSchedules.push(newSchedule);
+
+        console.log('POST /api/schedules - Created:', newSchedule.id, newSchedule.title);
+
+        return res.status(201).json({
+            data: newSchedule,
+            message: 'Schedule created successfully'
+        });
+    } catch (err) {
+        console.error('POST /api/schedules error', err);
+        return res.status(500).json({ error: 'Failed to create schedule' });
+    }
+});
+
 module.exports = router;

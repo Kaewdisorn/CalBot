@@ -4,8 +4,8 @@ const router = express.Router();
 // Sample schedule data (will be replaced with database query later)
 const sampleSchedules = [
     {
+        gid: "a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4", // Owner of this schedule
         uid: "1",
-        gid: "user_001", // Owner of this schedule
         title: "Team Meeting",
         start: "2025-12-04T10:00:00.000Z",
         end: "2025-12-04T11:00:00.000Z",
@@ -17,8 +17,8 @@ const sampleSchedules = [
         isDone: false
     },
     {
+        gid: "a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4", // Owner of this schedule
         uid: "2",
-        gid: "user_001",
         title: "Weekly Review",
         start: "2025-12-04T14:00:00.000Z",
         end: "2025-12-04T15:00:00.000Z",
@@ -29,8 +29,8 @@ const sampleSchedules = [
         isDone: false
     },
     {
+        gid: "a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4", // Owner of this schedule
         uid: "3",
-        gid: "user_002",
         title: "Project Deadline",
         start: "2025-12-06T09:00:00.000Z",
         end: "2025-12-06T17:00:00.000Z",
@@ -40,8 +40,8 @@ const sampleSchedules = [
         isDone: false
     },
     {
+        gid: "a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4", // Owner of this schedule
         uid: "4",
-        gid: "user_001",
         title: "Monthly Report",
         start: "2025-12-15T10:00:00.000Z",
         end: "2025-12-15T11:30:00.000Z",
@@ -52,8 +52,8 @@ const sampleSchedules = [
         isDone: false
     },
     {
+        gid: "a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4", // Owner of this schedule
         uid: "5",
-        gid: "user_002",
         title: "Gym Session",
         start: "2025-12-04T18:00:00.000Z",
         end: "2025-12-04T19:30:00.000Z",
@@ -69,7 +69,14 @@ router.get('/', async (req, res) => {
     try {
         const { gid } = req.query;
 
-        // Filter by userId if provided
+        if (!gid) {
+            return res.status(400).json({
+                error: 'Missing required query parameter: gid',
+                required: ['gid']
+            });
+        }
+
+        // Filter by gid if provided
         let data = sampleSchedules;
         if (gid) {
             data = sampleSchedules.filter(s => s.gid === gid);

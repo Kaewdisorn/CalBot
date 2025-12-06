@@ -17,7 +17,7 @@ class HomeController extends GetxController {
 
   // Current user ID for ownership validation
   // TODO: Replace with actual user authentication
-  final RxnString currentUserId = RxnString('user_001');
+  final RxnString userUid = RxnString('a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4');
 
   // Loading and error states
   final RxBool isLoading = false.obs;
@@ -41,20 +41,20 @@ class HomeController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
 
-    if (currentUserId.value == null) {
+    if (userUid.value == null) {
       errorMessage.value = 'No user logged in';
       isLoading.value = false;
       return;
     } else {
-      debugPrint('🔑 Fetching schedules for user: ${currentUserId.value}');
+      debugPrint('🔑 Fetching schedules for user: ${userUid.value}');
     }
 
-    final response = await _repository.getSchedules(gid: currentUserId.value!);
+    final response = await _repository.getSchedules(gid: userUid.value!);
 
     response.when(
       success: (data) {
         scheduleList.assignAll(data);
-        debugPrint('✅ Loaded ${data.length} schedules for user: ${currentUserId.value}');
+        debugPrint('✅ Loaded ${data.length} schedules for user: ${userUid.value}');
       },
       failure: (error) {
         errorMessage.value = error;
@@ -136,7 +136,7 @@ class HomeController extends GetxController {
     isLoading.value = true;
 
     // Require userId for deletion
-    if (currentUserId.value == null) {
+    if (userUid.value == null) {
       debugPrint('❌ Cannot delete schedule: No user logged in');
       Get.snackbar(
         'Error',
@@ -149,7 +149,7 @@ class HomeController extends GetxController {
       return false;
     }
 
-    final response = await _repository.deleteSchedule(id, userId: currentUserId.value!);
+    final response = await _repository.deleteSchedule(id, userId: userUid.value!);
 
     bool success = false;
     response.when(

@@ -67,12 +67,12 @@ const sampleSchedules = [
 // GET /api/schedules - Get all schedules (optionally filtered by userId)
 router.get('/', async (req, res) => {
     try {
-        const { userId } = req.query;
+        const { gid } = req.query;
 
         // Filter by userId if provided
         let data = sampleSchedules;
-        if (userId) {
-            data = sampleSchedules.filter(s => s.userId === userId);
+        if (gid) {
+            data = sampleSchedules.filter(s => s.gid === gid);
         }
 
         return res.status(200).json({

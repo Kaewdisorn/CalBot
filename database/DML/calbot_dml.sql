@@ -1,13 +1,101 @@
 -- Convert string to UUID
-SELECT uuid_generate_v5 (uuid_ns_url (), 'calbot_user_guest');
-SELECT gen_random_uuid();
+SELECT uuid_generate_v5 ( uuid_ns_url (), 'calbot_user_guest' );
 
+-- Generate random UUID
+SELECT gen_random_uuid ();
+
+-- Insert guest user with fixed GID and random UID
 INSERT INTO v1.users (
     gid,
     uid,
     properties
 ) VALUES (
     'a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4',
-     (SELECT gen_random_uuid()), -- Group ID
+     (SELECT gen_random_uuid()),
     '{"email": "guest", "password_hash": "adasdsds"}'::jsonb
+);
+
+/* Sample Schedule Data for Testing */
+-- Insert Team Meeting
+INSERT INTO v1.schedules (gid, uid, properties)
+VALUES (
+    'a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4',
+    (SELECT gen_random_uuid()),
+    '{
+        "title": "Team Meeting",
+        "start": "2025-12-04T10:00:00.000Z",
+        "end": "2025-12-04T11:00:00.000Z",
+        "recurrenceRule": "FREQ=DAILY;INTERVAL=1;COUNT=10",
+        "exceptionDateList": ["2025-12-08"],
+        "colorValue": 4282557941,
+        "doneOccurrences": ["2025-12-04", "2025-12-05"],
+        "isAllDay": false,
+        "isDone": false
+    }'::jsonb
+);
+
+-- Insert Weekly Review
+INSERT INTO v1.schedules (gid, uid, properties)
+VALUES (
+    'a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4',
+    (SELECT gen_random_uuid()),
+    '{
+        "title": "Weekly Review",
+        "start": "2025-12-04T14:00:00.000Z",
+        "end": "2025-12-04T15:00:00.000Z",
+        "recurrenceRule": "FREQ=WEEKLY;BYDAY=MO,WE,FR;COUNT=6",
+        "location": "Conference Room A",
+        "colorValue": 4284947020,
+        "isAllDay": false,
+        "isDone": false
+    }'::jsonb
+);
+
+-- Insert Project Deadline
+INSERT INTO v1.schedules (gid, uid, properties)
+VALUES (
+    'a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4',
+    (SELECT gen_random_uuid()),
+    '{
+        "title": "Project Deadline",
+        "start": "2025-12-06T09:00:00.000Z",
+        "end": "2025-12-06T17:00:00.000Z",
+        "isAllDay": true,
+        "colorValue": 4293467984,
+        "note": "Submit final report",
+        "isDone": false
+    }'::jsonb
+);
+
+-- Insert Monthly Report
+INSERT INTO v1.schedules (gid, uid, properties)
+VALUES (
+    'a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4',
+    (SELECT gen_random_uuid()),
+    '{
+        "title": "Monthly Report",
+        "start": "2025-12-15T10:00:00.000Z",
+        "end": "2025-12-15T11:30:00.000Z",
+        "recurrenceRule": "FREQ=MONTHLY;BYMONTHDAY=15;COUNT=6",
+        "colorValue": 4289420220,
+        "location": "Head Office",
+        "isAllDay": false,
+        "isDone": false
+    }'::jsonb
+);
+
+-- Insert Gym Session
+INSERT INTO v1.schedules (gid, uid, properties)
+VALUES (
+    'a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4',
+    (SELECT gen_random_uuid()),
+    '{
+        "title": "Gym Session",
+        "start": "2025-12-04T18:00:00.000Z",
+        "end": "2025-12-04T19:30:00.000Z",
+        "recurrenceRule": "FREQ=WEEKLY;BYDAY=TU,TH;COUNT=8",
+        "colorValue": 4294938179,
+        "isAllDay": false,
+        "isDone": false
+    }'::jsonb
 );

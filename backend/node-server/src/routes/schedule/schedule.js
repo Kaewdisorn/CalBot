@@ -4,8 +4,8 @@ const router = express.Router();
 // Sample schedule data (will be replaced with database query later)
 const sampleSchedules = [
     {
-        id: "1",
-        userId: "user_001", // Owner of this schedule
+        uid: "1",
+        gid: "user_001", // Owner of this schedule
         title: "Team Meeting",
         start: "2025-12-04T10:00:00.000Z",
         end: "2025-12-04T11:00:00.000Z",
@@ -17,8 +17,8 @@ const sampleSchedules = [
         isDone: false
     },
     {
-        id: "2",
-        userId: "user_001",
+        uid: "2",
+        gid: "user_001",
         title: "Weekly Review",
         start: "2025-12-04T14:00:00.000Z",
         end: "2025-12-04T15:00:00.000Z",
@@ -29,8 +29,8 @@ const sampleSchedules = [
         isDone: false
     },
     {
-        id: "3",
-        userId: "user_002",
+        uid: "3",
+        gid: "user_002",
         title: "Project Deadline",
         start: "2025-12-06T09:00:00.000Z",
         end: "2025-12-06T17:00:00.000Z",
@@ -40,8 +40,8 @@ const sampleSchedules = [
         isDone: false
     },
     {
-        id: "4",
-        userId: "user_001",
+        uid: "4",
+        gid: "user_001",
         title: "Monthly Report",
         start: "2025-12-15T10:00:00.000Z",
         end: "2025-12-15T11:30:00.000Z",
@@ -52,8 +52,8 @@ const sampleSchedules = [
         isDone: false
     },
     {
-        id: "5",
-        userId: "user_002",
+        uid: "5",
+        gid: "user_002",
         title: "Gym Session",
         start: "2025-12-04T18:00:00.000Z",
         end: "2025-12-04T19:30:00.000Z",
@@ -116,8 +116,8 @@ router.post('/', async (req, res) => {
 
         // Create new schedule object
         const newSchedule = {
-            id: newId,
-            userId,
+            uid: newId,
+            gid: userId,
             title,
             start,
             end,

@@ -56,7 +56,7 @@ class ScheduleRepository {
   /// Update an existing schedule
   Future<ApiResponse<ScheduleModel>> updateSchedule(ScheduleModel schedule) async {
     return await _apiClient.put<ScheduleModel>(
-      '${ApiConfig.schedules}/${schedule.id}',
+      '${ApiConfig.schedules}/${schedule.uid}',
       body: schedule.toJson(),
       parser: (json) {
         final Map<String, dynamic> data = json is Map<String, dynamic> ? (json['data'] as Map<String, dynamic>? ?? json) : json;

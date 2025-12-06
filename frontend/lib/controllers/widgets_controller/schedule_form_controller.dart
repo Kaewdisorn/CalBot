@@ -570,8 +570,8 @@ class ScheduleFormController extends GetxController {
     }
 
     return ScheduleModel(
-      id: existingSchedule?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      userId: existingSchedule?.userId ?? Get.find<HomeController>().currentUserId.value,
+      uid: existingSchedule?.uid ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      gid: existingSchedule!.gid,
       title: title,
       start: startDateTime,
       end: endDateTime,

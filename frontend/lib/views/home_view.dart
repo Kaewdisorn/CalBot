@@ -83,7 +83,7 @@ class HomeView extends StatelessWidget {
                     final Appointment tappedAppointment = appts[0] as Appointment;
 
                     // Find the matching ScheduleModel
-                    final existingSchedule = homeController.scheduleList.firstWhereOrNull((s) => s.id == tappedAppointment.id);
+                    final existingSchedule = homeController.scheduleList.firstWhereOrNull((s) => s.uid == tappedAppointment.id);
 
                     if (existingSchedule != null) {
                       // For recurring events, pass the tapped occurrence date
@@ -110,7 +110,7 @@ class HomeView extends StatelessWidget {
                           },
                           onDelete: () async {
                             // Call API to delete the entire schedule series
-                            final success = await homeController.deleteSchedule(existingSchedule.id);
+                            final success = await homeController.deleteSchedule(existingSchedule.uid);
                             if (success) {
                               Get.snackbar(
                                 'Deleted',
@@ -124,7 +124,7 @@ class HomeView extends StatelessWidget {
                           },
                           onDeleteSingle: (occurrenceDate) async {
                             // Delete single occurrence by adding it to exception dates
-                            final index = homeController.scheduleList.indexWhere((s) => s.id == existingSchedule.id);
+                            final index = homeController.scheduleList.indexWhere((s) => s.uid == existingSchedule.uid);
                             if (index != -1) {
                               final schedule = homeController.scheduleList[index];
                               // Normalize the date
@@ -133,7 +133,8 @@ class HomeView extends StatelessWidget {
                               final List<DateTime> newExceptionDates = [...(schedule.exceptionDateList ?? <DateTime>[]), normalizedDate];
                               // Create updated schedule with new exception date
                               final updatedSchedule = ScheduleModel(
-                                id: schedule.id,
+                                gid: schedule.gid,
+                                uid: schedule.uid,
                                 title: schedule.title,
                                 start: schedule.start,
                                 end: schedule.end,

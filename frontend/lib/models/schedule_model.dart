@@ -90,8 +90,8 @@ class NoteData {
 }
 
 class ScheduleModel {
-  final String id;
-  final String? userId; // User ID for ownership validation
+  final String gid; // user id
+  final String uid; // schedule unique id
   final String title;
   final DateTime start;
   final DateTime end;
@@ -108,8 +108,8 @@ class ScheduleModel {
   bool get isRecurring => recurrenceRule != null && recurrenceRule!.isNotEmpty;
 
   ScheduleModel({
-    required this.id,
-    this.userId,
+    required this.gid,
+    required this.uid,
     required this.title,
     required this.start,
     required this.end,
@@ -150,8 +150,8 @@ class ScheduleModel {
 
     // 4. Construct the Model
     return ScheduleModel(
-      id: json['id'] as String? ?? '',
-      userId: json['userId'] as String?,
+      gid: json['gid'] as String? ?? '',
+      uid: json['uid'] as String? ?? '',
       title: json['title'] as String? ?? '',
       start: DateTime.parse(json['start'] as String).toLocal(),
       end: DateTime.parse(json['end'] as String).toLocal(),
@@ -169,8 +169,8 @@ class ScheduleModel {
   // Convert model to JSON for API
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      if (userId != null) 'userId': userId,
+      'gid': gid,
+      'uid': uid,
       'title': title,
       'start': start.toUtc().toIso8601String(),
       'end': end.toUtc().toIso8601String(),
@@ -200,7 +200,7 @@ class ScheduleModel {
     final Color displayColor = (!isRecurring && isDone) ? Colors.grey : Color(colorValue);
 
     return Appointment(
-      id: id,
+      id: uid, // schedule unique id
       subject: title,
       startTime: startTime,
       endTime: endTime,
@@ -231,7 +231,8 @@ class ScheduleModel {
     if (!isRecurring) {
       // Non-recurring: just update isDone
       return ScheduleModel(
-        id: id,
+        gid: gid,
+        uid: uid,
         title: title,
         start: start,
         end: end,
@@ -266,7 +267,8 @@ class ScheduleModel {
     }
 
     return ScheduleModel(
-      id: id,
+      gid: gid,
+      uid: uid,
       title: title,
       start: start,
       end: end,

@@ -99,7 +99,7 @@ class HomeController extends GetxController {
     bool success = false;
     response.when(
       success: (data) {
-        final index = scheduleList.indexWhere((s) => s.id == data.id);
+        final index = scheduleList.indexWhere((s) => s.uid == data.uid);
         if (index != -1) {
           scheduleList[index] = data;
         }
@@ -146,7 +146,7 @@ class HomeController extends GetxController {
     bool success = false;
     response.when(
       success: (_) {
-        scheduleList.removeWhere((s) => s.id == id);
+        scheduleList.removeWhere((s) => s.uid == id);
         debugPrint('✅ Deleted schedule: $id');
         success = true;
       },
@@ -177,14 +177,14 @@ class HomeController extends GetxController {
 
   /// Update schedule in local list (for optimistic updates)
   void updateScheduleLocal(ScheduleModel schedule) {
-    final index = scheduleList.indexWhere((s) => s.id == schedule.id);
+    final index = scheduleList.indexWhere((s) => s.uid == schedule.uid);
     if (index != -1) {
       scheduleList[index] = schedule;
     }
   }
 
   /// Remove schedule from local list (for optimistic updates)
-  void removeScheduleLocal(String id) {
-    scheduleList.removeWhere((s) => s.id == id);
+  void removeScheduleLocal(String uid) {
+    scheduleList.removeWhere((s) => s.uid == uid);
   }
 }

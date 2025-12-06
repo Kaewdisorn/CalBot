@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![CalBot Logo](docs\screenshots\halulu_calendar.png)
+![CalBot Logo](docs/screenshots/halulu_calendar.png)
 
 **A modern, cross-platform calendar and scheduling application with Discord bot integration**
 

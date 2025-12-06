@@ -91,6 +91,7 @@ class NoteData {
 
 class ScheduleModel {
   final String id;
+  final String? userId; // User ID for ownership validation
   final String title;
   final DateTime start;
   final DateTime end;
@@ -108,6 +109,7 @@ class ScheduleModel {
 
   ScheduleModel({
     required this.id,
+    this.userId,
     required this.title,
     required this.start,
     required this.end,
@@ -149,6 +151,7 @@ class ScheduleModel {
     // 4. Construct the Model
     return ScheduleModel(
       id: json['id'] as String? ?? '',
+      userId: json['userId'] as String?,
       title: json['title'] as String? ?? '',
       start: DateTime.parse(json['start'] as String).toLocal(),
       end: DateTime.parse(json['end'] as String).toLocal(),
@@ -167,6 +170,7 @@ class ScheduleModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      if (userId != null) 'userId': userId,
       'title': title,
       'start': start.toUtc().toIso8601String(),
       'end': end.toUtc().toIso8601String(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../models/schedule_model.dart';
+import '../home_controller.dart';
 
 /// Recurrence frequency options
 enum RecurrenceFrequency { never, daily, weekly, monthly }
@@ -570,6 +571,7 @@ class ScheduleFormController extends GetxController {
 
     return ScheduleModel(
       id: existingSchedule?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      userId: existingSchedule?.userId ?? Get.find<HomeController>().currentUserId.value,
       title: title,
       start: startDateTime,
       end: endDateTime,

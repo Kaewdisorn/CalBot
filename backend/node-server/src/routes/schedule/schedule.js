@@ -5,6 +5,7 @@ const router = express.Router();
 const sampleSchedules = [
     {
         id: "1",
+        userId: "user_001", // Owner of this schedule
         title: "Team Meeting",
         start: "2025-12-04T10:00:00.000Z",
         end: "2025-12-04T11:00:00.000Z",
@@ -17,6 +18,7 @@ const sampleSchedules = [
     },
     {
         id: "2",
+        userId: "user_001",
         title: "Weekly Review",
         start: "2025-12-04T14:00:00.000Z",
         end: "2025-12-04T15:00:00.000Z",
@@ -28,6 +30,7 @@ const sampleSchedules = [
     },
     {
         id: "3",
+        userId: "user_002",
         title: "Project Deadline",
         start: "2025-12-06T09:00:00.000Z",
         end: "2025-12-06T17:00:00.000Z",
@@ -38,6 +41,7 @@ const sampleSchedules = [
     },
     {
         id: "4",
+        userId: "user_001",
         title: "Monthly Report",
         start: "2025-12-15T10:00:00.000Z",
         end: "2025-12-15T11:30:00.000Z",
@@ -49,6 +53,7 @@ const sampleSchedules = [
     },
     {
         id: "5",
+        userId: "user_002",
         title: "Gym Session",
         start: "2025-12-04T18:00:00.000Z",
         end: "2025-12-04T19:30:00.000Z",
@@ -59,11 +64,16 @@ const sampleSchedules = [
     }
 ];
 
-// GET /api/schedules - Get all schedules
-router.get('/', async (_req, res) => {
+// GET /api/schedules - Get all schedules (optionally filtered by userId)
+router.get('/', async (req, res) => {
     try {
+        const { userId } = req.query;
 
-        const data = sampleSchedules;
+        // Filter by userId if provided
+        let data = sampleSchedules;
+        if (userId) {
+            data = sampleSchedules.filter(s => s.userId === userId);
+        }
 
         return res.status(200).json({
             data,
@@ -79,6 +89,7 @@ router.get('/', async (_req, res) => {
 router.post('/', async (req, res) => {
     try {
         const {
+            userId,
             title,
             start,
             end,
@@ -93,19 +104,20 @@ router.post('/', async (req, res) => {
         } = req.body;
 
         // Validate required fields
-        if (!title || !start || !end) {
+        if (!userId || !title || !start || !end) {
             return res.status(400).json({
                 error: 'Missing required fields',
-                required: ['title', 'start', 'end']
+                required: ['userId', 'title', 'start', 'end']
             });
         }
 
         // Generate a new ID (temporary - will use database auto-increment later)
-        const newId = String(sampleSchedules.length + 1);
+        const newId = String(Date.now()); // Use timestamp for unique ID
 
         // Create new schedule object
         const newSchedule = {
             id: newId,
+            userId,
             title,
             start,
             end,
@@ -122,7 +134,7 @@ router.post('/', async (req, res) => {
         // Add to sample data (temporary - will insert into database later)
         sampleSchedules.push(newSchedule);
 
-        console.log('POST /api/schedules - Created:', newSchedule.id, newSchedule.title);
+        console.log('POST /api/schedules - Created:', newSchedule.id, newSchedule.title, 'for user:', userId);
 
         return res.status(201).json({
             data: newSchedule,
@@ -157,6 +169,7 @@ router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const {
+            userId,
             title,
             start,
             end,
@@ -170,6 +183,11 @@ router.put('/:id', async (req, res) => {
             note
         } = req.body;
 
+        // Validate userId is provided
+        if (!userId) {
+            return res.status(400).json({ error: 'userId is required' });
+        }
+
         // Find the schedule index
         const index = sampleSchedules.findIndex(s => s.id === id);
 
@@ -177,8 +195,13 @@ router.put('/:id', async (req, res) => {
             return res.status(404).json({ error: 'Schedule not found' });
         }
 
-        // Update the schedule (merge with existing data)
+        // Validate ownership - user can only update their own schedules
         const existingSchedule = sampleSchedules[index];
+        if (existingSchedule.userId !== userId) {
+            return res.status(403).json({ error: 'You do not have permission to update this schedule' });
+        }
+
+        // Update the schedule (merge with existing data)
         const updatedSchedule = {
             ...existingSchedule,
             title: title ?? existingSchedule.title,
@@ -197,7 +220,7 @@ router.put('/:id', async (req, res) => {
         // Replace in array
         sampleSchedules[index] = updatedSchedule;
 
-        console.log('PUT /api/schedules/:id - Updated:', id, updatedSchedule.title);
+        console.log('PUT /api/schedules/:id - Updated:', id, updatedSchedule.title, 'by user:', userId);
 
         return res.status(200).json({
             data: updatedSchedule,
@@ -213,6 +236,12 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
+        const { userId } = req.query; // Pass userId as query param for DELETE
+
+        // Validate userId is provided
+        if (!userId) {
+            return res.status(400).json({ error: 'userId is required as query parameter' });
+        }
 
         // Find the schedule index
         const index = sampleSchedules.findIndex(s => s.id === id);
@@ -221,10 +250,16 @@ router.delete('/:id', async (req, res) => {
             return res.status(404).json({ error: 'Schedule not found' });
         }
 
+        // Validate ownership - user can only delete their own schedules
+        const existingSchedule = sampleSchedules[index];
+        if (existingSchedule.userId !== userId) {
+            return res.status(403).json({ error: 'You do not have permission to delete this schedule' });
+        }
+
         // Remove from array
         const deletedSchedule = sampleSchedules.splice(index, 1)[0];
 
-        console.log('DELETE /api/schedules/:id - Deleted:', id, deletedSchedule.title);
+        console.log('DELETE /api/schedules/:id - Deleted:', id, deletedSchedule.title, 'by user:', userId);
 
         return res.status(200).json({
             message: 'Schedule deleted successfully',

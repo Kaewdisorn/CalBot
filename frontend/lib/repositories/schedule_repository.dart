@@ -9,9 +9,15 @@ class ScheduleRepository {
   ScheduleRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
 
   // ============ GET ALL SCHEDULES ============
-  Future<ApiResponse<List<ScheduleModel>>> getSchedules() async {
+  /// Fetch all schedules, optionally filtered by userId
+  Future<ApiResponse<List<ScheduleModel>>> getSchedules({String? userId}) async {
+    String endpoint = ApiConfig.schedules;
+    if (userId != null) {
+      endpoint = '${ApiConfig.schedules}?userId=$userId';
+    }
+
     return await _apiClient.get<List<ScheduleModel>>(
-      ApiConfig.schedules,
+      endpoint,
       parser: (json) {
         // API returns: { "data": [...] } or just [...]
         final List<dynamic> list = json is List ? json : (json['data'] as List? ?? []);
@@ -60,9 +66,9 @@ class ScheduleRepository {
   }
 
   // ============ DELETE SCHEDULE ============
-  /// Delete a schedule by ID
-  Future<ApiResponse<bool>> deleteSchedule(String id) async {
-    final response = await _apiClient.delete<dynamic>('${ApiConfig.schedules}/$id');
+  /// Delete a schedule by ID (requires userId for ownership validation)
+  Future<ApiResponse<bool>> deleteSchedule(String id, {required String userId}) async {
+    final response = await _apiClient.delete<dynamic>('${ApiConfig.schedules}/$id?userId=$userId');
 
     // Convert to bool response
     if (response.isSuccess) {

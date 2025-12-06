@@ -15,6 +15,10 @@ class HomeController extends GetxController {
   final RxList<ScheduleModel> scheduleList = <ScheduleModel>[].obs;
   final RxBool isAgendaView = false.obs;
 
+  // Current user ID for ownership validation
+  // TODO: Replace with actual user authentication
+  final RxnString currentUserId = RxnString('user_001');
+
   // Loading and error states
   final RxBool isLoading = false.obs;
   final RxnString errorMessage = RxnString(null);
@@ -32,16 +36,17 @@ class HomeController extends GetxController {
   }
 
   // ============ FETCH ALL SCHEDULES ============
+  /// Fetch schedules for current user
   Future<void> fetchSchedules() async {
     isLoading.value = true;
     errorMessage.value = null;
 
-    final response = await _repository.getSchedules();
+    final response = await _repository.getSchedules(userId: currentUserId.value);
 
     response.when(
       success: (data) {
         scheduleList.assignAll(data);
-        debugPrint('✅ Loaded ${data.length} schedules');
+        debugPrint('✅ Loaded ${data.length} schedules for user: ${currentUserId.value}');
       },
       failure: (error) {
         errorMessage.value = error;
@@ -122,7 +127,21 @@ class HomeController extends GetxController {
   Future<bool> deleteSchedule(String id) async {
     isLoading.value = true;
 
-    final response = await _repository.deleteSchedule(id);
+    // Require userId for deletion
+    if (currentUserId.value == null) {
+      debugPrint('❌ Cannot delete schedule: No user logged in');
+      Get.snackbar(
+        'Error',
+        'You must be logged in to delete schedules',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+      isLoading.value = false;
+      return false;
+    }
+
+    final response = await _repository.deleteSchedule(id, userId: currentUserId.value!);
 
     bool success = false;
     response.when(

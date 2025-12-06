@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../models/schedule_model.dart';
-import '../home_controller.dart';
 
 /// Recurrence frequency options
 enum RecurrenceFrequency { never, daily, weekly, monthly }

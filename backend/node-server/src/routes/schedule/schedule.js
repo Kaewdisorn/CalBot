@@ -1,41 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const scheduleRepository = require('../../repositories/schedule.repository');
+
+const scheduleController = require('../../controllers/schedule');
 
 // =============================================================================
 // GET /api/schedules - Get all schedules for a user (filtered by gid)
 // =============================================================================
-router.get('/', async (req, res) => {
-    try {
-        const { gid } = req.query;
+router.get('/', scheduleController.fetchSchedule);
 
-        if (!gid) {
-            return res.status(400).json({
-                error: 'Missing required query parameter: gid',
-                required: ['gid']
-            });
-        }
-
-        // ============ DATABASE QUERY ============
-        console.log(`📊 Fetching schedules from database for gid: ${gid}`);
-        let data = await scheduleRepository.getSchedules(gid, null);
-        console.log(`✅ Found ${data.length} schedules in database`);
-
-        return res.status(200).json({
-            data,
-            meta: {
-                count: data.length,
-                source: 'database'
-            }
-        });
-    } catch (err) {
-        console.error('GET /api/schedules error:', err);
-        return res.status(500).json({
-            error: 'Failed to load schedules',
-            details: process.env.NODE_ENV === 'development' ? err.message : undefined
-        });
-    }
-});
 
 // POST /api/schedules - Create a new schedule
 router.post('/', async (req, res) => {

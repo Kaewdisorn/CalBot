@@ -4,16 +4,20 @@ SELECT v1.uuid_generate_v5 (v1.uuid_ns_url(), 'calbot_user_guest' );
 -- Generate random UUID
 SELECT gen_random_uuid ();
 
--- Insert guest user with fixed GID and random UID
-INSERT INTO v1.users (
+-- Upsert User
+INSERT INTO ${FULL_TABLE} (gid, uid, properties)
+VALUES ($1, $2, $3)
+ON CONFLICT (gid, uid) DO UPDATE
+SET
+    gid         = EXCLUDED.gid,
+    properties  = EXCLUDED.properties,
+    updated_at  = CURRENT_TIMESTAMP
+RETURNING
     gid,
     uid,
-    properties
-) VALUES (
-    'a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4',
-     (SELECT gen_random_uuid()),
-    '{"email": "guest", "password_hash": "adasdsds"}'::jsonb
-);
+    properties,
+    created_at,
+    updated_at;
 
 /* Sample Schedule Data for Testing */
 -- Insert Team Meeting

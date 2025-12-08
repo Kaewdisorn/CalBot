@@ -51,7 +51,7 @@ const upsertUser = async (gid, uid, properties = {}) => {
     const sql = `
         INSERT INTO ${FULL_TABLE} (gid, uid, properties)
         VALUES ($1, $2, $3)
-        ON CONFLICT (uid) DO UPDATE SET
+        ON CONFLICT (gid, uid) DO UPDATE SET
             gid = EXCLUDED.gid,
             properties = EXCLUDED.properties,
             updated_at = CURRENT_TIMESTAMP
@@ -62,17 +62,34 @@ const upsertUser = async (gid, uid, properties = {}) => {
     return transformRowToUser(result.rows[0]);
 };
 
-const getUserByEmail = async (email) => {
+const checkUserExists = async (email) => {
+    const emailLower = email.toLowerCase();
     var sql = `SELECT ${SCHEMA}.uuid_generate_v5(${SCHEMA}.uuid_ns_url(), $1) AS uid`;
-    const userUid = await query(sql, [email.toLowerCase()]).then(res => res.rows[0]);
+    const userUid = await query(sql, [emailLower]).then(res => res.rows[0]);
 
     sql = `SELECT gid, uid, properties, created_at, updated_at
     FROM ${FULL_TABLE} WHERE gid = $1 AND uid = $1`;
 
     const result = await query(sql, [userUid.uid]);
-    return result.rows.length > 0 ? transformRowToUser(result.rows[0]) : null;
 
-};
+    if (result.rows.length > 0) {
+        return { "isExists": true, "userUid": userUid.uid };
+    } else {
+        return { "isExists": false, "userUid": userUid.uid };
+    }
+}
+
+// const getUserByEmail = async (email) => {
+//     var sql = `SELECT ${SCHEMA}.uuid_generate_v5(${SCHEMA}.uuid_ns_url(), $1) AS uid`;
+//     const userUid = await query(sql, [email.toLowerCase()]).then(res => res.rows[0]);
+
+//     sql = `SELECT gid, uid, properties, created_at, updated_at
+//     FROM ${FULL_TABLE} WHERE gid = $1 AND uid = $1`;
+
+//     const result = await query(sql, [userUid.uid]);
+//     return result.rows.length > 0 ? transformRowToUser(result.rows[0]) : null;
+
+// };
 
 const getUsers = async (uid) => {
 
@@ -100,5 +117,5 @@ const getUsers = async (uid) => {
 module.exports = {
     upsertUser,
     getUsers,
-    getUserByEmail,
+    checkUserExists,
 };

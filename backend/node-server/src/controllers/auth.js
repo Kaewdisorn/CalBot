@@ -11,9 +11,9 @@ const register = async (req, res) => {
             return apiRes(res, 400, 'Email and password are required', null);
         }
 
-        const existingUsers = await authRepository.getUserByEmail(email);
+        const existingUsers = await authRepository.checkUserExists(email);
 
-        if (existingUsers) {
+        if (existingUsers.isExists) {
             return apiRes(res, 400, 'User already exists with email', null);
         }
 
@@ -24,10 +24,16 @@ const register = async (req, res) => {
             parallelism: 1
         });
 
-        console.log('Hashed password for', email, ':', hashedPassword);
-        const isMatch = await argon2.verify(hashedPassword, '123456');
-        console.log('Password verification for "123456":', isMatch);
+        const userUid = existingUsers.userUid;
+        const userGid = userUid;
+        const properties = {
+            email: email,
+            password: hashedPassword
+        };
 
+        const userData = await authRepository.upsertUser(userGid, userUid, properties);
+
+        console.log('Registered new user:', userData);
 
         return apiRes(res, 201, 'User registered successfully', { email });
     } catch (error) {

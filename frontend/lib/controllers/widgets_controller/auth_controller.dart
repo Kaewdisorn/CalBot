@@ -13,6 +13,8 @@ class AuthController extends GetxController {
   final isGuest = false.obs;
   final userName = ''.obs;
   final userToken = ''.obs;
+  final userId = ''.obs; // User uid from backend
+  final userGid = ''.obs; // User gid from backend
   final errorMessage = ''.obs;
 
   // Dialog-specific state
@@ -38,12 +40,16 @@ class AuthController extends GetxController {
     // Check if user was previously logged in or using guest mode
     final savedUserName = box.read('userName') as String?;
     final savedToken = box.read('userToken') as String?;
+    final savedUserId = box.read('userId') as String?;
+    final savedUserGid = box.read('userGid') as String?;
     final savedIsGuest = box.read('isGuest') as bool? ?? false;
 
     if (savedUserName != null && savedUserName.isNotEmpty) {
       isLoggedIn.value = true;
       userName.value = savedUserName;
       userToken.value = savedToken ?? '';
+      userId.value = savedUserId ?? '';
+      userGid.value = savedUserGid ?? '';
     } else if (savedIsGuest) {
       isGuest.value = true;
     }
@@ -123,10 +129,19 @@ class AuthController extends GetxController {
     if (response.isSuccess && response.data != null) {
       final data = response.data!;
       final token = data['token'] as String? ?? '';
-      final userEmail = data['email'] as String? ?? email;
+      final user = data['user'] as Map<String, dynamic>?;
 
-      _saveUserSession(userEmail, token);
-      Get.defaultDialog(title: 'Success', middleText: 'Welcome back!', textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
+      if (user != null) {
+        final userEmail = user['email'] as String? ?? email;
+        final uid = user['uid'] as String? ?? '';
+        final gid = user['gid'] as String? ?? '';
+
+        _saveUserSession(userEmail, token, uid, gid);
+        Get.defaultDialog(title: 'Success', middleText: 'Welcome back!', textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
+      } else {
+        errorMessage.value = 'Invalid response format';
+        Get.defaultDialog(title: 'Error', middleText: errorMessage.value, textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
+      }
     } else {
       errorMessage.value = response.error ?? 'Login failed';
       Get.defaultDialog(title: 'Error', middleText: errorMessage.value, textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
@@ -143,34 +158,51 @@ class AuthController extends GetxController {
     if (response.isSuccess && response.data != null) {
       final data = response.data!;
       final token = data['token'] as String? ?? '';
-      final userEmail = data['email'] as String? ?? email;
+      final user = data['user'] as Map<String, dynamic>?;
 
-      _saveUserSession(userEmail, token);
-      Get.defaultDialog(
-        title: 'Success',
-        middleText: 'Account created successfully!',
-        textConfirm: 'OK',
-        confirmTextColor: Colors.white,
-        onConfirm: () => Get.back(),
-      );
+      if (user != null) {
+        final userEmail = user['email'] as String? ?? email;
+        final uid = user['uid'] as String? ?? '';
+        final gid = user['gid'] as String? ?? '';
+
+        _saveUserSession(userEmail, token, uid, gid);
+        Get.defaultDialog(
+          title: 'Success',
+          middleText: 'Account created successfully!\n\nUser ID: $uid',
+          textConfirm: 'OK',
+          confirmTextColor: Colors.white,
+          onConfirm: () => Get.back(),
+        );
+      } else {
+        errorMessage.value = 'Invalid response format';
+        Get.defaultDialog(title: 'Error', middleText: errorMessage.value, textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
+      }
     } else {
       errorMessage.value = response.error ?? 'Registration failed';
       Get.defaultDialog(title: 'Error', middleText: errorMessage.value, textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
     }
   }
 
-  void _saveUserSession(String email, String token) {
+  void _saveUserSession(String email, String token, String uid, String gid) {
     userName.value = email;
     userToken.value = token;
+    userId.value = uid;
+    userGid.value = gid;
+
     box.write('userName', email);
     box.write('userToken', token);
+    box.write('userId', uid);
+    box.write('userGid', gid);
     box.write('isGuest', false);
+
     isLoggedIn.value = true;
     isGuest.value = false;
 
     // Clear form
     emailController.clear();
     passwordController.clear();
+
+    debugPrint('✅ User session saved: uid=$uid, gid=$gid, email=$email');
   }
 
   void useAsGuest() {
@@ -185,8 +217,13 @@ class AuthController extends GetxController {
     isGuest.value = false;
     userName.value = '';
     userToken.value = '';
+    userId.value = '';
+    userGid.value = '';
+
     box.remove('userName');
     box.remove('userToken');
+    box.remove('userId');
+    box.remove('userGid');
     box.remove('isGuest');
   }
 

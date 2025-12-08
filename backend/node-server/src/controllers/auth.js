@@ -1,6 +1,7 @@
 const authRepository = require("../repositories/auth");
 const { apiRes } = require("../utils/response");
 const argon2 = require('argon2');
+const jwt = require('jsonwebtoken');
 
 const register = async (req, res) => {
 
@@ -35,12 +36,85 @@ const register = async (req, res) => {
 
         console.log('Registered new user:', userData);
 
-        return apiRes(res, 201, 'User registered successfully', { email });
+        // Generate JWT token
+        const jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+        const expiresInSeconds = parseInt(process.env.JWT_EXPIRES_IN_SECONDS, 10) || 604800; // 7 days
+        const token = jwt.sign(
+            { userId: userData.uid, email: userData.email },
+            jwtSecret,
+            { expiresIn: expiresInSeconds }
+        );
+
+        // Return user data without password
+        const { password: _, ...userWithoutPassword } = userData;
+        return apiRes(res, 201, 'User registered successfully', {
+            token,
+            user: {
+                uid: userData.uid,
+                gid: userData.gid,
+                email: userData.email,
+                createdAt: userData.createdAt,
+                updatedAt: userData.updatedAt
+            }
+        });
     } catch (error) {
         console.error('Error in register:', error);
         return apiRes(res, 500, 'Internal server error :' + error.message, null);
     }
 };
-const login = async (req, res) => { };
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body || {};
+
+        if (!email || !password) {
+            return apiRes(res, 400, 'Email and password are required', null);
+        }
+
+        const existingUsers = await authRepository.checkUserExists(email);
+
+        if (!existingUsers.isExists) {
+            return apiRes(res, 401, 'Invalid credentials', null);
+        }
+
+        // Get user data
+        const userData = await authRepository.getUsers(existingUsers.userUid);
+
+        if (!userData) {
+            return apiRes(res, 401, 'Invalid credentials', null);
+        }
+
+        // Verify password
+        const passwordMatch = await argon2.verify(userData.password, password);
+
+        if (!passwordMatch) {
+            return apiRes(res, 401, 'Invalid credentials', null);
+        }
+        console.log('User logged in:', userData.email);
+
+        // Generate JWT token
+        const jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+        const expiresInSeconds = parseInt(process.env.JWT_EXPIRES_IN_SECONDS, 10) || 604800; // 7 days
+        const token = jwt.sign(
+            { userId: userData.uid, email: userData.email },
+            jwtSecret,
+            { expiresIn: expiresInSeconds }
+        );
+
+        // Return user data without password
+        return apiRes(res, 200, 'Login successful', {
+            token,
+            user: {
+                uid: userData.uid,
+                gid: userData.gid,
+                email: userData.email,
+                createdAt: userData.createdAt,
+                updatedAt: userData.updatedAt
+            }
+        });
+    } catch (error) {
+        console.error('Error in login:', error);
+        return apiRes(res, 500, 'Internal server error: ' + error.message, null);
+    }
+};
 
 module.exports = { register, login };

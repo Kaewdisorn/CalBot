@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../models/schedule_model.dart';
+import 'auth_controller.dart';
 
 /// Recurrence frequency options
 enum RecurrenceFrequency { never, daily, weekly, monthly }
@@ -19,6 +20,9 @@ enum MonthlyRepeatMode { byDay, byWeekPosition }
 enum WeekPosition { first, second, third, fourth, last }
 
 class ScheduleFormController extends GetxController {
+  // Get AuthController to access logged-in user data
+  final AuthController _authController = Get.find<AuthController>();
+
   // Text controllers
   late TextEditingController titleController;
   late TextEditingController locationController;
@@ -570,7 +574,7 @@ class ScheduleFormController extends GetxController {
 
     return ScheduleModel(
       uid: existingSchedule?.uid ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      gid: existingSchedule!.gid,
+      gid: existingSchedule?.gid ?? _authController.userGid.value,
       title: title,
       start: startDateTime,
       end: endDateTime,

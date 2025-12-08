@@ -17,7 +17,7 @@ class HomeController extends GetxController {
 
   // Current user ID for ownership validation
   // TODO: Replace with actual user authentication
-  final RxnString userUid = RxnString('a3dfbd82-dedb-5577-bdc1-45d9e74cc5a4');
+  final RxnString userUid = RxnString('f0de0e66-e6b6-5bed-9a9f-73459b6adbe7');
 
   // Loading and error states
   final RxBool isLoading = false.obs;

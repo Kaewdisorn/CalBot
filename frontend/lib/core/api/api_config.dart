@@ -17,6 +17,8 @@ class ApiConfig {
   // ============ API Endpoints ============
   static const String schedules = '/api/schedules';
   static const String health = '/api/health';
+  static const String authRegister = '/api/auth/register';
+  static const String authLogin = '/api/auth/login';
 
   // ============ Timeouts ============
   static const Duration connectionTimeout = Duration(seconds: 30);

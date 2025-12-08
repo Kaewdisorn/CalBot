@@ -2,11 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
+import '../../core/api/api_client.dart';
+import '../../core/api/api_config.dart';
+
 class AuthController extends GetxController {
   final box = GetStorage();
+  final _apiClient = ApiClient();
+
   final isLoggedIn = false.obs;
   final isGuest = false.obs;
   final userName = ''.obs;
+  final userToken = ''.obs;
+  final errorMessage = ''.obs;
 
   // Dialog-specific state
   final emailController = TextEditingController();
@@ -30,37 +37,69 @@ class AuthController extends GetxController {
   void _checkAuthStatus() {
     // Check if user was previously logged in or using guest mode
     final savedUserName = box.read('userName') as String?;
+    final savedToken = box.read('userToken') as String?;
     final savedIsGuest = box.read('isGuest') as bool? ?? false;
 
     if (savedUserName != null && savedUserName.isNotEmpty) {
       isLoggedIn.value = true;
       userName.value = savedUserName;
+      userToken.value = savedToken ?? '';
     } else if (savedIsGuest) {
       isGuest.value = true;
     }
   }
 
-  void handleLogin() {
+  Future<void> handleLogin() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      Get.snackbar('Error', 'Please fill in all fields');
+      Get.defaultDialog(
+        title: 'Error',
+        middleText: 'Please fill in all fields',
+        textConfirm: 'OK',
+        confirmTextColor: Colors.white,
+        onConfirm: () => Get.back(),
+      );
+      return;
+    }
+
+    // Basic email validation
+    if (!GetUtils.isEmail(email)) {
+      Get.defaultDialog(
+        title: 'Error',
+        middleText: 'Please enter a valid email',
+        textConfirm: 'OK',
+        confirmTextColor: Colors.white,
+        onConfirm: () => Get.back(),
+      );
+      return;
+    }
+
+    // Basic password validation
+    if (password.length < 6) {
+      Get.defaultDialog(
+        title: 'Error',
+        middleText: 'Password must be at least 6 characters',
+        textConfirm: 'OK',
+        confirmTextColor: Colors.white,
+        onConfirm: () => Get.back(),
+      );
       return;
     }
 
     isLoading.value = true;
+    errorMessage.value = '';
 
-    // Simulate API call delay
-    Future.delayed(const Duration(seconds: 1), () {
+    try {
       if (isLogin.value) {
-        login(email, password);
+        await login(email, password);
       } else {
-        signup(email, password);
+        await signup(email, password);
       }
-      // Do not call Navigator.pop/Get.back() here — the view uses the controller's state to hide the dialog overlay.
+    } finally {
       isLoading.value = false;
-    });
+    }
   }
 
   void handleGuest() {
@@ -74,23 +113,64 @@ class AuthController extends GetxController {
     passwordController.clear();
   }
 
-  void login(String email, String password) {
-    // Implement actual API login call
-    // For now, just save the user info
-    userName.value = email;
-    box.write('userName', email);
-    box.write('isGuest', false);
-    isLoggedIn.value = true;
-    isGuest.value = false;
+  Future<void> login(String email, String password) async {
+    final response = await _apiClient.post<Map<String, dynamic>>(
+      ApiConfig.authLogin,
+      body: {'email': email, 'password': password},
+      parser: (json) => json as Map<String, dynamic>,
+    );
+
+    if (response.isSuccess && response.data != null) {
+      final data = response.data!;
+      final token = data['token'] as String? ?? '';
+      final userEmail = data['email'] as String? ?? email;
+
+      _saveUserSession(userEmail, token);
+      Get.defaultDialog(title: 'Success', middleText: 'Welcome back!', textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
+    } else {
+      errorMessage.value = response.error ?? 'Login failed';
+      Get.defaultDialog(title: 'Error', middleText: errorMessage.value, textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
+    }
   }
 
-  void signup(String email, String password) {
-    // Implement actual API signup call
+  Future<void> signup(String email, String password) async {
+    final response = await _apiClient.post<Map<String, dynamic>>(
+      ApiConfig.authRegister,
+      body: {'email': email, 'password': password},
+      parser: (json) => json as Map<String, dynamic>,
+    );
+
+    if (response.isSuccess && response.data != null) {
+      final data = response.data!;
+      final token = data['token'] as String? ?? '';
+      final userEmail = data['email'] as String? ?? email;
+
+      _saveUserSession(userEmail, token);
+      Get.defaultDialog(
+        title: 'Success',
+        middleText: 'Account created successfully!',
+        textConfirm: 'OK',
+        confirmTextColor: Colors.white,
+        onConfirm: () => Get.back(),
+      );
+    } else {
+      errorMessage.value = response.error ?? 'Registration failed';
+      Get.defaultDialog(title: 'Error', middleText: errorMessage.value, textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
+    }
+  }
+
+  void _saveUserSession(String email, String token) {
     userName.value = email;
+    userToken.value = token;
     box.write('userName', email);
+    box.write('userToken', token);
     box.write('isGuest', false);
     isLoggedIn.value = true;
     isGuest.value = false;
+
+    // Clear form
+    emailController.clear();
+    passwordController.clear();
   }
 
   void useAsGuest() {
@@ -104,7 +184,12 @@ class AuthController extends GetxController {
     isLoggedIn.value = false;
     isGuest.value = false;
     userName.value = '';
+    userToken.value = '';
     box.remove('userName');
+    box.remove('userToken');
     box.remove('isGuest');
   }
+
+  /// Get auth headers for authenticated API calls
+  Map<String, String> get authHeaders => ApiConfig.authHeaders(userToken.value);
 }

@@ -1,5 +1,5 @@
 -- Convert string to UUID
-SELECT uuid_generate_v5 ( uuid_ns_url (), 'calbot_user_guest' );
+SELECT v1.uuid_generate_v5 (v1.uuid_ns_url(), 'calbot_user_guest' );
 
 -- Generate random UUID
 SELECT gen_random_uuid ();

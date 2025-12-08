@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -183,10 +186,60 @@ class AuthController extends GetxController {
 
     try {
       responseData = await _apiRequester.post(endpoint: ApiConfig.authRegister, body: {'email': email, 'password': password});
+    } on TimeoutException catch (e) {
+      // Handle timeout - server not responding
+      Get.defaultDialog(
+        title: 'Connection Timeout',
+        middleText: 'Server is not responding. Please check your internet connection and try again.',
+        textConfirm: 'OK',
+        confirmTextColor: Colors.white,
+        onConfirm: () {
+          if (Get.isDialogOpen!) Get.back();
+        },
+      );
+      debugPrint('❌ Signup timeout: $e');
+      return;
+    } on SocketException catch (e) {
+      // Handle no internet connection
+      Get.defaultDialog(
+        title: 'No Internet Connection',
+        middleText: 'Please check your internet connection and try again.',
+        textConfirm: 'OK',
+        confirmTextColor: Colors.white,
+        onConfirm: () {
+          if (Get.isDialogOpen!) Get.back();
+        },
+      );
+      debugPrint('❌ Signup network error: $e');
+      return;
+    } on HttpException catch (e) {
+      // Handle server errors (5xx)
+      Get.defaultDialog(
+        title: 'Server Error',
+        middleText: 'The server is currently unavailable. Please try again later.',
+        textConfirm: 'OK',
+        confirmTextColor: Colors.white,
+        onConfirm: () {
+          if (Get.isDialogOpen!) Get.back();
+        },
+      );
+      debugPrint('❌ Signup HTTP error: $e');
+      return;
     } catch (e) {
-      Get.snackbar('Error', 'Registration failed: $e', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.redAccent, colorText: Colors.white);
+      // Handle any other errors
+      Get.defaultDialog(
+        title: 'Registration Failed',
+        middleText: 'An unexpected error occurred. Please try again.\n\nError: ${e.toString()}',
+        textConfirm: 'OK',
+        confirmTextColor: Colors.white,
+        onConfirm: () {
+          if (Get.isDialogOpen!) Get.back();
+        },
+      );
+      debugPrint('❌ Signup error: $e');
       return;
     }
+
     print(responseData);
     final int statusCode = responseData['status'];
     final String message = responseData['message'] ?? '';

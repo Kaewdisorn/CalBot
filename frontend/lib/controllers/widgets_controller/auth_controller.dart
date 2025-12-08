@@ -5,13 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:halulu/api/api_requesterr.dart';
+import 'package:http/http.dart' as http;
 
-import '../../core/api/api_client.dart';
 import '../../core/api/api_config.dart';
 
 class AuthController extends GetxController {
   final box = GetStorage();
-  final _apiClient = ApiClient();
   final _apiRequester = ApiRequester();
 
   final isLoggedIn = false.obs;
@@ -125,14 +124,20 @@ class AuthController extends GetxController {
   }
 
   Future<void> login(String email, String password) async {
-    final response = await _apiClient.post<Map<String, dynamic>>(
-      ApiConfig.authLogin,
-      body: {'email': email, 'password': password},
-      parser: (json) => json as Map<String, dynamic>,
-    );
+    final Map<String, dynamic> responseData;
 
-    if (response.isSuccess && response.data != null) {
-      final data = response.data!;
+    try {
+      responseData = await _apiRequester.post(endpoint: ApiConfig.authLogin, body: {'email': email, 'password': password});
+    } catch (e) {
+      _handleAuthError(e, 'Login');
+      return;
+    }
+
+    final int statusCode = responseData['status'];
+    final String message = responseData['message'] ?? '';
+    final Map<String, dynamic>? data = responseData['data'] as Map<String, dynamic>?;
+
+    if (statusCode == 200 && data != null) {
       final token = data['token'] as String? ?? '';
       final user = data['user'] as Map<String, dynamic>?;
 
@@ -168,7 +173,7 @@ class AuthController extends GetxController {
         );
       }
     } else {
-      errorMessage.value = response.error ?? 'Login failed';
+      errorMessage.value = message.isNotEmpty ? message : 'Login failed';
       Get.defaultDialog(
         title: 'Error',
         middleText: errorMessage.value,
@@ -186,57 +191,8 @@ class AuthController extends GetxController {
 
     try {
       responseData = await _apiRequester.post(endpoint: ApiConfig.authRegister, body: {'email': email, 'password': password});
-    } on TimeoutException catch (e) {
-      // Handle timeout - server not responding
-      Get.defaultDialog(
-        title: 'Connection Timeout',
-        middleText: 'Server is not responding. Please check your internet connection and try again.',
-        textConfirm: 'OK',
-        confirmTextColor: Colors.white,
-        onConfirm: () {
-          if (Get.isDialogOpen!) Get.back();
-        },
-      );
-      debugPrint('❌ Signup timeout: $e');
-      return;
-    } on SocketException catch (e) {
-      // Handle no internet connection
-      Get.defaultDialog(
-        title: 'No Internet Connection',
-        middleText: 'Please check your internet connection and try again.',
-        textConfirm: 'OK',
-        confirmTextColor: Colors.white,
-        onConfirm: () {
-          if (Get.isDialogOpen!) Get.back();
-        },
-      );
-      debugPrint('❌ Signup network error: $e');
-      return;
-    } on HttpException catch (e) {
-      // Handle server errors (5xx)
-      Get.defaultDialog(
-        title: 'Server Error',
-        middleText: 'The server is currently unavailable. Please try again later.',
-        textConfirm: 'OK',
-        confirmTextColor: Colors.white,
-        onConfirm: () {
-          if (Get.isDialogOpen!) Get.back();
-        },
-      );
-      debugPrint('❌ Signup HTTP error: $e');
-      return;
     } catch (e) {
-      // Handle any other errors
-      Get.defaultDialog(
-        title: 'Registration Failed',
-        middleText: 'An unexpected error occurred. Please try again.\n\nError: ${e.toString()}',
-        textConfirm: 'OK',
-        confirmTextColor: Colors.white,
-        onConfirm: () {
-          if (Get.isDialogOpen!) Get.back();
-        },
-      );
-      debugPrint('❌ Signup error: $e');
+      _handleAuthError(e, 'Registration');
       return;
     }
 
@@ -313,6 +269,41 @@ class AuthController extends GetxController {
     passwordController.clear();
 
     debugPrint('✅ User session saved: uid=$uid, gid=$gid, email=$email');
+  }
+
+  /// Centralized error handler for auth operations
+  void _handleAuthError(dynamic error, String operation) {
+    String title;
+    String message;
+
+    if (error is TimeoutException) {
+      title = 'Connection Timeout';
+      message = 'Server is not responding. Please check your internet connection and try again.';
+    } else if (error is SocketException) {
+      title = 'No Internet Connection';
+      message = 'Please check your internet connection and try again.';
+    } else if (error is http.ClientException) {
+      title = 'Connection Failed';
+      message = 'Unable to connect to the server. Please try again.';
+    } else if (error is HttpException) {
+      title = 'Server Error';
+      message = 'The server is currently unavailable. Please try again later.';
+    } else {
+      title = '$operation Failed';
+      message = 'An unexpected error occurred. Please try again.\n\nError: ${error.toString()}';
+    }
+
+    Get.defaultDialog(
+      title: title,
+      middleText: message,
+      textConfirm: 'OK',
+      confirmTextColor: Colors.white,
+      onConfirm: () {
+        if (Get.isDialogOpen!) Get.back();
+      },
+    );
+
+    debugPrint('❌ $operation error: $error');
   }
 
   void useAsGuest() {

@@ -1,5 +1,6 @@
 const authRepository = require("../repositories/auth");
 const { apiRes } = require("../utils/response");
+const argon2 = require('argon2');
 
 const register = async (req, res) => {
 
@@ -15,6 +16,17 @@ const register = async (req, res) => {
         if (existingUsers) {
             return apiRes(res, 400, 'User already exists with email', null);
         }
+
+        const hashedPassword = await argon2.hash(password, {
+            type: argon2.argon2id,
+            memoryCost: 32768, // 32 MiB
+            timeCost: 4,
+            parallelism: 1
+        });
+
+        console.log('Hashed password for', email, ':', hashedPassword);
+        const isMatch = await argon2.verify(hashedPassword, '123456');
+        console.log('Password verification for "123456":', isMatch);
 
 
         return apiRes(res, 201, 'User registered successfully', { email });

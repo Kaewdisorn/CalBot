@@ -59,7 +59,6 @@ router.post('/', async (req, res) => {
         // sampleSchedules.push(newSchedule);
 
         console.log('POST /api/schedules - Created:', newSchedule.id, newSchedule.title, 'for user:', userId);
-
         return res.status(201).json({
             data: newSchedule,
             message: 'Schedule created successfully'

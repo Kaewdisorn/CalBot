@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:halulu/api/api_requesterr.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/api/api_config.dart';
@@ -8,6 +9,7 @@ import '../../core/api/api_config.dart';
 class AuthController extends GetxController {
   final box = GetStorage();
   final _apiClient = ApiClient();
+  final _apiRequester = ApiRequester();
 
   final isLoggedIn = false.obs;
   final isGuest = false.obs;
@@ -149,38 +151,54 @@ class AuthController extends GetxController {
   }
 
   Future<void> signup(String email, String password) async {
-    final response = await _apiClient.post<Map<String, dynamic>>(
-      ApiConfig.authRegister,
-      body: {'email': email, 'password': password},
-      parser: (json) => json as Map<String, dynamic>,
-    );
+    final Map<String, dynamic> userData = await _apiRequester.post(endpoint: ApiConfig.authRegister, body: {'email': email, 'password': password});
+    print(userData);
+    final int statusCode = userData['status'];
+    final String message = userData['message'] ?? '';
 
-    if (response.isSuccess && response.data != null) {
-      final data = response.data!;
-      final token = data['token'] as String? ?? '';
-      final user = data['user'] as Map<String, dynamic>?;
-
-      if (user != null) {
-        final userEmail = user['email'] as String? ?? email;
-        final uid = user['uid'] as String? ?? '';
-        final gid = user['gid'] as String? ?? '';
-
-        _saveUserSession(userEmail, token, uid, gid);
-        Get.defaultDialog(
-          title: 'Success',
-          middleText: 'Account created successfully!\n\nUser ID: $uid',
-          textConfirm: 'OK',
-          confirmTextColor: Colors.white,
-          onConfirm: () => Get.back(),
-        );
-      } else {
-        errorMessage.value = 'Invalid response format';
-        Get.defaultDialog(title: 'Error', middleText: errorMessage.value, textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
-      }
+    if (statusCode == 201) {
+      Get.defaultDialog(
+        title: 'Success',
+        middleText: 'Account created successfully!',
+        textConfirm: 'OK',
+        confirmTextColor: Colors.white,
+        onConfirm: () => Get.back(),
+      );
     } else {
-      errorMessage.value = response.error ?? 'Registration failed';
-      Get.defaultDialog(title: 'Error', middleText: errorMessage.value, textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
+      Get.defaultDialog(title: 'Error', middleText: message, textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
     }
+    // final response = await _apiClient.post<Map<String, dynamic>>(
+    //   ApiConfig.authRegister,
+    //   body: {'email': email, 'password': password},
+    //   parser: (json) => json as Map<String, dynamic>,
+    // );
+
+    // if (response.isSuccess && response.data != null) {
+    //   final data = response.data!;
+    //   final token = data['token'] as String? ?? '';
+    //   final user = data['user'] as Map<String, dynamic>?;
+
+    //   if (user != null) {
+    //     final userEmail = user['email'] as String? ?? email;
+    //     final uid = user['uid'] as String? ?? '';
+    //     final gid = user['gid'] as String? ?? '';
+
+    //     _saveUserSession(userEmail, token, uid, gid);
+    //     Get.defaultDialog(
+    //       title: 'Success',
+    //       middleText: 'Account created successfully!\n\nUser ID: $uid',
+    //       textConfirm: 'OK',
+    //       confirmTextColor: Colors.white,
+    //       onConfirm: () => Get.back(),
+    //     );
+    //   } else {
+    //     errorMessage.value = 'Invalid response format';
+    //     Get.defaultDialog(title: 'Error', middleText: errorMessage.value, textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
+    //   }
+    // } else {
+    //   errorMessage.value = response.error ?? 'Registration failed';
+    //   Get.defaultDialog(title: 'Error', middleText: errorMessage.value, textConfirm: 'OK', confirmTextColor: Colors.white, onConfirm: () => Get.back());
+    // }
   }
 
   void _saveUserSession(String email, String token, String uid, String gid) {

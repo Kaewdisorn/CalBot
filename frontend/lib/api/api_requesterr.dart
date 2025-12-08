@@ -22,7 +22,7 @@ class ApiRequester {
         return jsonDecode(response.body);
       } else {
         debugPrint('❌ Error Response [${response.statusCode}]: ${response.body}');
-        return {};
+        return jsonDecode(response.body);
       }
     } catch (e) {
       debugPrint('❌ POST Error: $e');

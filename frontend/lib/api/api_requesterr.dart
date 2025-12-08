@@ -15,10 +15,6 @@ class ApiRequester {
       debugPrint('✅ Response [${response.statusCode}]: ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        if (response.body.isEmpty) {
-          return {};
-        }
-
         return jsonDecode(response.body);
       } else {
         debugPrint('❌ Error Response [${response.statusCode}]: ${response.body}');
@@ -26,7 +22,7 @@ class ApiRequester {
       }
     } catch (e) {
       debugPrint('❌ POST Error: $e');
-      return {};
+      throw Exception('Failed to make POST request: $e');
     }
   }
 }

@@ -1,4 +1,5 @@
 const scheduleRepository = require('../repositories/schedule');
+const { apiRes } = require('../utils/response');
 
 const fetchSchedule = async (req, res) => {
 
@@ -6,10 +7,7 @@ const fetchSchedule = async (req, res) => {
         const { gid } = req.query;
 
         if (!gid) {
-            return res.status(400).json({
-                error: 'Missing required query parameter: gid',
-                required: ['gid']
-            });
+            return apiRes(res, 400, 'Missing required query parameter: gid', null);
         }
 
         // ============ DATABASE QUERY ============

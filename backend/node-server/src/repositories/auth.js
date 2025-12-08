@@ -62,6 +62,43 @@ const upsertUser = async (gid, uid, properties = {}) => {
     return transformRowToUser(result.rows[0]);
 };
 
+const getUserByEmail = async (email) => {
+    var sql = `SELECT ${SCHEMA}.uuid_generate_v5(${SCHEMA}.uuid_ns_url(), $1) AS uid`;
+    const userUid = await query(sql, [email.toLowerCase()]).then(res => res.rows[0]);
+
+    sql = `SELECT gid, uid, properties, created_at, updated_at
+    FROM ${FULL_TABLE} WHERE gid = $1 AND uid = $1`;
+
+    const result = await query(sql, [userUid.uid]);
+    return result.rows.length > 0 ? transformRowToUser(result.rows[0]) : null;
+
+};
+
+const getUsers = async (uid) => {
+
+    if (uid != null) {
+        // Get specific user by uid
+        const sql = `
+        SELECT gid, uid, properties, created_at, updated_at
+        FROM ${FULL_TABLE}
+        WHERE uid = $1
+    `;
+        const result = await query(sql, [uid]);
+        return result.rows.length > 0 ? transformRowToUser(result.rows[0]) : null;
+    } else {
+        // Get all users
+        const sql = `
+        SELECT gid, uid, properties, created_at, updated_at
+        FROM ${FULL_TABLE}
+        ORDER BY created_at ASC
+    `;
+        const result = await query(sql);
+        return result.rows.map(transformRowToUser);
+    }
+}
+
 module.exports = {
     upsertUser,
+    getUsers,
+    getUserByEmail,
 };

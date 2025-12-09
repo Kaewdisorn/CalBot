@@ -4,10 +4,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:halulu/api/api_requesterr.dart';
 import 'package:http/http.dart' as http;
 
-import '../../core/api/api_config.dart';
+import '../../api/api_config.dart';
+import '../../api/api_requester.dart';
 
 class AuthController extends GetxController {
   final box = GetStorage();
@@ -127,9 +127,9 @@ class AuthController extends GetxController {
     final Map<String, dynamic> responseData;
 
     try {
-      responseData = await _apiRequester.post(endpoint: ApiConfig.authLogin, body: {'email': email, 'password': password});
+      responseData = await _apiRequester.post(endpoint: '', body: {'email': email, 'password': password});
     } catch (e) {
-      _handleAuthError(e, 'Login');
+      //_handleAuthError(e, 'Login');
       return;
     }
 
@@ -192,13 +192,24 @@ class AuthController extends GetxController {
     try {
       responseData = await _apiRequester.post(endpoint: ApiConfig.authRegister, body: {'email': email, 'password': password});
     } catch (e) {
-      _handleAuthError(e, 'Registration');
+      final Map<String, String> errorInfo = _apiRequester.handleApiError(e, 'Registration');
+      final String title = errorInfo['title'] ?? 'Error';
+      final String message = errorInfo['message'] ?? 'An unknown error occurred';
+
+      Get.defaultDialog(
+        title: title,
+        middleText: message,
+        textConfirm: 'OK',
+        confirmTextColor: Colors.white,
+        onConfirm: () {
+          if (Get.isDialogOpen!) Get.back();
+        },
+      );
+
       return;
     }
 
-    print(responseData);
-    final int statusCode = responseData['status'];
-    final String message = responseData['message'] ?? '';
+    final int statusCode = responseData['status'] ?? 0;
     final Map<String, dynamic>? userData = responseData['data'] as Map<String, dynamic>?;
 
     if (statusCode == 201 && userData != null) {
@@ -213,10 +224,8 @@ class AuthController extends GetxController {
 
         _saveUserSession(userEmail, token, uid, gid);
 
-        // Close auth dialog
         Get.until((route) => !Get.isDialogOpen!);
 
-        // Show success message
         Get.snackbar(
           'Success',
           'Account created successfully!',
@@ -228,7 +237,7 @@ class AuthController extends GetxController {
       } else {
         Get.defaultDialog(
           title: 'Error',
-          middleText: 'Invalid response format',
+          middleText: 'Cannot read user data',
           textConfirm: 'OK',
           confirmTextColor: Colors.white,
           onConfirm: () {
@@ -239,8 +248,8 @@ class AuthController extends GetxController {
     } else {
       Get.defaultDialog(
         title: 'Error',
-        middleText: message.isNotEmpty ? message : 'Registration failed',
-        textConfirm: 'OK',
+        middleText: 'Registration failed',
+        textConfirm: 'try again',
         confirmTextColor: Colors.white,
         onConfirm: () {
           if (Get.isDialogOpen!) Get.back();
@@ -271,41 +280,6 @@ class AuthController extends GetxController {
     debugPrint('✅ User session saved: uid=$uid, gid=$gid, email=$email');
   }
 
-  /// Centralized error handler for auth operations
-  void _handleAuthError(dynamic error, String operation) {
-    String title;
-    String message;
-
-    if (error is TimeoutException) {
-      title = 'Connection Timeout';
-      message = 'Server is not responding. Please check your internet connection and try again.';
-    } else if (error is SocketException) {
-      title = 'No Internet Connection';
-      message = 'Please check your internet connection and try again.';
-    } else if (error is http.ClientException) {
-      title = 'Connection Failed';
-      message = 'Unable to connect to the server. Please try again.';
-    } else if (error is HttpException) {
-      title = 'Server Error';
-      message = 'The server is currently unavailable. Please try again later.';
-    } else {
-      title = '$operation Failed';
-      message = 'An unexpected error occurred. Please try again.\n\nError: ${error.toString()}';
-    }
-
-    Get.defaultDialog(
-      title: title,
-      middleText: message,
-      textConfirm: 'OK',
-      confirmTextColor: Colors.white,
-      onConfirm: () {
-        if (Get.isDialogOpen!) Get.back();
-      },
-    );
-
-    debugPrint('❌ $operation error: $error');
-  }
-
   void useAsGuest() {
     box.write('isGuest', true);
     box.remove('userName');
@@ -327,7 +301,4 @@ class AuthController extends GetxController {
     box.remove('userGid');
     box.remove('isGuest');
   }
-
-  /// Get auth headers for authenticated API calls
-  Map<String, String> get authHeaders => ApiConfig.authHeaders(userToken.value);
 }

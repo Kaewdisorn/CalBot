@@ -21,8 +21,7 @@ class ApiRequester {
       // Try to parse response body
       final Map<String, dynamic> responseData = jsonDecode(response.body);
 
-      // Add status code to response data for easier handling
-      return {'status': response.statusCode, ...responseData};
+      return responseData;
     } on TimeoutException catch (e) {
       // Re-throw TimeoutException to preserve error type
       debugPrint('❌ POST Timeout: $e');
@@ -83,5 +82,29 @@ class ApiRequester {
       debugPrint('❌ GET Error: $e');
       rethrow;
     }
+  }
+
+  Map<String, String> handleApiError(dynamic error, String operation) {
+    String title;
+    String message;
+
+    if (error is TimeoutException) {
+      title = 'Connection Timeout';
+      message = 'Server is not responding. Please check your internet connection and try again.';
+    } else if (error is SocketException) {
+      title = 'No Internet Connection';
+      message = 'Please check your internet connection and try again.';
+    } else if (error is http.ClientException) {
+      title = 'Connection Failed';
+      message = 'Unable to connect to the server. Please try again.';
+    } else if (error is HttpException) {
+      title = 'Server Error';
+      message = 'The server is currently unavailable. Please try again later.';
+    } else {
+      title = '$operation Failed';
+      message = 'An unexpected error occurred. Please try again.\n\nError: ${error.toString()}';
+    }
+
+    return {'title': title, 'message': message};
   }
 }

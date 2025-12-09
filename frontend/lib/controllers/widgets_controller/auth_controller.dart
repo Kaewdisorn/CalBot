@@ -57,9 +57,24 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> handleLogin() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
+  Future<void> handleLogin({required bool guestLogin}) async {
+    final String email;
+    final String password;
+
+    if (guestLogin) {
+      email = '';
+      password = '';
+
+      box.write('isGuest', true);
+      box.remove('userName');
+      isGuest.value = true;
+      isLoggedIn.value = false;
+
+      return;
+    } else {
+      email = emailController.text.trim();
+      password = passwordController.text.trim();
+    }
 
     if (email.isEmpty || password.isEmpty) {
       Get.defaultDialog(
@@ -108,11 +123,6 @@ class AuthController extends GetxController {
     } finally {
       isLoading.value = false;
     }
-  }
-
-  void handleGuest() {
-    useAsGuest();
-    // Dialog overlay will hide via controller state; no Navigator.pop here.
   }
 
   void toggleAuthMode() {
@@ -276,13 +286,6 @@ class AuthController extends GetxController {
     passwordController.clear();
 
     debugPrint('✅ User session saved: uid=$uid, gid=$gid, email=$email');
-  }
-
-  void useAsGuest() {
-    box.write('isGuest', true);
-    box.remove('userName');
-    isGuest.value = true;
-    isLoggedIn.value = false;
   }
 
   void logout() {

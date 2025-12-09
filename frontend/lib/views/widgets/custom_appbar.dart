@@ -5,8 +5,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String titleText;
   final String logoAsset;
   final Color? appbarColor;
+  final String? welcomeUsername;
 
-  const CustomAppBar({super.key, required this.toolbarHeight, required this.titleText, required this.logoAsset, this.appbarColor});
+  const CustomAppBar({super.key, required this.toolbarHeight, required this.titleText, required this.logoAsset, this.appbarColor, this.welcomeUsername});
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +29,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
 
           const Spacer(),
+
+          // Welcome message next to hamburger button
+          if (welcomeUsername != null && welcomeUsername!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Text('Welcome, $welcomeUsername', style: const TextStyle(color: Colors.black87, fontSize: 14)),
+            ),
         ],
       ),
     );

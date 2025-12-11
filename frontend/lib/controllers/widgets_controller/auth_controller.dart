@@ -6,6 +6,7 @@ import 'package:get_storage/get_storage.dart';
 
 import '../../api/api_config.dart';
 import '../../api/api_requester.dart';
+import '../../models/user_model.dart';
 
 class AuthController extends GetxController {
   final box = GetStorage();
@@ -223,25 +224,35 @@ class AuthController extends GetxController {
     if (statusCode == 201 && userData != null) {
       // Extract token and user data
       final token = userData['token'] as String? ?? '';
-      final user = userData['user'] as Map<String, dynamic>?;
+      final userJson = userData['user'] as Map<String, dynamic>?;
 
-      if (user != null) {
-        final userEmail = user['email'] as String? ?? email;
-        final uid = user['uid'] as String? ?? '';
-        final gid = user['gid'] as String? ?? '';
+      if (userJson != null) {
+        try {
+          final User user = User.fromJson(userJson);
 
-        _saveUserSession(userEmail, token, uid, gid);
+          _saveUserSession(user.email, token, user.uid, user.gid);
 
-        Get.until((route) => !Get.isDialogOpen!);
+          Get.until((route) => !Get.isDialogOpen!);
 
-        Get.snackbar(
-          'Success',
-          'Account created successfully!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.shade600,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-        );
+          Get.snackbar(
+            'Success',
+            'Account created successfully!',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green.shade600,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 2),
+          );
+        } catch (e) {
+          Get.defaultDialog(
+            title: 'Error',
+            middleText: 'Failed to parse user data: $e',
+            textConfirm: 'OK',
+            confirmTextColor: Colors.white,
+            onConfirm: () {
+              if (Get.isDialogOpen!) Get.back();
+            },
+          );
+        }
       } else {
         Get.defaultDialog(
           title: 'Error',

@@ -1,4 +1,5 @@
 const { query } = require('../config/database');
+const User = require('../models/User');
 
 const SCHEMA = 'v1';
 const TABLE = 'users';
@@ -9,23 +10,14 @@ const FULL_TABLE = `${SCHEMA}.${TABLE}`;
 // =============================================================================
 
 /**
- * Transform database row to API response format
- * Extracts properties from JSONB and flattens the structure
+ * Transform database row to User model instance
+ * Extracts properties from JSONB and creates User instance
  * 
  * @param {Object} row - Database row with gid, uid, properties, timestamps
- * @returns {Object} - Flattened user object for API response
+ * @returns {User|null} - User model instance or null
  */
 const transformRowToUser = (row) => {
-    if (!row) return null;
-    const { gid, uid, properties, created_at, updated_at } = row;
-
-    return {
-        gid,
-        uid,
-        ...properties,
-        createdAt: created_at,
-        updatedAt: updated_at,
-    };
+    return User.fromDatabase(row);
 };
 
 // =============================================================================

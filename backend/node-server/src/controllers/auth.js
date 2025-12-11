@@ -34,7 +34,7 @@ const register = async (req, res) => {
 
         const userData = await authRepository.upsertUser(userGid, userUid, properties);
 
-        console.log('Registered new user:', userData);
+        console.log('Registered new user:', userData.email);
 
         // Generate JWT token
         const jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -45,17 +45,10 @@ const register = async (req, res) => {
             { expiresIn: expiresInSeconds }
         );
 
-        // Return user data without password
-        const { password: _, ...userWithoutPassword } = userData;
+        // Return user data without password using User model
         return apiRes(res, 201, 'User registered successfully', {
             token,
-            user: {
-                uid: userData.uid,
-                gid: userData.gid,
-                email: userData.email,
-                createdAt: userData.createdAt,
-                updatedAt: userData.updatedAt
-            }
+            user: userData.toJSON()
         });
     } catch (error) {
         console.error('Error in register:', error);
@@ -100,16 +93,10 @@ const login = async (req, res) => {
             { expiresIn: expiresInSeconds }
         );
 
-        // Return user data without password
+        // Return user data without password using User model
         return apiRes(res, 200, 'Login successful', {
             token,
-            user: {
-                uid: userData.uid,
-                gid: userData.gid,
-                email: userData.email,
-                createdAt: userData.createdAt,
-                updatedAt: userData.updatedAt
-            }
+            user: userData.toJSON()
         });
     } catch (error) {
         console.error('Error in login:', error);

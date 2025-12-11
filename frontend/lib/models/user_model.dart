@@ -1,46 +1,43 @@
 class User {
-  final String id;
-  final String name;
-  final String email;
-  final int age;
+  final String gid;
+  final String uid;
+  final String userEmail;
+  final String password;
   final DateTime createdAt;
+  final DateTime updatedAt;
 
-  User({required this.id, required this.name, required this.email, required this.age, required this.createdAt});
+  User({required this.gid, required this.uid, required this.userEmail, required this.password, required this.createdAt, required this.updatedAt});
 
-  // Factory constructor for creating a User from JSON
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      age: json['age'] as int,
+      gid: json['gid'] as String,
+      uid: json['uid'] as String,
+      userEmail: json['userEmail'] as String,
+      password: json['password'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
 
-  // Method to convert User to JSON
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'email': email, 'age': age, 'created_at': createdAt.toIso8601String()};
+    return {
+      'gid': gid,
+      'uid': uid,
+      'userEmail': userEmail,
+      'password': password,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
   }
 
-  // CopyWith method for immutable updates
-  User copyWith({String? id, String? name, String? email, int? age, DateTime? createdAt}) {
-    return User(id: id ?? this.id, name: name ?? this.name, email: email ?? this.email, age: age ?? this.age, createdAt: createdAt ?? this.createdAt);
-  }
-
-  @override
-  String toString() {
-    return 'User(id: $id, name: $name, email: $email, age: $age, createdAt: $createdAt)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is User && other.id == id && other.name == name && other.email == email && other.age == age && other.createdAt == createdAt;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(id, name, email, age, createdAt);
+  User copyWith({String? gid, String? uid, String? userEmail, String? password, DateTime? createdAt, DateTime? updatedAt}) {
+    return User(
+      gid: gid ?? this.gid,
+      uid: uid ?? this.uid,
+      userEmail: userEmail ?? this.userEmail,
+      password: password ?? this.password,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 }

@@ -42,14 +42,14 @@ class AuthController extends GetxController {
   void _checkAuthStatus() {
     final savedUserEmail = box.read('userEmail') as String?;
     final savedToken = box.read('userToken') as String?;
-    final savedUserId = box.read('userId') as String?;
+    final savedUserUid = box.read('userUid') as String?;
     final savedUserGid = box.read('userGid') as String?;
 
     if (savedUserEmail != null && savedUserEmail.isNotEmpty) {
       isLoggedIn.value = true;
       userEmail.value = savedUserEmail;
       userToken.value = savedToken ?? '';
-      userId.value = savedUserId ?? '';
+      userId.value = savedUserUid ?? '';
       userGid.value = savedUserGid ?? '';
     }
   }
@@ -252,10 +252,17 @@ class AuthController extends GetxController {
         );
       }
     } else {
+      debugPrint('❌ Signup failed [Status $statusCode]: ${responseData['message']}');
+      String errorMessage = "Registration failed";
+
+      if (statusCode == 400) {
+        errorMessage = 'Email already in use';
+      }
+
       Get.defaultDialog(
         title: 'Error',
-        middleText: 'Registration failed',
-        textConfirm: 'try again',
+        middleText: errorMessage,
+        textConfirm: 'Try again',
         confirmTextColor: Colors.white,
         onConfirm: () {
           if (Get.isDialogOpen!) Get.back();
@@ -272,7 +279,7 @@ class AuthController extends GetxController {
 
     box.write('userEmail', email);
     box.write('userToken', token);
-    box.write('userId', uid);
+    box.write('userUid', uid);
     box.write('userGid', gid);
 
     isLoggedIn.value = true;
@@ -292,8 +299,7 @@ class AuthController extends GetxController {
 
     box.remove('userEmail');
     box.remove('userToken');
-    box.remove('userId');
+    box.remove('userUid');
     box.remove('userGid');
-    box.remove('isGuest');
   }
 }

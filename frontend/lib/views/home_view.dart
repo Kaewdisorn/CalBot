@@ -27,7 +27,7 @@ class HomeView extends StatelessWidget {
           titleText: 'Halulu',
           logoAsset: 'assets/images/halulu_128x128.png',
           appbarColor: settingController.selectedColor.value,
-          welcomeUsername: authController.isLoggedIn.value ? authController.userName.value : null,
+          welcomeUsername: authController.isLoggedIn.value ? authController.userEmail.value : null,
         ),
         endDrawer: const SettingsDrawer(),
         body: Stack(

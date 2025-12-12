@@ -14,7 +14,7 @@ class AuthController extends GetxController {
   final _apiRequester = ApiRequester();
 
   final isLoggedIn = false.obs;
-  final userName = ''.obs;
+  final userEmail = ''.obs;
   final userToken = ''.obs;
   final userId = ''.obs; // User uid from backend
   final userGid = ''.obs; // User gid from backend
@@ -40,14 +40,14 @@ class AuthController extends GetxController {
   }
 
   void _checkAuthStatus() {
-    final savedUserName = box.read('userName') as String?;
+    final savedUserEmail = box.read('userEmail') as String?;
     final savedToken = box.read('userToken') as String?;
     final savedUserId = box.read('userId') as String?;
     final savedUserGid = box.read('userGid') as String?;
 
-    if (savedUserName != null && savedUserName.isNotEmpty) {
+    if (savedUserEmail != null && savedUserEmail.isNotEmpty) {
       isLoggedIn.value = true;
-      userName.value = savedUserName;
+      userEmail.value = savedUserEmail;
       userToken.value = savedToken ?? '';
       userId.value = savedUserId ?? '';
       userGid.value = savedUserGid ?? '';
@@ -190,7 +190,6 @@ class AuthController extends GetxController {
 
     try {
       responseData = await _apiRequester.post(endpoint: ApiConfig.authRegister, body: {'email': email, 'password': password});
-      print(responseData);
     } catch (e) {
       final Map<String, String> errorInfo = _apiRequester.handleApiError(e, 'Registration');
       final String title = errorInfo['title'] ?? 'Error';
@@ -210,46 +209,41 @@ class AuthController extends GetxController {
     }
 
     final int statusCode = responseData['status'] ?? 0;
-    final Map<String, dynamic>? userData = responseData['data'] as Map<String, dynamic>?;
 
-    if (statusCode == 201 && userData != null) {
-      // Extract token and user data
-      final token = userData['token'] as String? ?? '';
-      final userJson = userData['data'] as Map<String, dynamic>?;
+    if (statusCode == 201) {
+      final Map<String, dynamic>? userJson = responseData['data'] as Map<String, dynamic>?;
 
-      // TODO : use user model to parse user data
-
-      if (userJson != null) {
-        try {
-          final User user = User.fromJson(userJson);
-
-          _saveUserSession(user.email, token, user.uid, user.gid);
-
-          Get.until((route) => !Get.isDialogOpen!);
-
-          Get.snackbar(
-            'Success',
-            'Account created successfully!',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green.shade600,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 2),
-          );
-        } catch (e) {
-          Get.defaultDialog(
-            title: 'Error',
-            middleText: 'Failed to parse user data: $e',
-            textConfirm: 'OK',
-            confirmTextColor: Colors.white,
-            onConfirm: () {
-              if (Get.isDialogOpen!) Get.back();
-            },
-          );
-        }
-      } else {
+      if (userJson == null) {
         Get.defaultDialog(
           title: 'Error',
           middleText: 'Cannot read user data',
+          textConfirm: 'OK',
+          confirmTextColor: Colors.white,
+          onConfirm: () {
+            if (Get.isDialogOpen!) Get.back();
+          },
+        );
+        return;
+      }
+
+      try {
+        User userData = User.fromJson(responseData['data']);
+        _saveUserSession(userData.email, userData.token, userData.uid, userData.gid);
+
+        Get.until((route) => !Get.isDialogOpen!);
+
+        Get.snackbar(
+          'Success',
+          'Account created successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.shade600,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+      } catch (e) {
+        Get.defaultDialog(
+          title: 'Error',
+          middleText: 'Failed to parse user data: $e',
           textConfirm: 'OK',
           confirmTextColor: Colors.white,
           onConfirm: () {
@@ -271,19 +265,18 @@ class AuthController extends GetxController {
   }
 
   void _saveUserSession(String email, String token, String uid, String gid) {
-    userName.value = email;
+    userEmail.value = email;
     userToken.value = token;
     userId.value = uid;
     userGid.value = gid;
 
-    box.write('userName', email);
+    box.write('userEmail', email);
     box.write('userToken', token);
     box.write('userId', uid);
     box.write('userGid', gid);
 
     isLoggedIn.value = true;
 
-    // Clear form
     emailController.clear();
     passwordController.clear();
 
@@ -292,12 +285,12 @@ class AuthController extends GetxController {
 
   void logout() {
     isLoggedIn.value = false;
-    userName.value = '';
+    userEmail.value = '';
     userToken.value = '';
     userId.value = '';
     userGid.value = '';
 
-    box.remove('userName');
+    box.remove('userEmail');
     box.remove('userToken');
     box.remove('userId');
     box.remove('userGid');

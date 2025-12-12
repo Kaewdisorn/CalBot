@@ -8,6 +8,8 @@ import 'package:uuid/uuid.dart';
 import '../../api/api_config.dart';
 import '../../api/api_requester.dart';
 import '../../models/user_model.dart';
+import '../../views/widgets/auth_dialog.dart';
+import '../home_controller.dart';
 
 class AuthController extends GetxController {
   final box = GetStorage();
@@ -59,6 +61,10 @@ class AuthController extends GetxController {
     final String password;
 
     if (guestLogin) {
+      //TODO:
+      // Check if guest credentials already exist
+      // If not, generate new ones
+      // Create handleGuestLogin()
       final uuid = Uuid().v4().replaceAll('-', '').substring(0, 10);
       email = 'g$uuid@guest.com';
       password = 'g$uuid@guest.com';
@@ -291,15 +297,56 @@ class AuthController extends GetxController {
   }
 
   void logout() {
+    // Clear auth state
     isLoggedIn.value = false;
     userEmail.value = '';
     userToken.value = '';
     userId.value = '';
     userGid.value = '';
 
+    // Clear stored data
     box.remove('userEmail');
     box.remove('userToken');
     box.remove('userUid');
     box.remove('userGid');
+
+    // Reset dialog state for fresh login
+    emailController.clear();
+    passwordController.clear();
+    isLogin.value = true;
+    isLoading.value = false;
+    errorMessage.value = '';
+  }
+
+  /// Logout and show auth dialog (like first login)
+  void logoutAndShowAuthDialog() {
+    // Close drawer first
+    Get.back();
+
+    // Perform logout
+    logout();
+
+    // Clear schedules from HomeController
+    try {
+      final homeController = Get.find<HomeController>();
+      homeController.scheduleList.clear();
+    } catch (e) {
+      debugPrint('HomeController not found: $e');
+    }
+
+    // Show success message
+    Get.snackbar(
+      'Logged Out',
+      'You have been successfully logged out',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.orange.shade600,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 2),
+    );
+
+    // Show auth dialog after a short delay
+    Future.delayed(const Duration(milliseconds: 300), () {
+      Get.dialog(const AuthDialog(), barrierDismissible: false);
+    });
   }
 }

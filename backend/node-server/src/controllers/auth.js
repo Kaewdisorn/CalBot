@@ -3,6 +3,12 @@ const { apiRes } = require("../utils/response");
 const argon2 = require('argon2');
 const jwt = require('jsonwebtoken');
 
+/**
+ * Register a new user
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<import('express').Response>} - API response
+ */
 const register = async (req, res) => {
 
     try {
@@ -36,20 +42,17 @@ const register = async (req, res) => {
 
         console.log('Registered new user:', userData.email);
 
-        // Generate JWT token
-        const jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-        const expiresInSeconds = parseInt(process.env.JWT_EXPIRES_IN_SECONDS, 10) || 604800; // 7 days
+        const jwtSecret = process.env.JWT_SECRET;
+        const expiresInSeconds = parseInt(process.env.JWT_EXPIRES_IN_SECONDS, 10);
         const token = jwt.sign(
             { userId: userData.uid, email: userData.email },
             jwtSecret,
             { expiresIn: expiresInSeconds }
         );
 
-        // Return user data without password using User model
-        return apiRes(res, 201, 'User registered successfully', {
-            token,
-            user: userData.toJSON()
-        });
+        userData.token = token;
+
+        return apiRes(res, 201, 'User registered successfully', userData.toJSON());
     } catch (error) {
         console.error('Error in register:', error);
         return apiRes(res, 500, 'Internal server error :' + error.message, null);
@@ -93,7 +96,6 @@ const login = async (req, res) => {
             { expiresIn: expiresInSeconds }
         );
 
-        // Return user data without password using User model
         return apiRes(res, 200, 'Login successful', {
             token,
             user: userData.toJSON()

@@ -10,9 +10,6 @@ const FULL_TABLE = `${SCHEMA}.${TABLE}`;
 // =============================================================================
 
 /**
- * Transform database row to API response format
- * Extracts properties from JSONB and flattens the structure
- * 
  * @param {Object} row - Database row with gid, uid, properties, timestamps
  * @returns {Object} - Flattened schedule object for API response
  */

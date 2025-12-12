@@ -102,7 +102,20 @@ class User {
      * Convert to JSON for API response (without password)
      * @returns {Object} User data without password
      */
-    toJSON() {
+    toJSON(havePassword = false) {
+
+        if (havePassword) {
+            return {
+                uid: this.uid,
+                gid: this.gid,
+                token: this.token,
+                email: this.email,
+                password: this.password,
+                createdAt: this.createdAt,
+                updatedAt: this.updatedAt
+            };
+        }
+
         return {
             uid: this.uid,
             gid: this.gid,
@@ -113,20 +126,6 @@ class User {
         };
     }
 
-    // /**
-    //  * Convert to JSON with password (for internal use only)
-    //  * @returns {Object} Full user data including password
-    //  */
-    // toJSONWithPassword() {
-    //     return {
-    //         uid: this.uid,
-    //         gid: this.gid,
-    //         email: this.email,
-    //         password: this.password,
-    //         createdAt: this.createdAt,
-    //         updatedAt: this.updatedAt
-    //     };
-    // }
 
     // /**
     //  * Prepare data for database insertion/update

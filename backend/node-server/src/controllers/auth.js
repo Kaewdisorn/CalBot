@@ -52,7 +52,7 @@ const register = async (req, res) => {
 
         userData.token = token;
 
-        return apiRes(res, 201, 'User registered successfully', userData.toJSON());
+        return apiRes(res, 201, 'User registered successfully', userData.toJSON(false));
     } catch (error) {
         console.error('Error in register:', error);
         return apiRes(res, 500, 'Internal server error :' + error.message, null);

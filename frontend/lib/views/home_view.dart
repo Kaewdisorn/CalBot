@@ -27,7 +27,7 @@ class HomeView extends StatelessWidget {
           titleText: 'Halulu',
           logoAsset: 'assets/images/halulu_128x128.png',
           appbarColor: settingController.selectedColor.value,
-          welcomeUsername: authController.isLoggedIn.value ? authController.userName.value : (authController.isGuest.value ? 'Guesttttttttttttttt' : null),
+          welcomeUsername: authController.isLoggedIn.value ? authController.userName.value : null,
         ),
         endDrawer: const SettingsDrawer(),
         body: Stack(
@@ -198,7 +198,7 @@ class HomeView extends StatelessWidget {
 
             // Auth overlay: dim background + centered dialog
             Obx(() {
-              if (!authController.isLoggedIn.value && !authController.isGuest.value) {
+              if (!authController.isLoggedIn.value) {
                 return Stack(
                   children: [
                     const ModalBarrier(color: Colors.black54, dismissible: false),

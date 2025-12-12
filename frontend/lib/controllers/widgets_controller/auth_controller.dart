@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../api/api_config.dart';
 import '../../api/api_requester.dart';
@@ -13,7 +14,6 @@ class AuthController extends GetxController {
   final _apiRequester = ApiRequester();
 
   final isLoggedIn = false.obs;
-  final isGuest = false.obs;
   final userName = ''.obs;
   final userToken = ''.obs;
   final userId = ''.obs; // User uid from backend
@@ -40,12 +40,10 @@ class AuthController extends GetxController {
   }
 
   void _checkAuthStatus() {
-    // Check if user was previously logged in or using guest mode
     final savedUserName = box.read('userName') as String?;
     final savedToken = box.read('userToken') as String?;
     final savedUserId = box.read('userId') as String?;
     final savedUserGid = box.read('userGid') as String?;
-    final savedIsGuest = box.read('isGuest') as bool? ?? false;
 
     if (savedUserName != null && savedUserName.isNotEmpty) {
       isLoggedIn.value = true;
@@ -53,8 +51,6 @@ class AuthController extends GetxController {
       userToken.value = savedToken ?? '';
       userId.value = savedUserId ?? '';
       userGid.value = savedUserGid ?? '';
-    } else if (savedIsGuest) {
-      isGuest.value = true;
     }
   }
 
@@ -63,15 +59,9 @@ class AuthController extends GetxController {
     final String password;
 
     if (guestLogin) {
-      email = '';
-      password = '';
-
-      box.write('isGuest', true);
-      box.remove('userName');
-      isGuest.value = true;
-      isLoggedIn.value = false;
-
-      return;
+      final uuid = Uuid().v4().replaceAll('-', '').substring(0, 10);
+      email = 'g$uuid@guest.com';
+      password = 'g$uuid@guest.com';
     } else {
       email = emailController.text.trim();
       password = passwordController.text.trim();
@@ -200,6 +190,7 @@ class AuthController extends GetxController {
 
     try {
       responseData = await _apiRequester.post(endpoint: ApiConfig.authRegister, body: {'email': email, 'password': password});
+      print(responseData);
     } catch (e) {
       final Map<String, String> errorInfo = _apiRequester.handleApiError(e, 'Registration');
       final String title = errorInfo['title'] ?? 'Error';
@@ -224,7 +215,9 @@ class AuthController extends GetxController {
     if (statusCode == 201 && userData != null) {
       // Extract token and user data
       final token = userData['token'] as String? ?? '';
-      final userJson = userData['user'] as Map<String, dynamic>?;
+      final userJson = userData['data'] as Map<String, dynamic>?;
+
+      // TODO : use user model to parse user data
 
       if (userJson != null) {
         try {
@@ -287,10 +280,8 @@ class AuthController extends GetxController {
     box.write('userToken', token);
     box.write('userId', uid);
     box.write('userGid', gid);
-    box.write('isGuest', false);
 
     isLoggedIn.value = true;
-    isGuest.value = false;
 
     // Clear form
     emailController.clear();
@@ -301,7 +292,6 @@ class AuthController extends GetxController {
 
   void logout() {
     isLoggedIn.value = false;
-    isGuest.value = false;
     userName.value = '';
     userToken.value = '';
     userId.value = '';

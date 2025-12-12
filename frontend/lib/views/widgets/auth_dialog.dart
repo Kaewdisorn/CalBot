@@ -201,7 +201,13 @@ class AuthDialog extends StatelessWidget {
 
                     // Guest Button
                     OutlinedButton(
-                      onPressed: controller.isLoading.value ? null : () => controller.handleLogin(guestLogin: true),
+                      onPressed: controller.isLoading.value
+                          ? null
+                          : () {
+                              controller.isLogin.value = false;
+                              controller.handleLogin(guestLogin: true);
+                            },
+
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: Colors.grey.shade300, width: 1.5),

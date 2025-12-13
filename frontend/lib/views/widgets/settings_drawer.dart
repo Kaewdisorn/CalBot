@@ -74,7 +74,7 @@ class SettingsDrawer extends StatelessWidget {
                     Icon(Icons.logout_rounded, color: Colors.white, size: 22),
                     const SizedBox(width: 10),
                     Text(
-                      'Logout',
+                      authController.isGuest.value ? 'Switch to Member' : 'Logout',
                       style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.5),
                     ),
                   ],
@@ -103,10 +103,7 @@ class SettingsDrawer extends StatelessWidget {
             const Text('Logout'),
           ],
         ),
-        content: const Text(
-          'Are you sure you want to logout? You will need to sign in again to access your calendar.',
-          style: TextStyle(fontSize: 14, height: 1.5),
-        ),
+        content: const Text('Are you sure you want to logout?', style: TextStyle(fontSize: 14, height: 1.5)),
         actions: [
           TextButton(
             onPressed: () => Get.back(),

@@ -14,6 +14,7 @@ class AuthController extends GetxController {
   final box = GetStorage();
   final _apiRequester = ApiRequester();
 
+  final isGuest = false.obs;
   final isLoggedIn = false.obs;
   final userEmail = ''.obs;
   final userToken = ''.obs;
@@ -40,10 +41,15 @@ class AuthController extends GetxController {
   }
 
   void _checkAuthStatus() {
+    final savedGuest = box.read('isGuest') as bool?;
     final savedUserEmail = box.read('userEmail') as String?;
     final savedToken = box.read('userToken') as String?;
     final savedUserUid = box.read('userUid') as String?;
     final savedUserGid = box.read('userGid') as String?;
+
+    if (savedGuest != null && savedGuest) {
+      isGuest.value = true;
+    }
 
     if (savedUserEmail != null && savedUserEmail.isNotEmpty) {
       isLoggedIn.value = true;
@@ -57,21 +63,13 @@ class AuthController extends GetxController {
   Future<void> handleGuestLogin() async {
     isLoading.value = true;
 
-    final savedGuest = box.read('isGuest') as bool?;
-
-    if (savedGuest != null && savedGuest) {
-      isLoggedIn.value = true;
-      return;
-    }
-
-    // Generate guest credentials
     final uuid = Uuid().v4().replaceAll('-', '').substring(0, 10);
     final String email = uuid.toLowerCase();
     final String password = 'pwd_$email';
 
     try {
+      isGuest.value = true;
       await signup(email, password);
-      box.write('isGuest', true);
     } finally {
       isLoading.value = false;
     }
@@ -291,6 +289,12 @@ class AuthController extends GetxController {
     userUid.value = uid;
     userGid.value = gid;
 
+    if (isGuest.value) {
+      box.write('isGuest', true);
+    } else {
+      box.remove('isGuest');
+    }
+
     box.write('userEmail', email);
     box.write('userToken', token);
     box.write('userUid', uid);
@@ -306,6 +310,7 @@ class AuthController extends GetxController {
 
   void logout() {
     isLoggedIn.value = false;
+    isGuest.value = false;
 
     userEmail.value = '';
     userToken.value = '';

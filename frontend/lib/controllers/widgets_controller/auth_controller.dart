@@ -8,7 +8,6 @@ import 'package:uuid/uuid.dart';
 import '../../api/api_config.dart';
 import '../../api/api_requester.dart';
 import '../../models/user_model.dart';
-import '../../views/widgets/auth_dialog.dart';
 import '../home_controller.dart';
 
 class AuthController extends GetxController {
@@ -353,8 +352,8 @@ class AuthController extends GetxController {
     );
 
     // Show auth dialog after a short delay
-    Future.delayed(const Duration(milliseconds: 300), () {
-      Get.dialog(const AuthDialog(), barrierDismissible: false);
-    });
+    // Future.delayed(const Duration(milliseconds: 300), () {
+    //   Get.dialog(const AuthDialog(), barrierDismissible: false);
+    // });
   }
 }

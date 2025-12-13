@@ -15,15 +15,13 @@ class AuthController extends GetxController {
   final box = GetStorage();
   final _apiRequester = ApiRequester();
 
-  var _isGuest = false;
   final isLoggedIn = false.obs;
   final userEmail = ''.obs;
   final userToken = ''.obs;
-  final userId = ''.obs; // User uid from backend
-  final userGid = ''.obs; // User gid from backend
+  final userUid = ''.obs;
+  final userGid = ''.obs;
   final errorMessage = ''.obs;
 
-  // Dialog-specific state
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final isLogin = true.obs;
@@ -52,30 +50,37 @@ class AuthController extends GetxController {
       isLoggedIn.value = true;
       userEmail.value = savedUserEmail;
       userToken.value = savedToken ?? '';
-      userId.value = savedUserUid ?? '';
+      userUid.value = savedUserUid ?? '';
       userGid.value = savedUserGid ?? '';
     }
   }
 
-  Future<void> handleLogin({required bool guestLogin}) async {
-    final String email;
-    final String password;
-    _isGuest = guestLogin;
+  Future<void> handleGuestLogin() async {
+    isLoading.value = true;
 
-    final isGuest = box.read('isGuest') as bool?;
-    if (isGuest != null && isGuest) {
+    final savedGuest = box.read('isGuest') as bool?;
+
+    if (savedGuest != null && savedGuest) {
       isLoggedIn.value = true;
       return;
     }
 
-    if (_isGuest) {
-      final uuid = Uuid().v4().replaceAll('-', '').substring(0, 10);
-      email = 'g$uuid@guest.com';
-      password = 'g$uuid@guest.com';
-    } else {
-      email = emailController.text.trim();
-      password = passwordController.text.trim();
+    // Generate guest credentials
+    final uuid = Uuid().v4().replaceAll('-', '').substring(0, 10);
+    final String email = uuid.toLowerCase();
+    final String password = 'pwd_$email';
+
+    try {
+      await signup(email, password);
+      box.write('isGuest', true);
+    } finally {
+      isLoading.value = false;
     }
+  }
+
+  Future<void> handleLogin() async {
+    final String email = emailController.text.trim();
+    final String password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       Get.defaultDialog(
@@ -119,7 +124,7 @@ class AuthController extends GetxController {
       if (isLogin.value) {
         await login(email, password);
       } else {
-        await signup(email, password, _isGuest);
+        await signup(email, password);
       }
     } finally {
       isLoading.value = false;
@@ -155,7 +160,7 @@ class AuthController extends GetxController {
         final uid = user['uid'] as String? ?? '';
         final gid = user['gid'] as String? ?? '';
 
-        _saveUserSession(userEmail, token, uid, gid, false);
+        _saveUserSession(userEmail, token, uid, gid);
 
         // Close any open dialogs first, then close auth dialog
         Get.until((route) => !Get.isDialogOpen!);
@@ -195,7 +200,7 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> signup(String email, String password, bool isGuest) async {
+  Future<void> signup(String email, String password) async {
     final Map<String, dynamic> responseData;
 
     try {
@@ -238,7 +243,7 @@ class AuthController extends GetxController {
 
       try {
         User userData = User.fromJson(responseData['data']);
-        _saveUserSession(userData.email, userData.token, userData.uid, userData.gid, isGuest);
+        _saveUserSession(userData.email, userData.token, userData.uid, userData.gid);
 
         Get.until((route) => !Get.isDialogOpen!);
 
@@ -281,25 +286,16 @@ class AuthController extends GetxController {
     }
   }
 
-  void _saveUserSession(String email, String token, String uid, String gid, bool isGuest) {
+  void _saveUserSession(String email, String token, String uid, String gid) {
     userEmail.value = email;
     userToken.value = token;
-    userId.value = uid;
+    userUid.value = uid;
     userGid.value = gid;
 
-    if (isGuest) {
-      box.write('isGuest', isGuest);
-      box.write('userEmail', email);
-      box.write('userToken', token);
-      box.write('userUid', uid);
-      box.write('userGid', gid);
-    } else {
-      box.write('isGuest', isGuest);
-      box.write('userEmail', email);
-      box.write('userToken', token);
-      box.write('userUid', uid);
-      box.write('userGid', gid);
-    }
+    box.write('userEmail', email);
+    box.write('userToken', token);
+    box.write('userUid', uid);
+    box.write('userGid', gid);
 
     isLoggedIn.value = true;
 
@@ -312,18 +308,16 @@ class AuthController extends GetxController {
   void logout() {
     isLoggedIn.value = false;
 
-    if (!_isGuest) {
-      userEmail.value = '';
-      userToken.value = '';
-      userId.value = '';
-      userGid.value = '';
+    userEmail.value = '';
+    userToken.value = '';
+    userUid.value = '';
+    userGid.value = '';
 
-      box.remove('isGuest');
-      box.remove('userEmail');
-      box.remove('userToken');
-      box.remove('userUid');
-      box.remove('userGid');
-    }
+    box.remove('isGuest');
+    box.remove('userEmail');
+    box.remove('userToken');
+    box.remove('userUid');
+    box.remove('userGid');
 
     emailController.clear();
     passwordController.clear();

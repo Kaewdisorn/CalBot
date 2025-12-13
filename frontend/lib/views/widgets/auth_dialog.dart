@@ -130,7 +130,7 @@ class AuthDialog extends StatelessWidget {
                         ],
                       ),
                       child: ElevatedButton(
-                        onPressed: controller.isLoading.value ? null : () => controller.handleLogin(guestLogin: false),
+                        onPressed: controller.isLoading.value ? null : () => controller.handleLogin(),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
@@ -201,12 +201,7 @@ class AuthDialog extends StatelessWidget {
 
                     // Guest Button
                     OutlinedButton(
-                      onPressed: controller.isLoading.value
-                          ? null
-                          : () {
-                              controller.isLogin.value = false;
-                              controller.handleLogin(guestLogin: true);
-                            },
+                      onPressed: controller.isLoading.value ? null : () => controller.handleGuestLogin(),
 
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),

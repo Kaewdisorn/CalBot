@@ -20,7 +20,7 @@ class HomeController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
 
   // Current user ID from auth controller
-  String? get userUid => _authController.userId.value.isNotEmpty ? _authController.userId.value : null;
+  String? get userUid => _authController.userUid.value.isNotEmpty ? _authController.userUid.value : null;
   String? get userGid => _authController.userGid.value.isNotEmpty ? _authController.userGid.value : null;
 
   // Loading and error states

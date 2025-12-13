@@ -15,6 +15,7 @@ class AuthController extends GetxController {
   final box = GetStorage();
   final _apiRequester = ApiRequester();
 
+  var _isGuest = false;
   final isLoggedIn = false.obs;
   final userEmail = ''.obs;
   final userToken = ''.obs;
@@ -59,12 +60,15 @@ class AuthController extends GetxController {
   Future<void> handleLogin({required bool guestLogin}) async {
     final String email;
     final String password;
+    _isGuest = guestLogin;
 
-    if (guestLogin) {
-      //TODO:
-      // Check if guest credentials already exist
-      // If not, generate new ones
-      // Create handleGuestLogin()
+    final isGuest = box.read('isGuest') as bool?;
+    if (isGuest != null && isGuest) {
+      isLoggedIn.value = true;
+      return;
+    }
+
+    if (_isGuest) {
       final uuid = Uuid().v4().replaceAll('-', '').substring(0, 10);
       email = 'g$uuid@guest.com';
       password = 'g$uuid@guest.com';
@@ -115,7 +119,7 @@ class AuthController extends GetxController {
       if (isLogin.value) {
         await login(email, password);
       } else {
-        await signup(email, password);
+        await signup(email, password, _isGuest);
       }
     } finally {
       isLoading.value = false;
@@ -151,7 +155,7 @@ class AuthController extends GetxController {
         final uid = user['uid'] as String? ?? '';
         final gid = user['gid'] as String? ?? '';
 
-        _saveUserSession(userEmail, token, uid, gid);
+        _saveUserSession(userEmail, token, uid, gid, false);
 
         // Close any open dialogs first, then close auth dialog
         Get.until((route) => !Get.isDialogOpen!);
@@ -191,7 +195,7 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> signup(String email, String password) async {
+  Future<void> signup(String email, String password, bool isGuest) async {
     final Map<String, dynamic> responseData;
 
     try {
@@ -234,7 +238,7 @@ class AuthController extends GetxController {
 
       try {
         User userData = User.fromJson(responseData['data']);
-        _saveUserSession(userData.email, userData.token, userData.uid, userData.gid);
+        _saveUserSession(userData.email, userData.token, userData.uid, userData.gid, isGuest);
 
         Get.until((route) => !Get.isDialogOpen!);
 
@@ -277,16 +281,25 @@ class AuthController extends GetxController {
     }
   }
 
-  void _saveUserSession(String email, String token, String uid, String gid) {
+  void _saveUserSession(String email, String token, String uid, String gid, bool isGuest) {
     userEmail.value = email;
     userToken.value = token;
     userId.value = uid;
     userGid.value = gid;
 
-    box.write('userEmail', email);
-    box.write('userToken', token);
-    box.write('userUid', uid);
-    box.write('userGid', gid);
+    if (isGuest) {
+      box.write('isGuest', isGuest);
+      box.write('userEmail', email);
+      box.write('userToken', token);
+      box.write('userUid', uid);
+      box.write('userGid', gid);
+    } else {
+      box.write('isGuest', isGuest);
+      box.write('userEmail', email);
+      box.write('userToken', token);
+      box.write('userUid', uid);
+      box.write('userGid', gid);
+    }
 
     isLoggedIn.value = true;
 
@@ -297,20 +310,21 @@ class AuthController extends GetxController {
   }
 
   void logout() {
-    // Clear auth state
     isLoggedIn.value = false;
-    userEmail.value = '';
-    userToken.value = '';
-    userId.value = '';
-    userGid.value = '';
 
-    // Clear stored data
-    box.remove('userEmail');
-    box.remove('userToken');
-    box.remove('userUid');
-    box.remove('userGid');
+    if (!_isGuest) {
+      userEmail.value = '';
+      userToken.value = '';
+      userId.value = '';
+      userGid.value = '';
 
-    // Reset dialog state for fresh login
+      box.remove('isGuest');
+      box.remove('userEmail');
+      box.remove('userToken');
+      box.remove('userUid');
+      box.remove('userGid');
+    }
+
     emailController.clear();
     passwordController.clear();
     isLogin.value = true;

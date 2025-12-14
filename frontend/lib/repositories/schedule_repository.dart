@@ -45,17 +45,16 @@ class ScheduleRepository {
   }
 
   // ============ CREATE SCHEDULE ============
-  /// Create a new schedule
-  Future<ApiResponse<ScheduleModel>> createSchedule(ScheduleModel schedule) async {
-    return await _apiClient.post<ScheduleModel>(
-      ApiConfig.schedules,
-      body: schedule.toJson(),
-      parser: (json) {
-        final Map<String, dynamic> data = json is Map<String, dynamic> ? (json['data'] as Map<String, dynamic>? ?? json) : json;
-        return ScheduleModel.fromJson(data);
-      },
-    );
-  }
+  // Future<ApiResponse<ScheduleModel>> createSchedule(ScheduleModel schedule) async {
+  //   return await _apiClient.post<ScheduleModel>(
+  //     ApiConfig.schedules,
+  //     body: schedule.toJson(),
+  //     parser: (json) {
+  //       final Map<String, dynamic> data = json is Map<String, dynamic> ? (json['data'] as Map<String, dynamic>? ?? json) : json;
+  //       return ScheduleModel.fromJson(data);
+  //     },
+  //   );
+  // }
 
   // ============ UPDATE SCHEDULE ============
   /// Update an existing schedule

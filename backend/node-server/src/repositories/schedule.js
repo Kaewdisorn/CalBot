@@ -51,7 +51,6 @@ const transformRowsToSchedules = (rows) => {
 
 const getSchedules = async (gid, uid) => {
 
-
     if (gid != null && uid != null) {
         // Get specific schedule by uid and gid
         const sql = `
@@ -74,6 +73,10 @@ const getSchedules = async (gid, uid) => {
         return transformRowsToSchedules(result.rows);
     }
 };
+
+const upsertSchedules = async (schedule) => {
+    console.log('Upserting schedule:', schedule);
+}
 
 
 /**
@@ -195,6 +198,7 @@ const countByGid = async (gid) => {
 // =============================================================================
 module.exports = {
     getSchedules,
+    upsertSchedules,
     create,
     update,
     remove,

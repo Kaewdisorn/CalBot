@@ -57,7 +57,7 @@ const upsertSchedule = async (req, res) => {
             });
         }
 
-        const newSchedule = {
+        const schedule = {
             gid,
             uid,
             title,
@@ -73,7 +73,10 @@ const upsertSchedule = async (req, res) => {
             doneOccurrences: doneOccurrences || [],
         };
 
-        console.log('POST /api/schedules - Created:', newSchedule.uid, newSchedule.title, 'for user:', newSchedule.gid);
+        // ============ DATABASE QUERY ============
+        await scheduleRepository.upsertSchedules(schedule);
+
+        console.log('POST /api/schedules - Created:', schedule.uid, schedule.title, 'for user:', schedule.gid);
         return apiRes(res, 201, 'Schedule created successfully', null);
 
     } catch (error) {

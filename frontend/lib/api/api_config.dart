@@ -14,5 +14,5 @@ class ApiConfig {
 
   static const String authRegister = '/api/auth/register';
 
-  static const String scheduleUrl = '/api/schedule/';
+  static const String scheduleUrl = '/api/schedules';
 }

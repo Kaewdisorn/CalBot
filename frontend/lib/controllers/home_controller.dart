@@ -70,9 +70,7 @@ class HomeController extends GetxController {
   // ============ CREATE SCHEDULE ============
   Future<bool> createSchedule(ScheduleModel schedule) async {
     isLoading.value = true;
-    print('🔑 Creating schedule for user: $userGid');
-    print('🔑 Schedule data: ${schedule.toJson()}');
-    await _apiRequester.post(endpoint: ApiConfig.scheduleUrl, body: {});
+    await _apiRequester.post(endpoint: ApiConfig.scheduleUrl, body: schedule.toJson());
 
     // final response = await _repository.createSchedule(schedule);
 

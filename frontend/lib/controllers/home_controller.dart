@@ -2,30 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
+import '../api/api_config.dart';
+import '../api/api_requester.dart';
 import '../models/schedule_model.dart';
 import '../repositories/schedule_repository.dart';
 import 'widgets_controller/auth_controller.dart';
 
 class HomeController extends GetxController {
+  final _apiRequester = ApiRequester();
   final List<CalendarView> allowedViews = <CalendarView>[CalendarView.month, CalendarView.schedule];
-
-  // Repository for API calls
   final ScheduleRepository _repository = ScheduleRepository();
-
-  // Observable schedule list — populated from API
   final RxList<ScheduleModel> scheduleList = <ScheduleModel>[].obs;
   final RxBool isAgendaView = false.obs;
+  final RxBool isLoading = false.obs;
+  final RxnString errorMessage = RxnString(null);
 
-  // Get AuthController to access logged-in user data
   final AuthController _authController = Get.find<AuthController>();
 
   // Current user ID from auth controller
   String? get userUid => _authController.userUid.value.isNotEmpty ? _authController.userUid.value : null;
   String? get userGid => _authController.userGid.value.isNotEmpty ? _authController.userGid.value : null;
-
-  // Loading and error states
-  final RxBool isLoading = false.obs;
-  final RxnString errorMessage = RxnString(null);
 
   @override
   void onInit() {
@@ -40,7 +36,6 @@ class HomeController extends GetxController {
   }
 
   // ============ FETCH ALL SCHEDULES ============
-  /// Fetch schedules for current user
   Future<void> fetchSchedules() async {
     isLoading.value = true;
     errorMessage.value = null;
@@ -73,30 +68,32 @@ class HomeController extends GetxController {
   }
 
   // ============ CREATE SCHEDULE ============
-  /// Add new schedule via API
   Future<bool> createSchedule(ScheduleModel schedule) async {
     isLoading.value = true;
+    print('🔑 Creating schedule for user: $userGid');
+    print('🔑 Schedule data: ${schedule.toJson()}');
+    await _apiRequester.post(endpoint: ApiConfig.scheduleUrl, body: {});
 
-    final response = await _repository.createSchedule(schedule);
+    // final response = await _repository.createSchedule(schedule);
 
     bool success = false;
-    response.when(
-      success: (data) {
-        scheduleList.add(data);
-        debugPrint('✅ Created schedule: ${data.title}');
-        success = true;
-      },
-      failure: (error) {
-        debugPrint('❌ Failed to create schedule: $error');
-        Get.snackbar(
-          'Error',
-          'Failed to create schedule: $error',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-      },
-    );
+    // response.when(
+    //   success: (data) {
+    //     scheduleList.add(data);
+    //     debugPrint('✅ Created schedule: ${data.title}');
+    //     success = true;
+    //   },
+    //   failure: (error) {
+    //     debugPrint('❌ Failed to create schedule: $error');
+    //     Get.snackbar(
+    //       'Error',
+    //       'Failed to create schedule: $error',
+    //       snackPosition: SnackPosition.BOTTOM,
+    //       backgroundColor: Colors.redAccent,
+    //       colorText: Colors.white,
+    //     );
+    //   },
+    // );
 
     isLoading.value = false;
     return success;

@@ -28,18 +28,15 @@ class ScheduleFormDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Create and initialize controller
     final controller = Get.put(ScheduleFormController());
     controller.initialize(schedule: existingSchedule, initialDate: initialDate, tappedOccurrenceDate: tappedOccurrenceDate);
 
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    // Responsive sizing
     final bool isMobile = screenWidth < 600;
     final bool isTablet = screenWidth >= 600 && screenWidth < 1024;
 
-    // Dialog width based on screen size
     double dialogWidth;
     if (isMobile) {
       dialogWidth = screenWidth * 0.95;

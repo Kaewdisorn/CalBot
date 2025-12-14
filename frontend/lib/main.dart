@@ -9,10 +9,8 @@ import 'views/home_view.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await GetStorage.init();
 
-  // Read saved color seed (fallback to blue)
   final box = GetStorage();
   final savedColorSeed = box.read('colorSeed') as int? ?? Colors.blue.toARGB32();
 

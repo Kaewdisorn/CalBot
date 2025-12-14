@@ -47,17 +47,11 @@ class HomeView extends StatelessWidget {
                   appointmentDisplayMode: homeController.isAgendaView.value ? MonthAppointmentDisplayMode.indicator : MonthAppointmentDisplayMode.appointment,
                   showAgenda: homeController.isAgendaView.value,
                 ),
-                // Custom appointment builder to show strikethrough for done items
                 appointmentBuilder: (context, calendarAppointmentDetails) {
                   final Appointment appointment = calendarAppointmentDetails.appointments.first as Appointment;
                   final noteData = ScheduleModel.parseNoteData(appointment.notes);
-
-                  // For recurring events, check if this specific occurrence is done
-                  // For non-recurring events, check the isDone flag
                   final bool isRecurring = appointment.recurrenceRule != null && appointment.recurrenceRule!.isNotEmpty;
                   final bool isDone = isRecurring ? noteData.isOccurrenceDone(appointment.startTime) : noteData.isDone;
-
-                  // Apply gray color for done occurrences
                   final Color displayColor = isDone ? Colors.grey : appointment.color;
 
                   return Container(
@@ -79,27 +73,21 @@ class HomeView extends StatelessWidget {
                   );
                 },
                 onTap: (CalendarTapDetails details) async {
-                  // appointment tapped
                   final appts = details.appointments;
 
-                  // Existing schedule tapped -> open edit popup
                   if (details.targetElement == CalendarElement.appointment && appts != null && appts.isNotEmpty) {
                     final Appointment tappedAppointment = appts[0] as Appointment;
-
-                    // Find the matching ScheduleModel
                     final existingSchedule = homeController.scheduleList.firstWhereOrNull((s) => s.uid == tappedAppointment.id);
 
                     if (existingSchedule != null) {
-                      // For recurring events, pass the tapped occurrence date
                       final DateTime? tappedOccurrenceDate = existingSchedule.isRecurring ? tappedAppointment.startTime : null;
 
                       showDialog(
                         context: context,
                         builder: (context) => ScheduleFormDialog(
                           existingSchedule: existingSchedule,
-                          tappedOccurrenceDate: tappedOccurrenceDate, // Pass the occurrence date
+                          tappedOccurrenceDate: tappedOccurrenceDate,
                           onSave: (updatedSchedule) async {
-                            // Call API to update schedule
                             final success = await homeController.updateSchedule(updatedSchedule);
                             if (success) {
                               Get.snackbar(
@@ -113,7 +101,6 @@ class HomeView extends StatelessWidget {
                             }
                           },
                           onDelete: () async {
-                            // Call API to delete the entire schedule series
                             final success = await homeController.deleteSchedule(existingSchedule.uid);
                             if (success) {
                               Get.snackbar(

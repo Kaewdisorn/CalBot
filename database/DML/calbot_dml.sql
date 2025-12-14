@@ -19,6 +19,15 @@ RETURNING
     created_at,
     updated_at;
 
+-- Upsert Schedule
+INSERT INTO v1.schedules
+(gid, uid, properties, created_at, updated_at)
+VALUES(?, ?, '{}'::jsonb, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT (uid)
+DO UPDATE SET
+    properties = EXCLUDED.properties,
+    updated_at = CURRENT_TIMESTAMP;
+
 /* Sample Schedule Data for Testing */
 -- Insert Team Meeting
 INSERT INTO v1.schedules (gid, uid, properties)

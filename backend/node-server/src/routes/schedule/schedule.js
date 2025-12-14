@@ -8,66 +8,11 @@ const scheduleController = require('../../controllers/schedule');
 // =============================================================================
 router.get('/', scheduleController.fetchSchedule);
 
-
+// =============================================================================
 // POST /api/schedules - Create a new schedule
-router.post('/', async (req, res) => {
-    try {
-        const {
-            userId,
-            title,
-            start,
-            end,
-            recurrenceRule,
-            exceptionDateList,
-            colorValue,
-            doneOccurrences,
-            isAllDay,
-            isDone,
-            location,
-            note
-        } = req.body;
+// =============================================================================
+router.post('/', scheduleController.upsertSchedule);
 
-        // Validate required fields
-        if (!userId || !title || !start || !end) {
-            return res.status(400).json({
-                error: 'Missing required fields',
-                required: ['userId', 'title', 'start', 'end']
-            });
-        }
-
-        // Generate a new ID (temporary - will use database auto-increment later)
-        const newId = String(Date.now()); // Use timestamp for unique ID
-
-        // Create new schedule object
-        const newSchedule = {
-            uid: newId,
-            gid: userId,
-            title,
-            start,
-            end,
-            recurrenceRule: recurrenceRule || null,
-            exceptionDateList: exceptionDateList || [],
-            colorValue: colorValue || 4282557941, // Default blue
-            doneOccurrences: doneOccurrences || [],
-            isAllDay: isAllDay || false,
-            isDone: isDone || false,
-            location: location || null,
-            note: note || null
-        };
-
-        // Add to sample data (temporary - will insert into database later)
-        // sampleSchedules.push(newSchedule);
-
-        console.log('POST /api/schedules - Created:', newSchedule.id, newSchedule.title, 'for user:', userId);
-        return res.status(201).json({
-            data: newSchedule,
-            message: 'Schedule created successfully'
-        });
-    } catch (err) {
-        console.error('POST /api/schedules error', err);
-        return res.status(500).json({ error: 'Failed to create schedule' });
-    }
-});
 
 // GET /api/schedules/:id - Get a single schedule by ID
 // router.get('/:id', async (req, res) => {

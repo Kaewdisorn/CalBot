@@ -31,5 +31,57 @@ const fetchSchedule = async (req, res) => {
     }
 };
 
+const upsertSchedule = async (req, res) => {
 
-module.exports = { fetchSchedule };
+    try {
+        const {
+            gid,
+            uid,
+            title,
+            start,
+            end,
+            location,
+            isAllDay,
+            note,
+            colorValue,
+            isDone,
+            recurrenceRule,
+            exceptionDateList,
+            doneOccurrences,
+        } = req.body;
+
+        if (!uid || !title || !start || !end) {
+            return res.status(400).json({
+                error: 'Missing required fields',
+                required: ['userId', 'title', 'start', 'end']
+            });
+        }
+
+        const newSchedule = {
+            gid,
+            uid,
+            title,
+            start,
+            end,
+            location,
+            isAllDay,
+            note,
+            colorValue,
+            isDone,
+            recurrenceRule: recurrenceRule || null,
+            exceptionDateList: exceptionDateList || [],
+            doneOccurrences: doneOccurrences || [],
+        };
+
+        console.log('POST /api/schedules - Created:', newSchedule.uid, newSchedule.title, 'for user:', newSchedule.gid);
+        return apiRes(res, 201, 'Schedule created successfully', null);
+
+    } catch (error) {
+        console.error('POST /api/schedules error', error);
+        return apiRes(res, 500, 'Internal server error :' + error.message, null);
+
+    }
+}
+
+
+module.exports = { fetchSchedule, upsertSchedule };

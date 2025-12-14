@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../models/schedule_model.dart';
 import 'auth_controller.dart';
@@ -506,7 +507,6 @@ class ScheduleFormController extends GetxController {
     monthlyWeekDay.value = day;
   }
 
-  /// Validate and build the schedule model
   ScheduleModel? buildSchedule() {
     final title = titleController.text.trim();
     if (title.isEmpty) {
@@ -573,7 +573,7 @@ class ScheduleFormController extends GetxController {
     }
 
     return ScheduleModel(
-      uid: existingSchedule?.uid ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      uid: existingSchedule?.uid ?? Uuid().v4(),
       gid: existingSchedule?.gid ?? _authController.userGid.value,
       title: title,
       start: startDateTime,

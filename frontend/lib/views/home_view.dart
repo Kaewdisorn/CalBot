@@ -163,7 +163,6 @@ class HomeView extends StatelessWidget {
                       builder: (context) => ScheduleFormDialog(
                         initialDate: tapped,
                         onSave: (newSchedule) async {
-                          // Call API to create schedule
                           final success = await homeController.createSchedule(newSchedule);
                           if (success) {
                             Get.snackbar(

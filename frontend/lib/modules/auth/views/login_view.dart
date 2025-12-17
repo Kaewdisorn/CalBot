@@ -3,9 +3,6 @@ import 'package:get/get.dart';
 
 import '../controllers/auth_controller.dart';
 
-// Assuming your AuthController has an RxBool for password visibility
-// If not, you can add: var isPasswordVisible = false.obs; to your controller.
-
 class LoginView extends GetView<AuthController> {
   const LoginView({super.key});
 
@@ -23,13 +20,13 @@ class LoginView extends GetView<AuthController> {
               children: [
                 // --- BEAR LOGO SECTION ---
                 Transform.translate(
-                  offset: const Offset(0, -10), // Bear "holding" the card
+                  offset: const Offset(0, -10), // Logo position adjustment
                   child: Image.asset('assets/images/halulu_128x128.png', height: 120),
                 ),
 
                 // --- LOGIN CARD ---
                 Transform.translate(
-                  offset: const Offset(0, -35),
+                  offset: const Offset(0, -35), // Card position adjustment
                   child: Card(
                     elevation: 8,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -78,7 +75,7 @@ class LoginView extends GetView<AuthController> {
                           ),
                           const SizedBox(height: 20),
 
-                          // Primary Login Button
+                          // Login Button
                           SizedBox(
                             width: double.infinity,
                             height: 50,

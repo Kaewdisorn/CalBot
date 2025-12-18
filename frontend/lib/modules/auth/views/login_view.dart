@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
 
 class LoginView extends GetView<AuthController> {
@@ -135,7 +134,7 @@ class LoginView extends GetView<AuthController> {
                 width: double.infinity,
                 child: TextButton.icon(
                   onPressed: () {
-                    Get.offAllNamed(Routes.HOME);
+                    controller.guestLogin();
                   },
                   icon: const Icon(Icons.person_search_rounded),
                   label: const Text("Continue as Guest"),

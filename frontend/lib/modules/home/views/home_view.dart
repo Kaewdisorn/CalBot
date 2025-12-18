@@ -13,7 +13,7 @@ class HomeView extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(toolbarHeight: 60, titleText: headerTitle, logoAsset: logoImgPath, appbarColor: null, welcomeUsername: 'test'),
+      appBar: CustomAppBar(toolbarHeight: 60, titleText: headerTitle, logoAsset: logoImgPath, appbarColor: null, welcomeUsername: controller.displayName),
       endDrawer: null,
     );
   }

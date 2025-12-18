@@ -42,6 +42,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
+import 'modules/auth/bindings/auth_binding.dart';
 import 'routes/app_pages.dart';
 import 'routes/app_routes.dart';
 
@@ -68,6 +69,7 @@ class CalBot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      initialBinding: AuthBinding(),
       title: 'CalBot Halulu',
       theme: ThemeData(colorSchemeSeed: Color(colorSeedValue), brightness: Brightness.light, useMaterial3: true),
       initialRoute: Routes.LOGIN,

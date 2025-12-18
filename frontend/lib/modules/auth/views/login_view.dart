@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
 
 class LoginView extends GetView<AuthController> {
@@ -130,7 +131,9 @@ class LoginView extends GetView<AuthController> {
               SizedBox(
                 width: double.infinity,
                 child: TextButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Get.offAllNamed(Routes.HOME);
+                  },
                   icon: const Icon(Icons.person_search_rounded),
                   label: const Text("Continue as Guest"),
                   style: TextButton.styleFrom(foregroundColor: Colors.grey[700], padding: const EdgeInsets.symmetric(vertical: 12)),

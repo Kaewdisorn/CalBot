@@ -5,12 +5,16 @@ import '../../../core/widgets/custom_appbar.dart';
 import '../controllers/home_controller.dart';
 
 class HomeView extends GetView<HomeController> {
+  static const logoImgPath = 'assets/images/halulu_128x128.png';
+  static const headerTitle = 'Halulu';
+
   const HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(toolbarHeight: 60, titleText: 'Halulu', logoAsset: 'assets/images/halulu_128x128.png', appbarColor: null, welcomeUsername: 'test'),
+      appBar: CustomAppBar(toolbarHeight: 60, titleText: headerTitle, logoAsset: logoImgPath, appbarColor: null, welcomeUsername: 'test'),
+      endDrawer: null,
     );
   }
 }

@@ -5,12 +5,15 @@ import '../../../routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
 
 class LoginView extends GetView<AuthController> {
+  static const String logoImgPath = 'assets/images/halulu_128x128.png';
   const LoginView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
-      color: const Color(0xFFF5F5F5),
+      color: theme.colorScheme.surface,
       child: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -26,7 +29,7 @@ class LoginView extends GetView<AuthController> {
   Widget _logoSection() {
     return Transform.translate(
       offset: const Offset(0, -10), // Logo position adjustment
-      child: Image.asset('assets/images/halulu_128x128.png', height: 120),
+      child: Image.asset(logoImgPath, height: 120),
     );
   }
 

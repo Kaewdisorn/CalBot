@@ -6,7 +6,10 @@ import '../../../routes/app_routes.dart';
 class AuthController extends GetxController {
   final box = GetStorage();
   final RxBool isPasswordVisible = false.obs;
-  final RxString username = ''.obs;
+
+  //User data
+  String userName = '';
+  String userEmail = '';
 
   @override
   void onInit() {
@@ -14,12 +17,12 @@ class AuthController extends GetxController {
     final cacheUserName = box.read('userName');
 
     if (cacheUserName != null) {
-      username.value = cacheUserName;
+      userName = cacheUserName;
     }
   }
 
   void guestLogin() {
-    username.value = 'Guest';
+    userName = 'Guest';
     box.write('userName', 'Guest');
     Get.offAllNamed(Routes.HOME);
   }

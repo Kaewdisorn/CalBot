@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:halulu/data/models/schedule_model.dart';
 
 import '../../core/api/api.dart';
-import '../models/schedule_model.dart';
 
 /// Repository for Schedule-related API operations
 /// This is the single source of truth for schedule data

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:halulu/data/models/schedule_model.dart';
 import 'package:intl/intl.dart';
 
 import '../../controllers/widgets_controller/schedule_form_controller.dart';
-import '../../models/schedule_model.dart';
 
 /// A professional, reusable dialog for adding/editing schedules.
 /// Pass [existingSchedule] to edit mode, or leave null for add mode.

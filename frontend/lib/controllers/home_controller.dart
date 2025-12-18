@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:halulu/data/models/schedule_model.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../api/api_config.dart';
 import '../api/api_requester.dart';
-import '../models/schedule_model.dart';
 import '../repositories/schedule_repository.dart';
 import 'widgets_controller/auth_controller.dart';
 

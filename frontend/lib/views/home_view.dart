@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:halulu/data/models/schedule_model.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../controllers/home_controller.dart';
 import '../controllers/widgets_controller/auth_controller.dart';
 import '../controllers/widgets_controller/setting_controller.dart';
 import '../core/widgets/custom_appbar.dart';
-import '../models/schedule_model.dart';
 import 'widgets/auth_dialog.dart';
 import 'widgets/schedule_form_dialog.dart';
 import 'widgets/settings_drawer.dart';

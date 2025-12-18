@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:halulu/data/models/schedule_model.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../models/schedule_model.dart';
 import 'auth_controller.dart';
 
 /// Recurrence frequency options

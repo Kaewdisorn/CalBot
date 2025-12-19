@@ -1,4 +1,4 @@
-class User {
+class UserModel {
   final String gid;
   final String uid;
   final String token;
@@ -7,7 +7,7 @@ class User {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  User({
+  UserModel({
     required this.gid,
     required this.uid,
     required this.token,
@@ -17,8 +17,8 @@ class User {
     required this.updatedAt,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
       gid: json['gid'] as String? ?? '',
       uid: json['uid'] as String? ?? '',
       token: json['token'] as String? ?? '',
@@ -41,8 +41,8 @@ class User {
   //   };
   // }
 
-  User copyWith({String? gid, String? uid, String? token, String? email, String? password, DateTime? createdAt, DateTime? updatedAt}) {
-    return User(
+  UserModel copyWith({String? gid, String? uid, String? token, String? email, String? password, DateTime? createdAt, DateTime? updatedAt}) {
+    return UserModel(
       gid: gid ?? this.gid,
       uid: uid ?? this.uid,
       token: token ?? this.token,

@@ -11,13 +11,13 @@ class UserModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'gid': gid,
-      'uid': uid,
-      'userName': userName,
-      'userEmail': userEmail,
-      'userPassword': userPassword,
-      'createdAt': createdAt?.toIso8601String(),
-      'updatedAt': updatedAt?.toIso8601String(),
+      if (gid != null) 'gid': gid,
+      if (uid != null) 'uid': uid,
+      if (userName != null) 'userName': userName,
+      if (userEmail != null) 'userEmail': userEmail,
+      if (userPassword != null) 'userPassword': userPassword,
+      if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+      if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     };
   }
 }

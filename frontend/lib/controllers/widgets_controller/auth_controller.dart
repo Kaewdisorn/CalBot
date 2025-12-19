@@ -239,7 +239,7 @@ class AuthController extends GetxController {
       }
 
       try {
-        User userData = User.fromJson(responseData['data']);
+        UserModel userData = UserModel.fromJson(responseData['data']);
         _saveUserSession(userData.email, userData.token, userData.uid, userData.gid);
 
         Get.until((route) => !Get.isDialogOpen!);

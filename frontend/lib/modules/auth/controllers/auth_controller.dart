@@ -26,13 +26,13 @@ class AuthController extends GetxController {
     }
   }
 
-  void registerGuest() {
+  Future<void> registerGuest() async {
     final DateTime now = DateTime.now().toLocal();
     userName = 'Guest';
     userEmail = '${now.millisecondsSinceEpoch}@guest.com';
     userPassword = Uuid().v4().toLowerCase();
 
-    UserModel userModel = _authRepository.register(userName: userName, userEmail: userEmail, userPassword: userPassword);
+    UserModel userModel = await _authRepository.register(userName: userName, userEmail: userEmail, userPassword: userPassword);
 
     _saveUserCache();
     Get.offAllNamed(Routes.HOME);

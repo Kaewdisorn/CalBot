@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:halulu/core/configs/api_config.dart';
 import 'package:halulu/data/models/schedule_model.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
-import '../api/api_config.dart';
 import '../api/api_requester.dart';
 import '../data/repositories/schedule_repository.dart';
 import 'widgets_controller/auth_controller.dart';
@@ -70,7 +70,7 @@ class HomeController extends GetxController {
   // ============ CREATE SCHEDULE ============
   Future<bool> createSchedule(ScheduleModel schedule) async {
     isLoading.value = true;
-    final response = await _apiRequester.post(endpoint: ApiConfig.scheduleUrl, body: schedule.toJson());
+    final response = await _apiRequester.post(endpoint: ApiConfig.schedules, body: schedule.toJson());
     debugPrint('Response from createSchedule: $response');
 
     // final response = await _repository.createSchedule(schedule);

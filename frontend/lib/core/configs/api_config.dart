@@ -11,6 +11,10 @@ class ApiConfig {
     return 'http://localhost:30001';
   }
 
+  // ============ Timeouts ============
+  static const Duration connectionTimeout = Duration(seconds: 30);
+  static const Duration receiveTimeout = Duration(seconds: 30);
+
   // For production, you might use:
   // static const String baseUrl = 'https://api.calbot.com';
 
@@ -19,10 +23,6 @@ class ApiConfig {
   static const String health = '/api/health';
   static const String authRegister = '/api/auth/register';
   static const String authLogin = '/api/auth/login';
-
-  // ============ Timeouts ============
-  static const Duration connectionTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
 
   // ============ Headers ============
   static Map<String, String> get defaultHeaders => {'Content-Type': 'application/json', 'Accept': 'application/json'};

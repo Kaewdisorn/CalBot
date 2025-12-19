@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:halulu/core/configs/api_config.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../api/api_config.dart';
 import '../../api/api_requester.dart';
 import '../../models/user_model.dart';
 import '../home_controller.dart';

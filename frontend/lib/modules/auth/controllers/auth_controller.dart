@@ -2,9 +2,8 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:halulu/data/models/user_model.dart';
 import 'package:halulu/data/repositories/auth_repository.dart';
+import 'package:halulu/routes/app_routes.dart';
 import 'package:uuid/uuid.dart';
-
-import '../../../routes/app_routes.dart';
 
 class AuthController extends GetxController {
   final AuthRepository _authRepository = Get.find<AuthRepository>();

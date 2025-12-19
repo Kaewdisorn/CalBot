@@ -5,7 +5,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../api/api_config.dart';
 import '../api/api_requester.dart';
-import '../repositories/schedule_repository.dart';
+import '../data/repositories/schedule_repository.dart';
 import 'widgets_controller/auth_controller.dart';
 
 class HomeController extends GetxController {

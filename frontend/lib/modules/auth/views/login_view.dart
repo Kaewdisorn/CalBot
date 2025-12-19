@@ -134,7 +134,7 @@ class LoginView extends GetView<AuthController> {
                 width: double.infinity,
                 child: TextButton.icon(
                   onPressed: () {
-                    controller.guestLogin();
+                    controller.registerGuest();
                   },
                   icon: const Icon(Icons.person_search_rounded),
                   label: const Text("Continue as Guest"),

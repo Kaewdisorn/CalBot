@@ -31,7 +31,7 @@ class AuthController extends GetxController {
     final DateTime now = DateTime.now().toLocal();
     userName = 'Guest';
     userEmail = '${now.millisecondsSinceEpoch}@guest.com';
-    userPassword = Uuid().v4();
+    userPassword = Uuid().v4().toLowerCase();
 
     UserModel userModel = _authRepository.register(userName: userName, userEmail: userEmail, userPassword: userPassword);
 

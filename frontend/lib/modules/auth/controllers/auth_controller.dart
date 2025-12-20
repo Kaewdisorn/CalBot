@@ -6,10 +6,13 @@ import 'package:halulu/routes/app_routes.dart';
 import 'package:uuid/uuid.dart';
 
 class AuthController extends GetxController {
+  final String logoImgPath = 'assets/images/halulu_128x128.png';
+
   final AuthRepository _authRepository = Get.find<AuthRepository>();
 
   final box = GetStorage();
   final RxBool isPasswordVisible = false.obs;
+  final RxBool isConfirmPasswordVisible = false.obs;
 
   //User data
   String userName = '';

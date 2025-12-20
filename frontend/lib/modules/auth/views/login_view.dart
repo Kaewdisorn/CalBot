@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:halulu/routes/app_routes.dart';
 
 import '../controllers/auth_controller.dart';
 
 class LoginView extends GetView<AuthController> {
-  static const String logoImgPath = 'assets/images/halulu_128x128.png';
   const LoginView({super.key});
 
   @override
@@ -28,7 +28,7 @@ class LoginView extends GetView<AuthController> {
   Widget _logoSection() {
     return Transform.translate(
       offset: const Offset(0, -10), // Logo position adjustment
-      child: Image.asset(logoImgPath, height: 120),
+      child: Image.asset(controller.logoImgPath, height: 120),
     );
   }
 
@@ -108,7 +108,7 @@ class LoginView extends GetView<AuthController> {
                     side: BorderSide(color: Colors.grey.shade300),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  onPressed: () {},
+                  onPressed: () => Get.toNamed(Routes.REGISTER),
                   child: const Text("Create an Account"),
                 ),
               ),
@@ -133,9 +133,7 @@ class LoginView extends GetView<AuthController> {
               SizedBox(
                 width: double.infinity,
                 child: TextButton.icon(
-                  onPressed: () {
-                    controller.registerGuest();
-                  },
+                  onPressed: () => controller.registerGuest(),
                   icon: const Icon(Icons.person_search_rounded),
                   label: const Text("Continue as Guest"),
                   style: TextButton.styleFrom(foregroundColor: Colors.grey[700], padding: const EdgeInsets.symmetric(vertical: 12)),

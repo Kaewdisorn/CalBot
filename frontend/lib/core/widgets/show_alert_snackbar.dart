@@ -11,7 +11,7 @@ class AppSnackbar {
       colorText: Colors.white,
       icon: const Icon(Icons.error_outline, color: Colors.white),
       margin: const EdgeInsets.all(15),
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 2),
     );
   }
 }

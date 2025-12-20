@@ -27,9 +27,8 @@ class AuthController extends GetxController {
   String userName = '';
 
   @override
-  void onInit() {
-    super.onInit();
-
+  void onReady() {
+    super.onReady();
     _checkLoginStatus();
   }
 
@@ -51,7 +50,7 @@ class AuthController extends GetxController {
     await _authRepository.register(
       userName: userNameController.text.trim(),
       userEmail: userEmailController.text.trim(),
-      userPassword: userPasswordController.text,
+      userPassword: Uuid().v5(Namespace.url.value, userPasswordController.text.toString()),
     );
   }
 
@@ -68,8 +67,9 @@ class AuthController extends GetxController {
     final cacheUserName = box.read('userName');
     final cacheUserEmail = box.read('userEmail');
 
-    if (cacheUserName != null) {
+    if (cacheGid != null && cacheUid != null && cacheUserEmail != null && cacheUserName != null) {
       userName = cacheUserName;
+      Get.offAllNamed(Routes.HOME);
     }
   }
 

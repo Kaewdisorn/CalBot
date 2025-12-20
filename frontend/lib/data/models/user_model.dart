@@ -20,4 +20,16 @@ class UserModel {
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     };
   }
+
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      gid: json['gid'],
+      uid: json['uid'],
+      userName: json['userName'],
+      userEmail: json['userEmail'],
+      userPassword: json['userPassword'],
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+    );
+  }
 }

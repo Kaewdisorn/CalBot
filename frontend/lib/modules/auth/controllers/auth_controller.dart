@@ -34,12 +34,14 @@ class AuthController extends GetxController {
 
     UserModel userModel = await _authRepository.register(userName: userName, userEmail: userEmail, userPassword: userPassword);
 
-    _saveUserCache();
+    _saveUserCache(userModel);
     Get.offAllNamed(Routes.HOME);
   }
 
-  void _saveUserCache() {
-    box.write('userName', userName);
-    box.write('userEmail', userEmail);
+  void _saveUserCache(UserModel userModel) {
+    box.write('gid', userModel.gid);
+    box.write('uid', userModel.uid);
+    box.write('userName', userModel.userName);
+    box.write('userEmail', userModel.userEmail);
   }
 }

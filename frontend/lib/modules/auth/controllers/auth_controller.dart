@@ -47,6 +47,12 @@ class AuthController extends GetxController {
 
   Future<void> registerUser() async {
     _validateRegistrationInputs();
+
+    await _authRepository.register(
+      userName: userNameController.text.trim(),
+      userEmail: userEmailController.text.trim(),
+      userPassword: userPasswordController.text,
+    );
   }
 
   void _saveUserCache(UserModel userModel) {

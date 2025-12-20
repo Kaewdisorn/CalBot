@@ -1,5 +1,8 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:halulu/core/widgets/show_alert_snackbar.dart';
 import 'package:halulu/data/models/user_model.dart';
 import 'package:halulu/data/repositories/auth_repository.dart';
 import 'package:halulu/routes/app_routes.dart';
@@ -13,6 +16,12 @@ class AuthController extends GetxController {
   final box = GetStorage();
   final RxBool isPasswordVisible = false.obs;
   final RxBool isConfirmPasswordVisible = false.obs;
+
+  // TextEditingControllers
+  final userNameController = TextEditingController();
+  final userEmailController = TextEditingController();
+  final userPasswordController = TextEditingController();
+  final userConfirmPasswordController = TextEditingController();
 
   //User data
   String userName = '';
@@ -36,6 +45,10 @@ class AuthController extends GetxController {
     Get.offAllNamed(Routes.HOME);
   }
 
+  Future<void> registerUser() async {
+    _validateRegistrationInputs();
+  }
+
   void _saveUserCache(UserModel userModel) {
     box.write('gid', userModel.gid);
     box.write('uid', userModel.uid);
@@ -51,6 +64,33 @@ class AuthController extends GetxController {
 
     if (cacheUserName != null) {
       userName = cacheUserName;
+    }
+  }
+
+  void _validateRegistrationInputs() {
+    if (userNameController.text.trim().isEmpty) {
+      AppSnackbar.error(title: 'Registration Error', message: 'Username cannot be empty.');
+      return;
+    }
+
+    if (userEmailController.text.trim().isEmpty) {
+      AppSnackbar.error(title: 'Registration Error', message: 'Email cannot be empty.');
+      return;
+    }
+
+    if (userPasswordController.text.isEmpty) {
+      AppSnackbar.error(title: 'Registration Error', message: 'Password cannot be empty.');
+      return;
+    }
+
+    if (userConfirmPasswordController.text.isEmpty) {
+      AppSnackbar.error(title: 'Registration Error', message: 'Confirm Password cannot be empty.');
+      return;
+    }
+
+    if (userPasswordController.text != userConfirmPasswordController.text) {
+      AppSnackbar.error(title: 'Registration Error', message: 'Passwords do not match.');
+      return;
     }
   }
 }

@@ -48,7 +48,7 @@ class RegisterView extends GetView<AuthController> {
 
               // Username Field
               TextField(
-                // controller: controller.nameController,
+                controller: controller.userNameController,
                 textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   labelText: 'Username',
@@ -60,7 +60,7 @@ class RegisterView extends GetView<AuthController> {
 
               // User Email Field
               TextField(
-                // controller: controller.emailController,
+                controller: controller.userEmailController,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
@@ -74,7 +74,7 @@ class RegisterView extends GetView<AuthController> {
               // Password Field
               Obx(
                 () => TextField(
-                  // controller: controller.passwordController,
+                  controller: controller.userPasswordController,
                   obscureText: !controller.isPasswordVisible.value,
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
@@ -93,12 +93,11 @@ class RegisterView extends GetView<AuthController> {
               // Confirm Password Field
               Obx(
                 () => TextField(
-                  // controller: controller.confirmPasswordController, // Add controller here
+                  controller: controller.userConfirmPasswordController,
                   obscureText: !controller.isConfirmPasswordVisible.value,
                   textInputAction: TextInputAction.done,
                   decoration: InputDecoration(
                     labelText: 'Confirm Password',
-                    // Slightly different icon to differentiate
                     prefixIcon: const Icon(Icons.lock_clock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(controller.isConfirmPasswordVisible.value ? Icons.visibility : Icons.visibility_off),
@@ -121,7 +120,7 @@ class RegisterView extends GetView<AuthController> {
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  onPressed: () {},
+                  onPressed: () => controller.registerUser(),
                   child: const Text("REGISTER", style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),

@@ -13,24 +13,19 @@ class AuthController extends GetxController {
 
   //User data
   String userName = '';
-  String userEmail = '';
-  String userPassword = '';
 
   @override
   void onInit() {
     super.onInit();
-    final cacheUserName = box.read('userName');
 
-    if (cacheUserName != null) {
-      userName = cacheUserName;
-    }
+    _checkLoginStatus();
   }
 
   Future<void> registerGuest() async {
     final DateTime now = DateTime.now().toLocal();
     userName = 'Guest';
-    userEmail = '${now.millisecondsSinceEpoch}@guest.com';
-    userPassword = Uuid().v4().toLowerCase();
+    String userEmail = '${now.millisecondsSinceEpoch}@guest.com';
+    String userPassword = Uuid().v4().toLowerCase();
 
     UserModel userModel = await _authRepository.register(userName: userName, userEmail: userEmail, userPassword: userPassword);
 
@@ -43,5 +38,16 @@ class AuthController extends GetxController {
     box.write('uid', userModel.uid);
     box.write('userName', userModel.userName);
     box.write('userEmail', userModel.userEmail);
+  }
+
+  void _checkLoginStatus() {
+    final cacheGid = box.read('gid');
+    final cacheUid = box.read('uid');
+    final cacheUserName = box.read('userName');
+    final cacheUserEmail = box.read('userEmail');
+
+    if (cacheUserName != null) {
+      userName = cacheUserName;
+    }
   }
 }

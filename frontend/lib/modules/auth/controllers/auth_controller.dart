@@ -34,7 +34,7 @@ class AuthController extends GetxController {
 
   Future<void> registerGuest() async {
     final DateTime now = DateTime.now().toLocal();
-    userName = 'Guest';
+
     String userEmail = '${now.millisecondsSinceEpoch}@guest.com';
     String userPassword = Uuid().v4().toLowerCase();
 
@@ -47,14 +47,19 @@ class AuthController extends GetxController {
   Future<void> registerUser() async {
     _validateRegistrationInputs();
 
-    await _authRepository.register(
+    UserModel userModel = await _authRepository.register(
       userName: userNameController.text.trim(),
       userEmail: userEmailController.text.trim(),
       userPassword: Uuid().v5(Namespace.url.value, userPasswordController.text.toString()),
     );
+
+    _saveUserCache(userModel);
+    Get.offAllNamed(Routes.HOME);
   }
 
   void _saveUserCache(UserModel userModel) {
+    userName = userModel.userName ?? '';
+
     box.write('gid', userModel.gid);
     box.write('uid', userModel.uid);
     box.write('userName', userModel.userName);

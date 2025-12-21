@@ -17,7 +17,7 @@ class AuthProvider extends GetConnect {
       'data': {
         'gid': 'd60356d7-a262-4a28-b5d2-e9ec97809b03',
         'uid': 'd60356d7-a262-4a28-b5d2-e9ec97809b03',
-        'userName': 'Guest',
+        'userName': requestBody['userName'],
         'userEmail': '1766177343035@guest.com',
         'token': 'mock-jwt-token',
         'refreshToken': 'mock-refresh-token',

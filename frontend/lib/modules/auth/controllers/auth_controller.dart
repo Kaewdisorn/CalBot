@@ -32,6 +32,9 @@ class AuthController extends GetxController {
     _checkLoginStatus();
   }
 
+  /* ------------------ */
+  /* Guest Registration */
+  /* ------------------ */
   Future<void> registerGuest() async {
     final DateTime now = DateTime.now().toLocal();
 
@@ -44,6 +47,9 @@ class AuthController extends GetxController {
     Get.offAllNamed(Routes.HOME);
   }
 
+  /* ----------------- */
+  /* User Registration */
+  /* ----------------- */
   Future<void> registerUser() async {
     _validateRegistrationInputs();
 
@@ -57,6 +63,9 @@ class AuthController extends GetxController {
     Get.offAllNamed(Routes.HOME);
   }
 
+  /* ---------- */
+  /* Save Cache */
+  /* ---------- */
   void _saveUserCache(UserModel userModel) {
     userName = userModel.userName ?? '';
 
@@ -66,6 +75,9 @@ class AuthController extends GetxController {
     box.write('userEmail', userModel.userEmail);
   }
 
+  /* ------------------ */
+  /* Check login status */
+  /* ------------------ */
   void _checkLoginStatus() {
     final cacheGid = box.read('gid');
     final cacheUid = box.read('uid');
@@ -78,6 +90,9 @@ class AuthController extends GetxController {
     }
   }
 
+  /* ------------------------------ */
+  /* Validation Registration Inputs */
+  /* ------------------------------ */
   void _validateRegistrationInputs() {
     if (userNameController.text.trim().isEmpty) {
       AppSnackbar.error(title: 'Registration Error', message: 'Username cannot be empty.');

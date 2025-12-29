@@ -5,6 +5,21 @@ class DrawerView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Drawer();
+    return Drawer(
+      width: 280,
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // HEADER
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text("Settings", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            ),
+            Divider(),
+          ],
+        ),
+      ),
+    );
   }
 }
